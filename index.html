@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EF Cargo Clear</title>
 
-  <!-- SUPABASE (VERSÃO CORRETA) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <!-- SUPABASE (FIXED) -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
 </head>
+
 <body style="font-family: Arial; padding: 40px;">
 
 <h1>EF Cargo Clear</h1>
@@ -22,21 +23,23 @@
 
 <script>
 
-alert("JS CARREGOU"); // TESTE 1
+// TESTE JS
+alert("JS CARREGOU");
 
+// CONFIG
 const SUPABASE_URL = "https://fefkyzutcouoklbiwybs.supabase.co";
 const SUPABASE_KEY = "sb_publishable_uOowmqEhVdq8h0uzagYPEA_DXXpGOgA";
 
-// 🔥 CRIA CLIENTE
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// 🔥 CORREÇÃO DEFINITIVA
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 async function login() {
-  alert("CLICOU NO BOTÃO"); // TESTE 2
+  alert("CLICOU NO BOTÃO");
 
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
-  const { data, error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
     email,
     password
   });
@@ -47,7 +50,7 @@ async function login() {
     return;
   }
 
-  alert("LOGIN FUNCIONOU"); // TESTE 3
+  alert("LOGIN FUNCIONOU");
 
   document.getElementById("msg").innerText = "Login OK";
 }
