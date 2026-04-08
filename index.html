@@ -4,250 +4,160 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EF Cargo Clear</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- CORRETO -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
   <style>
     body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8;color:#111}
     .wrap{max-width:1100px;margin:auto;padding:20px}
     .card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:16px}
     .grid{display:grid;gap:16px}
     .g2{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
-    input,button,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px solid #d0d7de;box-sizing:border-box}
+    input,button{width:100%;padding:12px;border-radius:12px;border:1px solid #d0d7de}
     button{background:#111;color:#fff;border:none;cursor:pointer}
-    button.outline{background:#fff;color:#111;border:1px solid #111}
-    .row{display:flex;gap:12px;flex-wrap:wrap}
-    .row > *{flex:1}
     .small{font-size:12px;color:#666}
-    .badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px}
-    .amber{background:#fff3cd;color:#8a6d3b}
-    .green{background:#d1fae5;color:#065f46}
-    .blue{background:#dbeafe;color:#1d4ed8}
-    table{width:100%;border-collapse:collapse}
-    th,td{padding:12px;border-bottom:1px solid #eee;text-align:left}
     .hidden{display:none}
-    h1,h2,h3{margin-top:0}
   </style>
 </head>
+
 <body>
-  <div class="wrap">
-    <div id="loginView" class="card">
-      <h1>EF Cargo Clear</h1>
-      <p class="small">Login interno e portal do cliente</p>
-      <div class="grid">
-        <input id="email" placeholder="Email" />
-        <input id="password" type="password" placeholder="Password" />
-        <button onclick="login()">Entrar</button>
-      </div>
-      <p id="loginMsg" class="small"></p>
-    </div>
+<div class="wrap">
 
-    <div id="appView" class="hidden">
-      <div class="card">
-        <div class="row">
-          <div>
-            <h1>EF Cargo Clear</h1>
-            <p class="small" id="welcome"></p>
-          </div>
-          <div style="max-width:220px">
-            <button class="outline" onclick="logout()">Sair</button>
-          </div>
-        </div>
-      </div>
+<!-- LOGIN -->
+<div id="loginView" class="card">
+  <h1>EF Cargo Clear</h1>
+  <input id="email" placeholder="Email" />
+  <input id="password" type="password" placeholder="Password" />
+  <button onclick="login()">Entrar</button>
+  <p id="loginMsg" class="small"></p>
+</div>
 
-      <div id="internalView" class="hidden">
-        <div class="grid g2">
-          <div class="card"><h3>Clientes</h3><div id="clientesCount">0</div></div>
-          <div class="card"><h3>Processos</h3><div id="processosCount">0</div></div>
-          <div class="card"><h3>Pendências</h3><div id="pendenciasCount">0</div></div>
-          <div class="card"><h3>Estado</h3><div>Interno</div></div>
-        </div>
+<!-- APP -->
+<div id="appView" class="hidden">
 
-        <div class="card">
-          <h2>Processos</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Processo</th>
-                <th>Factura</th>
-                <th>Cliente</th>
-                <th>Regime</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody id="processosTable"></tbody>
-          </table>
-        </div>
-      </div>
+  <div class="card">
+    <h2 id="welcome"></h2>
+    <button onclick="logout()">Sair</button>
+  </div>
 
-      <div id="clientView" class="hidden">
-        <div class="card">
-          <h2>Portal do Cliente</h2>
-          <div class="row">
-            <input id="facturaSearch" placeholder="Pesquisar por factura, ex: 0101" />
-            <button onclick="buscarFactura()">Pesquisar</button>
-          </div>
-        </div>
+  <!-- ADMIN -->
+  <div id="internalView" class="hidden card">
+    <h2>Processos</h2>
+    <table>
+      <tbody id="processosTable"></tbody>
+    </table>
+  </div>
 
-        <div id="processoCard" class="card hidden">
-          <div class="row">
-            <div>
-              <h3 id="pcTitulo"></h3>
-              <p class="small" id="pcSub"></p>
-            </div>
-            <div style="max-width:180px">
-              <div id="pcEstado"></div>
-            </div>
-          </div>
+  <!-- CLIENTE -->
+  <div id="clientView" class="hidden card">
+    <h2>Portal Cliente</h2>
+    <input id="facturaSearch" placeholder="Factura 0101" />
+    <button onclick="buscarFactura()">Pesquisar</button>
 
-          <div class="grid g2">
-            <div><strong>Regime</strong><div id="pcRegime"></div></div>
-            <div><strong>Origem</strong><div id="pcOrigem"></div></div>
-            <div><strong>Destino</strong><div id="pcDestino"></div></div>
-            <div><strong>Porto / Fronteira</strong><div id="pcPorto"></div></div>
-            <div><strong>BL / AWB</strong><div id="pcBl"></div></div>
-            <div><strong>Prazo</strong><div id="pcPrazo"></div></div>
-            <div><strong>Docs em falta</strong><div id="pcDocs"></div></div>
-          </div>
-
-          <hr style="margin:20px 0;border:none;border-top:1px solid #eee" />
-          <strong>Histórico</strong>
-          <div id="pcHistorico" class="small" style="margin-top:10px"></div>
-        </div>
-      </div>
+    <div id="processoCard" class="hidden">
+      <h3 id="pcTitulo"></h3>
+      <p id="pcSub"></p>
+      <p id="pcEstado"></p>
     </div>
   </div>
 
- <script>
-  const SUPABASE_URL = "https://fefkyzutcouoklbiwybs.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_uOowmqEhVdq8h0uzagYPEA_DXXpGOgA";
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</div>
+</div>
 
-    async function login() {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
-      const loginMsg = document.getElementById("loginMsg");
-      loginMsg.textContent = "A entrar...";
+<script>
+const SUPABASE_URL = "https://fefkyzutcouoklbiwybs.supabase.co";
+const SUPABASE_KEY = "sb_publishable_uOowmqEhVdq8h0uzagYPEA_DXXpGOgA";
 
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        loginMsg.textContent = error.message;
-        return;
-      }
-      loginMsg.textContent = "";
-      await loadApp();
-    }
+// 🔥 CORREÇÃO PRINCIPAL
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    async function logout() {
-      await supabase.auth.signOut();
-      document.getElementById("appView").classList.add("hidden");
-      document.getElementById("loginView").classList.remove("hidden");
-    }
+async function login() {
+  alert("clicou");
 
-    function estadoBadge(estado) {
-      const e = (estado || "").toLowerCase();
-      if (e.includes("liberado")) return '<span class="badge green">' + estado + '</span>';
-      if (e.includes("inspec")) return '<span class="badge blue">' + estado + '</span>';
-      return '<span class="badge amber">' + estado + '</span>';
-    }
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-    async function loadApp() {
-      const { data: userData } = await supabase.auth.getUser();
-      const user = userData.user;
-      if (!user) return;
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
 
-      document.getElementById("loginView").classList.add("hidden");
-      document.getElementById("appView").classList.remove("hidden");
+  if (error) {
+    alert(error.message);
+    return;
+  }
 
-      const { data: profile } = await supabase
-        .from("users_profile")
-        .select("*")
-        .eq("id", user.id)
-        .single();
+  alert("login ok");
+  loadApp();
+}
 
-      document.getElementById("welcome").textContent =
-        profile ? `${profile.nome} • ${profile.role}` : user.email;
+async function loadApp() {
+  const { data } = await supabase.auth.getUser();
+  const user = data.user;
 
-      if (profile && (profile.role === "admin" || profile.role === "operador")) {
-        document.getElementById("internalView").classList.remove("hidden");
-        document.getElementById("clientView").classList.add("hidden");
-        await loadInternal();
-      } else {
-        document.getElementById("clientView").classList.remove("hidden");
-        document.getElementById("internalView").classList.add("hidden");
-      }
-    }
+  if (!user) return;
 
-    async function loadInternal() {
-      const { data: clientes } = await supabase.from("clientes").select("*");
-      const { data: processos } = await supabase.from("processos").select("*");
+  document.getElementById("loginView").classList.add("hidden");
+  document.getElementById("appView").classList.remove("hidden");
 
-      document.getElementById("clientesCount").textContent = clientes ? clientes.length : 0;
-      document.getElementById("processosCount").textContent = processos ? processos.length : 0;
-      document.getElementById("pendenciasCount").textContent =
-        processos ? processos.filter(p => p.documentos_em_falta && p.documentos_em_falta.trim() !== "").length : 0;
+  const { data: profile } = await supabase
+    .from("users_profile")
+    .select("*")
+    .eq("id", user.id)
+    .single();
 
-      const tbody = document.getElementById("processosTable");
-      tbody.innerHTML = "";
+  document.getElementById("welcome").innerText = profile.nome;
 
-      (processos || []).forEach(p => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${p.numero_processo || ""}</td>
-          <td>${p.numero_factura || ""}</td>
-          <td>${p.importador_exportador || ""}</td>
-          <td>${p.regime || ""}</td>
-          <td>${estadoBadge(p.estado || "")}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
+  if (profile.role === "admin") {
+    document.getElementById("internalView").classList.remove("hidden");
+    loadInternal();
+  } else {
+    document.getElementById("clientView").classList.remove("hidden");
+  }
+}
 
-    async function buscarFactura() {
-      const termo = document.getElementById("facturaSearch").value.trim();
-      const { data: userData } = await supabase.auth.getUser();
-      const user = userData.user;
-      if (!user) return;
+async function loadInternal() {
+  const { data } = await supabase.from("processos").select("*");
 
-      const { data: profile } = await supabase
-        .from("users_profile")
-        .select("*")
-        .eq("id", user.id)
-        .single();
+  const table = document.getElementById("processosTable");
+  table.innerHTML = "";
 
-      let query = supabase
-        .from("processos")
-        .select("*")
-        .ilike("numero_factura", `%${termo}%`);
+  data.forEach(p => {
+    table.innerHTML += `<tr>
+      <td>${p.numero_processo}</td>
+      <td>${p.numero_factura}</td>
+    </tr>`;
+  });
+}
 
-      if (profile && profile.cliente_id) {
-        query = query.eq("cliente_id", profile.cliente_id);
-      }
+async function buscarFactura() {
+  const termo = document.getElementById("facturaSearch").value;
 
-      const { data: processos } = await query.limit(1);
-      const p = processos && processos.length ? processos[0] : null;
+  const { data } = await supabase
+    .from("processos")
+    .select("*")
+    .ilike("numero_factura", `%${termo}%`)
+    .limit(1);
 
-      if (!p) {
-        alert("Processo não encontrado.");
-        return;
-      }
+  const p = data[0];
 
-      document.getElementById("processoCard").classList.remove("hidden");
-      document.getElementById("pcTitulo").textContent = "Factura " + (p.numero_factura || "");
-      document.getElementById("pcSub").textContent = (p.numero_processo || "") + " • " + (p.importador_exportador || "");
-      document.getElementById("pcEstado").innerHTML = estadoBadge(p.estado || "");
-      document.getElementById("pcRegime").textContent = p.regime || "";
-      document.getElementById("pcOrigem").textContent = p.pais_origem || "";
-      document.getElementById("pcDestino").textContent = p.pais_destino || "";
-      document.getElementById("pcPorto").textContent = p.porto_fronteira || "";
-      document.getElementById("pcBl").textContent = p.bl_awb_manifesto || "";
-      document.getElementById("pcPrazo").textContent = p.prazo || "";
-      document.getElementById("pcDocs").textContent = p.documentos_em_falta || "Sem pendências";
-      document.getElementById("pcHistorico").innerHTML = "• " + (p.historico || "Sem histórico");
-    }
+  if (!p) {
+    alert("não encontrado");
+    return;
+  }
 
-    window.addEventListener("load", async () => {
-      const { data } = await supabase.auth.getUser();
-      if (data.user) await loadApp();
-    });
-  </script>
+  document.getElementById("processoCard").classList.remove("hidden");
+  document.getElementById("pcTitulo").innerText = "Factura " + p.numero_factura;
+  document.getElementById("pcSub").innerText = p.numero_processo;
+  document.getElementById("pcEstado").innerText = p.estado;
+}
+
+async function logout() {
+  await supabase.auth.signOut();
+  location.reload();
+}
+</script>
+
 </body>
 </html>
