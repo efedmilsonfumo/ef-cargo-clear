@@ -1,79 +1,37 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EF Cargo Clear</title>
 
-  <!-- CORRETO -->
+  <!-- SUPABASE (VERSÃO CORRETA) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
-  <style>
-    body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8;color:#111}
-    .wrap{max-width:1100px;margin:auto;padding:20px}
-    .card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:16px}
-    .grid{display:grid;gap:16px}
-    .g2{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
-    input,button{width:100%;padding:12px;border-radius:12px;border:1px solid #d0d7de}
-    button{background:#111;color:#fff;border:none;cursor:pointer}
-    .small{font-size:12px;color:#666}
-    .hidden{display:none}
-  </style>
 </head>
+<body style="font-family: Arial; padding: 40px;">
 
-<body>
-<div class="wrap">
+<h1>EF Cargo Clear</h1>
 
-<!-- LOGIN -->
-<div id="loginView" class="card">
-  <h1>EF Cargo Clear</h1>
-  <input id="email" placeholder="Email" />
-  <input id="password" type="password" placeholder="Password" />
-  <button onclick="login()">Entrar</button>
-  <p id="loginMsg" class="small"></p>
-</div>
+<input id="email" placeholder="Email"><br><br>
+<input id="password" type="password" placeholder="Password"><br><br>
 
-<!-- APP -->
-<div id="appView" class="hidden">
+<button onclick="login()">Entrar</button>
 
-  <div class="card">
-    <h2 id="welcome"></h2>
-    <button onclick="logout()">Sair</button>
-  </div>
-
-  <!-- ADMIN -->
-  <div id="internalView" class="hidden card">
-    <h2>Processos</h2>
-    <table>
-      <tbody id="processosTable"></tbody>
-    </table>
-  </div>
-
-  <!-- CLIENTE -->
-  <div id="clientView" class="hidden card">
-    <h2>Portal Cliente</h2>
-    <input id="facturaSearch" placeholder="Factura 0101" />
-    <button onclick="buscarFactura()">Pesquisar</button>
-
-    <div id="processoCard" class="hidden">
-      <h3 id="pcTitulo"></h3>
-      <p id="pcSub"></p>
-      <p id="pcEstado"></p>
-    </div>
-  </div>
-
-</div>
-</div>
+<p id="msg"></p>
 
 <script>
+
+alert("JS CARREGOU"); // TESTE 1
+
 const SUPABASE_URL = "https://fefkyzutcouoklbiwybs.supabase.co";
 const SUPABASE_KEY = "sb_publishable_uOowmqEhVdq8h0uzagYPEA_DXXpGOgA";
 
-// 🔥 CORREÇÃO PRINCIPAL
+// 🔥 CRIA CLIENTE
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 async function login() {
-  alert("clicou");
+  alert("CLICOU NO BOTÃO"); // TESTE 2
 
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
@@ -84,79 +42,16 @@ async function login() {
   });
 
   if (error) {
-    alert(error.message);
+    alert("ERRO: " + error.message);
+    document.getElementById("msg").innerText = error.message;
     return;
   }
 
-  alert("login ok");
-  loadApp();
+  alert("LOGIN FUNCIONOU"); // TESTE 3
+
+  document.getElementById("msg").innerText = "Login OK";
 }
 
-async function loadApp() {
-  const { data } = await supabase.auth.getUser();
-  const user = data.user;
-
-  if (!user) return;
-
-  document.getElementById("loginView").classList.add("hidden");
-  document.getElementById("appView").classList.remove("hidden");
-
-  const { data: profile } = await supabase
-    .from("users_profile")
-    .select("*")
-    .eq("id", user.id)
-    .single();
-
-  document.getElementById("welcome").innerText = profile.nome;
-
-  if (profile.role === "admin") {
-    document.getElementById("internalView").classList.remove("hidden");
-    loadInternal();
-  } else {
-    document.getElementById("clientView").classList.remove("hidden");
-  }
-}
-
-async function loadInternal() {
-  const { data } = await supabase.from("processos").select("*");
-
-  const table = document.getElementById("processosTable");
-  table.innerHTML = "";
-
-  data.forEach(p => {
-    table.innerHTML += `<tr>
-      <td>${p.numero_processo}</td>
-      <td>${p.numero_factura}</td>
-    </tr>`;
-  });
-}
-
-async function buscarFactura() {
-  const termo = document.getElementById("facturaSearch").value;
-
-  const { data } = await supabase
-    .from("processos")
-    .select("*")
-    .ilike("numero_factura", `%${termo}%`)
-    .limit(1);
-
-  const p = data[0];
-
-  if (!p) {
-    alert("não encontrado");
-    return;
-  }
-
-  document.getElementById("processoCard").classList.remove("hidden");
-  document.getElementById("pcTitulo").innerText = "Factura " + p.numero_factura;
-  document.getElementById("pcSub").innerText = p.numero_processo;
-  document.getElementById("pcEstado").innerText = p.estado;
-}
-
-async function logout() {
-  await supabase.auth.signOut();
-  location.reload();
-}
 </script>
 
 </body>
