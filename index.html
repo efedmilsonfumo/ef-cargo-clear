@@ -24,7 +24,6 @@
       --shadow:0 10px 30px rgba(0,0,0,.06);
       --radius:20px;
     }
-
     *{box-sizing:border-box}
     body{
       margin:0;
@@ -32,13 +31,7 @@
       background:linear-gradient(180deg,#f7f9fc 0%, #eef3f8 100%);
       color:var(--text);
     }
-
-    .wrap{
-      max-width:1250px;
-      margin:0 auto;
-      padding:22px;
-    }
-
+    .wrap{max-width:1250px;margin:0 auto;padding:22px}
     .card{
       background:var(--card);
       border-radius:var(--radius);
@@ -47,7 +40,6 @@
       margin-bottom:18px;
       border:1px solid rgba(229,231,235,.8);
     }
-
     .topbar{
       display:flex;
       justify-content:space-between;
@@ -55,19 +47,8 @@
       gap:16px;
       flex-wrap:wrap;
     }
-
-    .brand h1{
-      margin:0;
-      font-size:30px;
-      line-height:1.1;
-    }
-
-    .brand p{
-      margin:10px 0 0;
-      color:var(--muted);
-      font-size:14px;
-    }
-
+    .brand h1{margin:0;font-size:30px;line-height:1.1}
+    .brand p{margin:10px 0 0;color:var(--muted);font-size:14px}
     .btn{
       border:none;
       background:var(--primary);
@@ -78,32 +59,14 @@
       font-size:15px;
       min-height:48px;
     }
-
     .btn-outline{
       background:#fff;
       color:var(--text);
       border:1px solid #cfd6df;
     }
-
-    .btn:hover{opacity:.96}
-
-    .grid{
-      display:grid;
-      gap:18px;
-    }
-
-    .grid-4{
-      grid-template-columns:repeat(4,1fr);
-    }
-
-    .grid-2{
-      grid-template-columns:repeat(2,1fr);
-    }
-
-    .grid-3{
-      grid-template-columns:repeat(3,1fr);
-    }
-
+    .grid{display:grid;gap:18px}
+    .grid-4{grid-template-columns:repeat(4,1fr)}
+    .grid-3{grid-template-columns:repeat(3,1fr)}
     .kpi{
       padding:20px;
       border-radius:20px;
@@ -111,31 +74,10 @@
       box-shadow:var(--shadow);
       border:1px solid rgba(229,231,235,.8);
     }
-
-    .kpi-title{
-      color:var(--muted);
-      font-size:14px;
-      margin-bottom:10px;
-    }
-
-    .kpi-value{
-      font-size:34px;
-      font-weight:700;
-    }
-
-    .section-title{
-      font-size:18px;
-      font-weight:700;
-      margin:0 0 18px;
-    }
-
-    .tabs{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-bottom:18px;
-    }
-
+    .kpi-title{color:var(--muted);font-size:14px;margin-bottom:10px}
+    .kpi-value{font-size:34px;font-weight:700}
+    .section-title{font-size:18px;font-weight:700;margin:0 0 18px}
+    .tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
     .tab-btn{
       background:#fff;
       border:1px solid var(--line);
@@ -145,26 +87,14 @@
       cursor:pointer;
       font-size:14px;
     }
-
     .tab-btn.active{
       background:var(--primary);
       color:#fff;
       border-color:var(--primary);
     }
-
     .tab-content.hidden{display:none}
-
-    .row{
-      display:flex;
-      gap:14px;
-      flex-wrap:wrap;
-    }
-
-    .row > *{
-      flex:1;
-      min-width:220px;
-    }
-
+    .row{display:flex;gap:14px;flex-wrap:wrap}
+    .row > *{flex:1;min-width:220px}
     label{
       display:block;
       font-size:13px;
@@ -172,7 +102,6 @@
       margin:0 0 8px;
       font-weight:600;
     }
-
     input, select, textarea{
       width:100%;
       border:1px solid #d7dee8;
@@ -182,17 +111,8 @@
       font-size:15px;
       outline:none;
     }
-
-    textarea{
-      min-height:110px;
-      resize:vertical;
-    }
-
-    .small{
-      font-size:13px;
-      color:var(--muted);
-    }
-
+    textarea{min-height:110px;resize:vertical}
+    .small{font-size:13px;color:var(--muted)}
     .badge{
       display:inline-flex;
       align-items:center;
@@ -202,16 +122,10 @@
       font-size:13px;
       white-space:nowrap;
     }
-
-    .amber{background:var(--warn-bg); color:var(--warn-text)}
-    .green{background:var(--success-bg); color:var(--success-text)}
-    .blue{background:var(--info-bg); color:var(--info-text)}
-
-    table{
-      width:100%;
-      border-collapse:collapse;
-    }
-
+    .amber{background:var(--warn-bg);color:var(--warn-text)}
+    .green{background:var(--success-bg);color:var(--success-text)}
+    .blue{background:var(--info-bg);color:var(--info-text)}
+    table{width:100%;border-collapse:collapse}
     th,td{
       text-align:left;
       padding:15px 12px;
@@ -219,14 +133,8 @@
       font-size:15px;
       vertical-align:top;
     }
-
-    th{
-      color:#374151;
-      font-size:14px;
-    }
-
+    th{color:#374151;font-size:14px}
     .hidden{display:none}
-
     .hero{
       display:flex;
       align-items:center;
@@ -234,14 +142,12 @@
       gap:20px;
       flex-wrap:wrap;
     }
-
     .hero-note{
       color:var(--muted);
       font-size:14px;
       max-width:700px;
       line-height:1.5;
     }
-
     .muted-box{
       background:var(--soft);
       border:1px solid var(--line);
@@ -250,7 +156,6 @@
       color:var(--muted);
       font-size:14px;
     }
-
     .status-line{
       display:flex;
       justify-content:space-between;
@@ -258,7 +163,6 @@
       gap:12px;
       flex-wrap:wrap;
     }
-
     .login-shell{
       min-height:100vh;
       display:flex;
@@ -266,7 +170,6 @@
       justify-content:center;
       padding:20px;
     }
-
     .login-card{
       width:100%;
       max-width:560px;
@@ -276,19 +179,8 @@
       padding:28px;
       border:1px solid rgba(229,231,235,.8);
     }
-
-    .login-title{
-      margin:0 0 8px;
-      font-size:38px;
-      line-height:1;
-    }
-
-    .login-sub{
-      margin:0 0 24px;
-      color:var(--muted);
-      font-size:15px;
-    }
-
+    .login-title{margin:0 0 8px;font-size:38px;line-height:1}
+    .login-sub{margin:0 0 24px;color:var(--muted);font-size:15px}
     .pill{
       display:inline-block;
       padding:7px 11px;
@@ -298,23 +190,12 @@
       color:#3730a3;
       margin-bottom:16px;
     }
-
-    .message-ok{
-      color:#166534;
-      font-size:14px;
-    }
-
-    .message-err{
-      color:var(--danger);
-      font-size:14px;
-    }
-
+    .message-ok{color:#166534;font-size:14px}
+    .message-err{color:var(--danger);font-size:14px}
     @media (max-width: 980px){
       .grid-4{grid-template-columns:repeat(2,1fr)}
       .grid-3{grid-template-columns:1fr}
-      .grid-2{grid-template-columns:1fr}
     }
-
     @media (max-width: 640px){
       .wrap{padding:14px}
       .card,.kpi{padding:18px}
@@ -622,8 +503,7 @@
         return;
       }
 
-      loginMsg.textContent = "";
-      await loadApp();
+      await loadApp(data.user);
     }
 
     async function logout() {
@@ -631,71 +511,54 @@
       location.reload();
     }
 
-    async function loadApp() {
+    async function loadApp(userFromLogin = null) {
       try {
-        const { data: userData, error: userError } = await supabaseClient.auth.getUser();
+        let user = userFromLogin;
 
-        if (userError) {
-          document.getElementById("loginMsg").textContent = "Erro ao obter utilizador: " + userError.message;
-          document.getElementById("loginView").classList.remove("hidden");
-          document.getElementById("appView").classList.add("hidden");
-          return;
+        if (!user) {
+          const { data: userData, error: userError } = await supabaseClient.auth.getUser();
+          if (userError) {
+            document.getElementById("loginMsg").textContent = "Erro ao obter utilizador: " + userError.message;
+            return;
+          }
+          user = userData.user;
         }
 
-        const user = userData.user;
         if (!user) {
           document.getElementById("loginMsg").textContent = "Utilizador não encontrado após login.";
-          document.getElementById("loginView").classList.remove("hidden");
-          document.getElementById("appView").classList.add("hidden");
           return;
         }
+
+        const email = (user.email || "").toLowerCase();
 
         document.getElementById("loginView").classList.add("hidden");
         document.getElementById("appView").classList.remove("hidden");
 
-        const { data: profile, error: profileError } = await supabaseClient
-          .from("users_profile")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-
-        if (profileError) {
-          document.getElementById("welcome").textContent = "Erro ao carregar perfil: " + profileError.message;
-          return;
-        }
-
-        if (!profile) {
-          document.getElementById("welcome").textContent = "Perfil não encontrado para: " + user.email;
-          return;
-        }
-
-        document.getElementById("welcome").textContent = `${profile.nome} • ${profile.role}`;
-
-        if (profile.role === "admin" || profile.role === "operador") {
+        if (email === "ef.edmilsonfumo@gmail.com") {
+          document.getElementById("welcome").textContent = "Edmilson Fumo • admin";
           document.getElementById("internalView").classList.remove("hidden");
           document.getElementById("clientView").classList.add("hidden");
           await loadInternal();
+          return;
+        }
+
+        document.getElementById("welcome").textContent = "Cliente Teste LDA • cliente";
+        document.getElementById("clientView").classList.remove("hidden");
+        document.getElementById("internalView").classList.add("hidden");
+
+        const { data: cliente } = await supabaseClient
+          .from("clientes")
+          .select("*")
+          .eq("email", user.email)
+          .maybeSingle();
+
+        if (cliente) {
+          document.getElementById("cot_nome").value = cliente.nome || "";
+          document.getElementById("cot_nuit").value = cliente.nuit || "";
+          document.getElementById("cot_contacto").value = cliente.contacto || "";
+          document.getElementById("cot_email").value = cliente.email || "";
         } else {
-          document.getElementById("clientView").classList.remove("hidden");
-          document.getElementById("internalView").classList.add("hidden");
-
-          const { data: cliente, error: clienteError } = await supabaseClient
-            .from("clientes")
-            .select("*")
-            .eq("id", profile.cliente_id)
-            .single();
-
-          if (clienteError) {
-            document.getElementById("welcome").textContent = "Erro ao carregar cliente: " + clienteError.message;
-            return;
-          }
-
-          if (cliente) {
-            document.getElementById("cot_nome").value = cliente.nome || "";
-            document.getElementById("cot_nuit").value = cliente.nuit || "";
-            document.getElementById("cot_contacto").value = cliente.contacto || "";
-            document.getElementById("cot_email").value = cliente.email || "";
-          }
+          document.getElementById("cot_email").value = user.email || "";
         }
       } catch (e) {
         document.getElementById("loginMsg").textContent = "Erro geral: " + e.message;
@@ -703,22 +566,12 @@
     }
 
     async function loadInternal() {
-      const { data: clientes, error: clientesError } = await supabaseClient.from("clientes").select("*");
-      const { data: processos, error: processosError } = await supabaseClient.from("processos").select("*");
-      const { data: cotacoes, error: cotacoesError } = await supabaseClient.from("pedidos_cotacao").select("*").order("created_at", { ascending: false });
-
-      if (clientesError) {
-        document.getElementById("welcome").textContent = "Erro clientes: " + clientesError.message;
-        return;
-      }
-      if (processosError) {
-        document.getElementById("welcome").textContent = "Erro processos: " + processosError.message;
-        return;
-      }
-      if (cotacoesError) {
-        document.getElementById("welcome").textContent = "Erro cotações: " + cotacoesError.message;
-        return;
-      }
+      const { data: clientes } = await supabaseClient.from("clientes").select("*");
+      const { data: processos } = await supabaseClient.from("processos").select("*");
+      const { data: cotacoes } = await supabaseClient
+        .from("pedidos_cotacao")
+        .select("*")
+        .order("created_at", { ascending: false });
 
       document.getElementById("clientesCount").textContent = clientes ? clientes.length : 0;
       document.getElementById("processosCount").textContent = processos ? processos.length : 0;
@@ -762,26 +615,12 @@
       const termo = document.getElementById("facturaSearch").value.trim();
       if (!termo) return;
 
-      const { data: userData } = await supabaseClient.auth.getUser();
-      const user = userData.user;
-      if (!user) return;
-
-      const { data: profile } = await supabaseClient
-        .from("users_profile")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      let query = supabaseClient
+      const { data: processos } = await supabaseClient
         .from("processos")
         .select("*")
-        .ilike("numero_factura", `%${termo}%`);
+        .ilike("numero_factura", `%${termo}%`)
+        .limit(1);
 
-      if (profile && profile.cliente_id) {
-        query = query.eq("cliente_id", profile.cliente_id);
-      }
-
-      const { data: processos } = await query.limit(1);
       const p = processos && processos.length ? processos[0] : null;
 
       if (!p) {
@@ -823,27 +662,9 @@
         return;
       }
 
-      const { data: userData } = await supabaseClient.auth.getUser();
-      const user = userData.user;
-
-      let cliente_id = null;
-
-      if (user) {
-        const { data: profile } = await supabaseClient
-          .from("users_profile")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-
-        if (profile?.cliente_id) {
-          cliente_id = profile.cliente_id;
-        }
-      }
-
       const { error } = await supabaseClient
         .from("pedidos_cotacao")
         .insert({
-          cliente_id,
           nome_cliente,
           nuit,
           contacto,
@@ -875,8 +696,10 @@
     }
 
     window.addEventListener("load", async () => {
-      const { data } = await supabaseClient.auth.getUser();
-      if (data.user) await loadApp();
+      const { data } = await supabaseClient.auth.getSession();
+      if (data.session?.user) {
+        await loadApp(data.session.user);
+      }
     });
   </script>
 </body>
