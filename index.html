@@ -18,8 +18,6 @@
       --success-text:#166534;
       --warn-bg:#fef3c7;
       --warn-text:#92400e;
-      --info-bg:#dbeafe;
-      --info-text:#1d4ed8;
       --danger:#b91c1c;
       --shadow:0 10px 30px rgba(0,0,0,.06);
       --radius:20px;
@@ -31,7 +29,7 @@
       background:linear-gradient(180deg,#f7f9fc 0%, #eef3f8 100%);
       color:var(--text);
     }
-    .wrap{max-width:1250px;margin:0 auto;padding:22px}
+    .wrap{max-width:1200px;margin:0 auto;padding:22px}
     .card{
       background:var(--card);
       border-radius:var(--radius);
@@ -40,59 +38,36 @@
       margin-bottom:18px;
       border:1px solid rgba(229,231,235,.8);
     }
-    .topbar{
+    .login-shell{
+      min-height:100vh;
       display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:16px;
-      flex-wrap:wrap;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
     }
-    .brand h1{margin:0;font-size:30px;line-height:1.1}
-    .brand p{margin:10px 0 0;color:var(--muted);font-size:14px}
-    .btn{
-      border:none;
-      background:var(--primary);
-      color:#fff;
-      padding:14px 18px;
-      border-radius:16px;
-      cursor:pointer;
-      font-size:15px;
-      min-height:48px;
-    }
-    .btn-outline{
+    .login-card{
+      width:100%;
+      max-width:560px;
       background:#fff;
-      color:var(--text);
-      border:1px solid #cfd6df;
+      border-radius:26px;
+      box-shadow:var(--shadow);
+      padding:28px;
+      border:1px solid rgba(229,231,235,.8);
     }
+    .pill{
+      display:inline-block;
+      padding:7px 11px;
+      font-size:12px;
+      border-radius:999px;
+      background:#eef2ff;
+      color:#3730a3;
+      margin-bottom:16px;
+    }
+    .login-title{margin:0 0 8px;font-size:38px;line-height:1}
+    .login-sub{margin:0 0 24px;color:var(--muted);font-size:15px}
     .grid{display:grid;gap:18px}
     .grid-4{grid-template-columns:repeat(4,1fr)}
     .grid-3{grid-template-columns:repeat(3,1fr)}
-    .kpi{
-      padding:20px;
-      border-radius:20px;
-      background:var(--card);
-      box-shadow:var(--shadow);
-      border:1px solid rgba(229,231,235,.8);
-    }
-    .kpi-title{color:var(--muted);font-size:14px;margin-bottom:10px}
-    .kpi-value{font-size:34px;font-weight:700}
-    .section-title{font-size:18px;font-weight:700;margin:0 0 18px}
-    .tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
-    .tab-btn{
-      background:#fff;
-      border:1px solid var(--line);
-      color:var(--text);
-      padding:12px 16px;
-      border-radius:14px;
-      cursor:pointer;
-      font-size:14px;
-    }
-    .tab-btn.active{
-      background:var(--primary);
-      color:#fff;
-      border-color:var(--primary);
-    }
-    .tab-content.hidden{display:none}
     .row{display:flex;gap:14px;flex-wrap:wrap}
     .row > *{flex:1;min-width:220px}
     label{
@@ -112,19 +87,60 @@
       outline:none;
     }
     textarea{min-height:110px;resize:vertical}
-    .small{font-size:13px;color:var(--muted)}
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 12px;
-      border-radius:999px;
-      font-size:13px;
-      white-space:nowrap;
+    .btn{
+      border:none;
+      background:var(--primary);
+      color:#fff;
+      padding:14px 18px;
+      border-radius:16px;
+      cursor:pointer;
+      font-size:15px;
+      min-height:48px;
     }
-    .amber{background:var(--warn-bg);color:var(--warn-text)}
-    .green{background:var(--success-bg);color:var(--success-text)}
-    .blue{background:var(--info-bg);color:var(--info-text)}
+    .btn-outline{
+      background:#fff;
+      color:var(--text);
+      border:1px solid #cfd6df;
+    }
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+    .brand h1{margin:0;font-size:30px;line-height:1.1}
+    .brand p{margin:10px 0 0;color:var(--muted);font-size:14px}
+    .small{font-size:13px;color:var(--muted)}
+    .message-ok{color:#166534;font-size:14px}
+    .message-err{color:#b91c1c;font-size:14px}
+    .hidden{display:none}
+    .kpi{
+      padding:20px;
+      border-radius:20px;
+      background:var(--card);
+      box-shadow:var(--shadow);
+      border:1px solid rgba(229,231,235,.8);
+    }
+    .kpi-title{color:var(--muted);font-size:14px;margin-bottom:10px}
+    .kpi-value{font-size:34px;font-weight:700}
+    .tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+    .tab-btn{
+      background:#fff;
+      border:1px solid var(--line);
+      color:var(--text);
+      padding:12px 16px;
+      border-radius:14px;
+      cursor:pointer;
+      font-size:14px;
+    }
+    .tab-btn.active{
+      background:var(--primary);
+      color:#fff;
+      border-color:var(--primary);
+    }
+    .tab-content.hidden{display:none}
+    .section-title{font-size:18px;font-weight:700;margin:0 0 18px}
     table{width:100%;border-collapse:collapse}
     th,td{
       text-align:left;
@@ -134,20 +150,17 @@
       vertical-align:top;
     }
     th{color:#374151;font-size:14px}
-    .hidden{display:none}
-    .hero{
-      display:flex;
+    .badge{
+      display:inline-flex;
       align-items:center;
-      justify-content:space-between;
-      gap:20px;
-      flex-wrap:wrap;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:13px;
+      white-space:nowrap;
     }
-    .hero-note{
-      color:var(--muted);
-      font-size:14px;
-      max-width:700px;
-      line-height:1.5;
-    }
+    .amber{background:#fef3c7;color:#92400e}
+    .green{background:#dcfce7;color:#166534}
     .muted-box{
       background:var(--soft);
       border:1px solid var(--line);
@@ -156,42 +169,6 @@
       color:var(--muted);
       font-size:14px;
     }
-    .status-line{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
-    }
-    .login-shell{
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:20px;
-    }
-    .login-card{
-      width:100%;
-      max-width:560px;
-      background:#fff;
-      border-radius:26px;
-      box-shadow:var(--shadow);
-      padding:28px;
-      border:1px solid rgba(229,231,235,.8);
-    }
-    .login-title{margin:0 0 8px;font-size:38px;line-height:1}
-    .login-sub{margin:0 0 24px;color:var(--muted);font-size:15px}
-    .pill{
-      display:inline-block;
-      padding:7px 11px;
-      font-size:12px;
-      border-radius:999px;
-      background:#eef2ff;
-      color:#3730a3;
-      margin-bottom:16px;
-    }
-    .message-ok{color:#166534;font-size:14px}
-    .message-err{color:var(--danger);font-size:14px}
     @media (max-width: 980px){
       .grid-4{grid-template-columns:repeat(2,1fr)}
       .grid-3{grid-template-columns:1fr}
@@ -202,8 +179,6 @@
       .login-card{padding:22px}
       .login-title{font-size:32px}
       .grid-4{grid-template-columns:1fr}
-      th,td{font-size:13px;padding:12px 8px}
-      .brand h1{font-size:26px}
     }
   </style>
 </head>
@@ -245,22 +220,10 @@
 
       <div id="internalView" class="hidden">
         <div class="grid grid-4">
-          <div class="kpi">
-            <div class="kpi-title">Clientes</div>
-            <div class="kpi-value" id="clientesCount">0</div>
-          </div>
-          <div class="kpi">
-            <div class="kpi-title">Processos</div>
-            <div class="kpi-value" id="processosCount">0</div>
-          </div>
-          <div class="kpi">
-            <div class="kpi-title">Pendências</div>
-            <div class="kpi-value" id="pendenciasCount">0</div>
-          </div>
-          <div class="kpi">
-            <div class="kpi-title">Pedidos de cotação</div>
-            <div class="kpi-value" id="cotacoesCount">0</div>
-          </div>
+          <div class="kpi"><div class="kpi-title">Clientes</div><div class="kpi-value" id="clientesCount">0</div></div>
+          <div class="kpi"><div class="kpi-title">Processos</div><div class="kpi-value" id="processosCount">0</div></div>
+          <div class="kpi"><div class="kpi-title">Pendências</div><div class="kpi-value" id="pendenciasCount">0</div></div>
+          <div class="kpi"><div class="kpi-title">Pedidos de cotação</div><div class="kpi-value" id="cotacoesCount">0</div></div>
         </div>
 
         <div class="tabs">
@@ -308,14 +271,8 @@
 
       <div id="clientView" class="hidden">
         <div class="card">
-          <div class="hero">
-            <div>
-              <h2 class="section-title" style="margin-bottom:10px;">Portal do Cliente</h2>
-              <div class="hero-note">
-                Consulte o estado do seu processo pela factura e envie um pedido de cotação sem precisar ligar.
-              </div>
-            </div>
-          </div>
+          <h2 class="section-title" style="margin-bottom:10px;">Portal do Cliente</h2>
+          <div class="small">Consulte o estado do seu processo pela factura e envie um pedido de cotação sem precisar ligar.</div>
         </div>
 
         <div class="tabs">
@@ -338,13 +295,9 @@
           </div>
 
           <div id="processoCard" class="card hidden">
-            <div class="status-line" style="margin-bottom:18px;">
-              <div>
-                <h2 id="pcTitulo" style="margin:0 0 6px;"></h2>
-                <div id="pcSub" class="small"></div>
-              </div>
-              <div id="pcEstado"></div>
-            </div>
+            <h2 id="pcTitulo" style="margin:0 0 6px;"></h2>
+            <div id="pcSub" class="small" style="margin-bottom:12px;"></div>
+            <div id="pcEstado" style="margin-bottom:16px;"></div>
 
             <div class="grid grid-3">
               <div><strong>Regime</strong><div id="pcRegime"></div></div>
@@ -451,10 +404,16 @@
     const SUPABASE_KEY = "sb_publishable_uOowmqEhVdq8h0uzagYPEA_DXXpGOgA";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    function withTimeout(promise, ms = 8000) {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout ao carregar dados.")), ms))
+      ]);
+    }
+
     function badgeEstado(estado) {
       const e = (estado || "").toLowerCase();
       if (e.includes("liberado")) return `<span class="badge green">${estado}</span>`;
-      if (e.includes("inspec")) return `<span class="badge blue">${estado}</span>`;
       return `<span class="badge amber">${estado || "Sem estado"}</span>`;
     }
 
@@ -486,24 +445,29 @@
       loginMsg.textContent = "A entrar...";
       loginMsg.className = "small";
 
-      const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email,
-        password
-      });
+      try {
+        const { data, error } = await withTimeout(
+          supabaseClient.auth.signInWithPassword({ email, password }),
+          8000
+        );
 
-      if (error) {
-        loginMsg.textContent = error.message;
+        if (error) {
+          loginMsg.textContent = error.message;
+          loginMsg.className = "message-err";
+          return;
+        }
+
+        if (!data.user) {
+          loginMsg.textContent = "Login não concluído.";
+          loginMsg.className = "message-err";
+          return;
+        }
+
+        await loadApp(data.user);
+      } catch (e) {
+        loginMsg.textContent = e.message;
         loginMsg.className = "message-err";
-        return;
       }
-
-      if (!data.user) {
-        loginMsg.textContent = "Login não concluído.";
-        loginMsg.className = "message-err";
-        return;
-      }
-
-      await loadApp(data.user);
     }
 
     async function logout() {
@@ -511,46 +475,29 @@
       location.reload();
     }
 
-    async function loadApp(userFromLogin = null) {
+    async function loadApp(user) {
+      const email = (user.email || "").toLowerCase();
+
+      document.getElementById("loginView").classList.add("hidden");
+      document.getElementById("appView").classList.remove("hidden");
+
+      if (email === "ef.edmilsonfumo@gmail.com") {
+        document.getElementById("welcome").textContent = "Edmilson Fumo • admin";
+        document.getElementById("internalView").classList.remove("hidden");
+        document.getElementById("clientView").classList.add("hidden");
+        setTimeout(loadInternal, 100);
+        return;
+      }
+
+      document.getElementById("welcome").textContent = "Cliente • portal";
+      document.getElementById("clientView").classList.remove("hidden");
+      document.getElementById("internalView").classList.add("hidden");
+
       try {
-        let user = userFromLogin;
-
-        if (!user) {
-          const { data: userData, error: userError } = await supabaseClient.auth.getUser();
-          if (userError) {
-            document.getElementById("loginMsg").textContent = "Erro ao obter utilizador: " + userError.message;
-            return;
-          }
-          user = userData.user;
-        }
-
-        if (!user) {
-          document.getElementById("loginMsg").textContent = "Utilizador não encontrado após login.";
-          return;
-        }
-
-        const email = (user.email || "").toLowerCase();
-
-        document.getElementById("loginView").classList.add("hidden");
-        document.getElementById("appView").classList.remove("hidden");
-
-        if (email === "ef.edmilsonfumo@gmail.com") {
-          document.getElementById("welcome").textContent = "Edmilson Fumo • admin";
-          document.getElementById("internalView").classList.remove("hidden");
-          document.getElementById("clientView").classList.add("hidden");
-          await loadInternal();
-          return;
-        }
-
-        document.getElementById("welcome").textContent = "Cliente Teste LDA • cliente";
-        document.getElementById("clientView").classList.remove("hidden");
-        document.getElementById("internalView").classList.add("hidden");
-
-        const { data: cliente } = await supabaseClient
-          .from("clientes")
-          .select("*")
-          .eq("email", user.email)
-          .maybeSingle();
+        const { data: cliente } = await withTimeout(
+          supabaseClient.from("clientes").select("*").eq("email", user.email).maybeSingle(),
+          8000
+        );
 
         if (cliente) {
           document.getElementById("cot_nome").value = cliente.nome || "";
@@ -561,85 +508,91 @@
           document.getElementById("cot_email").value = user.email || "";
         }
       } catch (e) {
-        document.getElementById("loginMsg").textContent = "Erro geral: " + e.message;
+        document.getElementById("welcome").textContent = "Cliente • portal";
       }
     }
 
     async function loadInternal() {
-      const { data: clientes } = await supabaseClient.from("clientes").select("*");
-      const { data: processos } = await supabaseClient.from("processos").select("*");
-      const { data: cotacoes } = await supabaseClient
-        .from("pedidos_cotacao")
-        .select("*")
-        .order("created_at", { ascending: false });
+      try {
+        const [{ data: clientes }, { data: processos }, { data: cotacoes }] = await Promise.all([
+          withTimeout(supabaseClient.from("clientes").select("*"), 8000),
+          withTimeout(supabaseClient.from("processos").select("*"), 8000),
+          withTimeout(
+            supabaseClient.from("pedidos_cotacao").select("*").order("created_at", { ascending: false }),
+            8000
+          )
+        ]);
 
-      document.getElementById("clientesCount").textContent = clientes ? clientes.length : 0;
-      document.getElementById("processosCount").textContent = processos ? processos.length : 0;
-      document.getElementById("pendenciasCount").textContent =
-        processos ? processos.filter(p => p.documentos_em_falta && p.documentos_em_falta.trim() !== "").length : 0;
-      document.getElementById("cotacoesCount").textContent = cotacoes ? cotacoes.length : 0;
+        document.getElementById("clientesCount").textContent = clientes ? clientes.length : 0;
+        document.getElementById("processosCount").textContent = processos ? processos.length : 0;
+        document.getElementById("pendenciasCount").textContent =
+          processos ? processos.filter(p => p.documentos_em_falta && p.documentos_em_falta.trim() !== "").length : 0;
+        document.getElementById("cotacoesCount").textContent = cotacoes ? cotacoes.length : 0;
 
-      const tbody = document.getElementById("processosTable");
-      tbody.innerHTML = "";
+        const tbody = document.getElementById("processosTable");
+        tbody.innerHTML = "";
+        (processos || []).forEach(p => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${p.numero_processo || ""}</td>
+            <td>${p.numero_factura || ""}</td>
+            <td>${p.importador_exportador || ""}</td>
+            <td>${p.regime || ""}</td>
+            <td>${badgeEstado(p.estado || "")}</td>
+          `;
+          tbody.appendChild(tr);
+        });
 
-      (processos || []).forEach(p => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${p.numero_processo || ""}</td>
-          <td>${p.numero_factura || ""}</td>
-          <td>${p.importador_exportador || ""}</td>
-          <td>${p.regime || ""}</td>
-          <td>${badgeEstado(p.estado || "")}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      const ctbody = document.getElementById("cotacoesTable");
-      ctbody.innerHTML = "";
-
-      (cotacoes || []).forEach(c => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${c.nome_cliente || ""}</td>
-          <td>${c.tipo_operacao || ""}</td>
-          <td>${c.numero_factura || ""}</td>
-          <td>${c.origem || ""}</td>
-          <td>${c.destino || ""}</td>
-          <td>${badgeEstado(c.estado || "recebido")}</td>
-        `;
-        ctbody.appendChild(tr);
-      });
+        const ctbody = document.getElementById("cotacoesTable");
+        ctbody.innerHTML = "";
+        (cotacoes || []).forEach(c => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${c.nome_cliente || ""}</td>
+            <td>${c.tipo_operacao || ""}</td>
+            <td>${c.numero_factura || ""}</td>
+            <td>${c.origem || ""}</td>
+            <td>${c.destino || ""}</td>
+            <td>${badgeEstado(c.estado || "recebido")}</td>
+          `;
+          ctbody.appendChild(tr);
+        });
+      } catch (e) {
+        document.getElementById("welcome").textContent = "Edmilson Fumo • admin • " + e.message;
+      }
     }
 
     async function buscarFactura() {
       const termo = document.getElementById("facturaSearch").value.trim();
       if (!termo) return;
 
-      const { data: processos } = await supabaseClient
-        .from("processos")
-        .select("*")
-        .ilike("numero_factura", `%${termo}%`)
-        .limit(1);
+      try {
+        const { data: processos } = await withTimeout(
+          supabaseClient.from("processos").select("*").ilike("numero_factura", `%${termo}%`).limit(1),
+          8000
+        );
 
-      const p = processos && processos.length ? processos[0] : null;
+        const p = processos && processos.length ? processos[0] : null;
+        if (!p) {
+          alert("Processo não encontrado.");
+          return;
+        }
 
-      if (!p) {
-        alert("Processo não encontrado.");
-        return;
+        document.getElementById("processoCard").classList.remove("hidden");
+        document.getElementById("pcTitulo").textContent = "Factura " + (p.numero_factura || "");
+        document.getElementById("pcSub").textContent = (p.numero_processo || "") + " • " + (p.importador_exportador || "");
+        document.getElementById("pcEstado").innerHTML = badgeEstado(p.estado || "");
+        document.getElementById("pcRegime").textContent = p.regime || "";
+        document.getElementById("pcOrigem").textContent = p.pais_origem || "";
+        document.getElementById("pcDestino").textContent = p.pais_destino || "";
+        document.getElementById("pcPorto").textContent = p.porto_fronteira || "";
+        document.getElementById("pcBl").textContent = p.bl_awb_manifesto || "";
+        document.getElementById("pcPrazo").textContent = p.prazo || "";
+        document.getElementById("pcDocs").textContent = p.documentos_em_falta || "Sem pendências";
+        document.getElementById("pcHistorico").innerHTML = "• " + (p.historico || "Sem histórico");
+      } catch (e) {
+        alert(e.message);
       }
-
-      document.getElementById("processoCard").classList.remove("hidden");
-      document.getElementById("pcTitulo").textContent = "Factura " + (p.numero_factura || "");
-      document.getElementById("pcSub").textContent = (p.numero_processo || "") + " • " + (p.importador_exportador || "");
-      document.getElementById("pcEstado").innerHTML = badgeEstado(p.estado || "");
-      document.getElementById("pcRegime").textContent = p.regime || "";
-      document.getElementById("pcOrigem").textContent = p.pais_origem || "";
-      document.getElementById("pcDestino").textContent = p.pais_destino || "";
-      document.getElementById("pcPorto").textContent = p.porto_fronteira || "";
-      document.getElementById("pcBl").textContent = p.bl_awb_manifesto || "";
-      document.getElementById("pcPrazo").textContent = p.prazo || "";
-      document.getElementById("pcDocs").textContent = p.documentos_em_falta || "Sem pendências";
-      document.getElementById("pcHistorico").innerHTML = "• " + (p.historico || "Sem histórico");
     }
 
     async function submeterCotacao() {
@@ -662,44 +615,52 @@
         return;
       }
 
-      const { error } = await supabaseClient
-        .from("pedidos_cotacao")
-        .insert({
-          nome_cliente,
-          nuit,
-          contacto,
-          email,
-          tipo_operacao,
-          origem,
-          destino,
-          descricao_mercadoria,
-          numero_factura,
-          observacoes,
-          estado: "recebido"
-        });
+      try {
+        const { error } = await withTimeout(
+          supabaseClient.from("pedidos_cotacao").insert({
+            nome_cliente,
+            nuit,
+            contacto,
+            email,
+            tipo_operacao,
+            origem,
+            destino,
+            descricao_mercadoria,
+            numero_factura,
+            observacoes,
+            estado: "recebido"
+          }),
+          8000
+        );
 
-      if (error) {
-        msg.textContent = error.message;
+        if (error) {
+          msg.textContent = error.message;
+          msg.className = "message-err";
+          return;
+        }
+
+        msg.textContent = "Pedido enviado com sucesso.";
+        msg.className = "message-ok";
+
+        document.getElementById("cot_tipo").value = "";
+        document.getElementById("cot_origem").value = "";
+        document.getElementById("cot_destino").value = "";
+        document.getElementById("cot_mercadoria").value = "";
+        document.getElementById("cot_factura").value = "";
+        document.getElementById("cot_obs").value = "";
+      } catch (e) {
+        msg.textContent = e.message;
         msg.className = "message-err";
-        return;
       }
-
-      msg.textContent = "Pedido enviado com sucesso.";
-      msg.className = "message-ok";
-
-      document.getElementById("cot_tipo").value = "";
-      document.getElementById("cot_origem").value = "";
-      document.getElementById("cot_destino").value = "";
-      document.getElementById("cot_mercadoria").value = "";
-      document.getElementById("cot_factura").value = "";
-      document.getElementById("cot_obs").value = "";
     }
 
     window.addEventListener("load", async () => {
-      const { data } = await supabaseClient.auth.getSession();
-      if (data.session?.user) {
-        await loadApp(data.session.user);
-      }
+      try {
+        const { data } = await withTimeout(supabaseClient.auth.getSession(), 8000);
+        if (data.session?.user) {
+          await loadApp(data.session.user);
+        }
+      } catch (_) {}
     });
   </script>
 </body>
