@@ -1,116 +1,564 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EF Cargo Clear</title>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <style>
-    body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8;color:#111}
-    .wrap{max-width:1100px;margin:auto;padding:20px}
-    .card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:16px}
-    .grid{display:grid;gap:16px}
-    .g2{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
-    input,button{width:100%;padding:12px;border-radius:12px;border:1px solid #d0d7de;box-sizing:border-box}
-    button{background:#111;color:#fff;border:none;cursor:pointer}
-    button.outline{background:#fff;color:#111;border:1px solid #111}
-    .row{display:flex;gap:12px;flex-wrap:wrap}
-    .row > *{flex:1}
-    .small{font-size:12px;color:#666}
-    .badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px}
-    .amber{background:#fff3cd;color:#8a6d3b}
-    .green{background:#d1fae5;color:#065f46}
-    .blue{background:#dbeafe;color:#1d4ed8}
-    table{width:100%;border-collapse:collapse}
-    th,td{padding:12px;border-bottom:1px solid #eee;text-align:left}
+    :root{
+      --bg:#f4f7fb;
+      --card:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --primary:#111827;
+      --soft:#f8fafc;
+      --success-bg:#dcfce7;
+      --success-text:#166534;
+      --warn-bg:#fef3c7;
+      --warn-text:#92400e;
+      --info-bg:#dbeafe;
+      --info-text:#1d4ed8;
+      --shadow:0 10px 30px rgba(0,0,0,.06);
+      --radius:20px;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial,sans-serif;
+      background:linear-gradient(180deg,#f7f9fc 0%, #eef3f8 100%);
+      color:var(--text);
+    }
+
+    .wrap{
+      max-width:1250px;
+      margin:0 auto;
+      padding:22px;
+    }
+
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:22px;
+      margin-bottom:18px;
+      border:1px solid rgba(229,231,235,.8);
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+
+    .brand h1{
+      margin:0;
+      font-size:30px;
+      line-height:1.1;
+    }
+
+    .brand p{
+      margin:10px 0 0;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .btn{
+      border:none;
+      background:var(--primary);
+      color:#fff;
+      padding:14px 18px;
+      border-radius:16px;
+      cursor:pointer;
+      font-size:15px;
+      min-height:48px;
+    }
+
+    .btn-outline{
+      background:#fff;
+      color:var(--text);
+      border:1px solid #cfd6df;
+    }
+
+    .btn:hover{opacity:.96}
+
+    .grid{
+      display:grid;
+      gap:18px;
+    }
+
+    .grid-4{
+      grid-template-columns:repeat(4,1fr);
+    }
+
+    .grid-2{
+      grid-template-columns:repeat(2,1fr);
+    }
+
+    .grid-3{
+      grid-template-columns:repeat(3,1fr);
+    }
+
+    .kpi{
+      padding:20px;
+      border-radius:20px;
+      background:var(--card);
+      box-shadow:var(--shadow);
+      border:1px solid rgba(229,231,235,.8);
+    }
+
+    .kpi-title{
+      color:var(--muted);
+      font-size:14px;
+      margin-bottom:10px;
+    }
+
+    .kpi-value{
+      font-size:34px;
+      font-weight:700;
+    }
+
+    .section-title{
+      font-size:18px;
+      font-weight:700;
+      margin:0 0 18px;
+    }
+
+    .tabs{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+
+    .tab-btn{
+      background:#fff;
+      border:1px solid var(--line);
+      color:var(--text);
+      padding:12px 16px;
+      border-radius:14px;
+      cursor:pointer;
+      font-size:14px;
+    }
+
+    .tab-btn.active{
+      background:var(--primary);
+      color:#fff;
+      border-color:var(--primary);
+    }
+
+    .tab-content.hidden{display:none}
+
+    .row{
+      display:flex;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+
+    .row > *{
+      flex:1;
+      min-width:220px;
+    }
+
+    label{
+      display:block;
+      font-size:13px;
+      color:var(--muted);
+      margin:0 0 8px;
+      font-weight:600;
+    }
+
+    input, select, textarea{
+      width:100%;
+      border:1px solid #d7dee8;
+      background:#fff;
+      border-radius:14px;
+      padding:14px 15px;
+      font-size:15px;
+      outline:none;
+    }
+
+    textarea{
+      min-height:110px;
+      resize:vertical;
+    }
+
+    .small{
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:13px;
+      white-space:nowrap;
+    }
+
+    .amber{background:var(--warn-bg); color:var(--warn-text)}
+    .green{background:var(--success-bg); color:var(--success-text)}
+    .blue{background:var(--info-bg); color:var(--info-text)}
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+    }
+
+    th,td{
+      text-align:left;
+      padding:15px 12px;
+      border-bottom:1px solid var(--line);
+      font-size:15px;
+      vertical-align:top;
+    }
+
+    th{
+      color:#374151;
+      font-size:14px;
+    }
+
     .hidden{display:none}
-    h1,h2,h3{margin-top:0}
+
+    .hero{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:20px;
+      flex-wrap:wrap;
+    }
+
+    .hero-note{
+      color:var(--muted);
+      font-size:14px;
+      max-width:700px;
+      line-height:1.5;
+    }
+
+    .muted-box{
+      background:var(--soft);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:16px;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .status-line{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .login-shell{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+
+    .login-card{
+      width:100%;
+      max-width:560px;
+      background:#fff;
+      border-radius:26px;
+      box-shadow:var(--shadow);
+      padding:28px;
+      border:1px solid rgba(229,231,235,.8);
+    }
+
+    .login-title{
+      margin:0 0 8px;
+      font-size:38px;
+      line-height:1;
+    }
+
+    .login-sub{
+      margin:0 0 24px;
+      color:var(--muted);
+      font-size:15px;
+    }
+
+    .pill{
+      display:inline-block;
+      padding:7px 11px;
+      font-size:12px;
+      border-radius:999px;
+      background:#eef2ff;
+      color:#3730a3;
+      margin-bottom:16px;
+    }
+
+    .message-ok{
+      color:#166534;
+      font-size:14px;
+    }
+
+    .message-err{
+      color:#b91c1c;
+      font-size:14px;
+    }
+
+    @media (max-width: 980px){
+      .grid-4{grid-template-columns:repeat(2,1fr)}
+      .grid-3{grid-template-columns:1fr}
+      .grid-2{grid-template-columns:1fr}
+    }
+
+    @media (max-width: 640px){
+      .wrap{padding:14px}
+      .card,.kpi{padding:18px}
+      .login-card{padding:22px}
+      .login-title{font-size:32px}
+      .grid-4{grid-template-columns:1fr}
+      th,td{font-size:13px;padding:12px 8px}
+      .brand h1{font-size:26px}
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div id="loginView" class="card">
-      <h1>EF Cargo Clear</h1>
-      <p class="small">Login interno e portal do cliente</p>
-      <div class="grid">
-        <input id="email" placeholder="Email" />
-        <input id="password" type="password" placeholder="Password" />
-        <button onclick="login()">Entrar</button>
-      </div>
-      <p id="loginMsg" class="small"></p>
-    </div>
 
-    <div id="appView" class="hidden">
+  <div id="loginView" class="login-shell">
+    <div class="login-card">
+      <div class="pill">EF Cargo Clear</div>
+      <h1 class="login-title">Entrar no sistema</h1>
+      <p class="login-sub">Painel interno e portal do cliente para acompanhamento de despachos e pedidos de cotação.</p>
+
+      <div class="grid">
+        <div>
+          <label>Email</label>
+          <input id="email" placeholder="Digite o email" />
+        </div>
+        <div>
+          <label>Password</label>
+          <input id="password" type="password" placeholder="Digite a password" />
+        </div>
+        <button class="btn" onclick="login()">Entrar</button>
+      </div>
+
+      <p id="loginMsg" class="small" style="margin-top:14px;"></p>
+    </div>
+  </div>
+
+  <div id="appView" class="hidden">
+    <div class="wrap">
       <div class="card">
-        <div class="row">
-          <div>
+        <div class="topbar">
+          <div class="brand">
             <h1>EF Cargo Clear</h1>
-            <p class="small" id="welcome"></p>
+            <p id="welcome">A carregar...</p>
           </div>
-          <div style="max-width:220px">
-            <button class="outline" onclick="logout()">Sair</button>
-          </div>
+          <button class="btn btn-outline" style="min-width:180px" onclick="logout()">Sair</button>
         </div>
       </div>
 
       <div id="internalView" class="hidden">
-        <div class="grid g2">
-          <div class="card"><h3>Clientes</h3><div id="clientesCount">0</div></div>
-          <div class="card"><h3>Processos</h3><div id="processosCount">0</div></div>
-          <div class="card"><h3>Pendências</h3><div id="pendenciasCount">0</div></div>
-          <div class="card"><h3>Estado</h3><div>Interno</div></div>
+        <div class="grid grid-4">
+          <div class="kpi">
+            <div class="kpi-title">Clientes</div>
+            <div class="kpi-value" id="clientesCount">0</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-title">Processos</div>
+            <div class="kpi-value" id="processosCount">0</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-title">Pendências</div>
+            <div class="kpi-value" id="pendenciasCount">0</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-title">Pedidos de cotação</div>
+            <div class="kpi-value" id="cotacoesCount">0</div>
+          </div>
         </div>
 
-        <div class="card">
-          <h2>Processos</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Processo</th>
-                <th>Factura</th>
-                <th>Cliente</th>
-                <th>Regime</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody id="processosTable"></tbody>
-          </table>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="showInternalTab('processos', this)">Processos</button>
+          <button class="tab-btn" onclick="showInternalTab('cotacoes', this)">Pedidos de cotação</button>
+        </div>
+
+        <div id="internal-processos" class="tab-content">
+          <div class="card">
+            <h2 class="section-title">Processos</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>Processo</th>
+                  <th>Factura</th>
+                  <th>Cliente</th>
+                  <th>Regime</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="processosTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="internal-cotacoes" class="tab-content hidden">
+          <div class="card">
+            <h2 class="section-title">Pedidos de cotação recebidos</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Tipo</th>
+                  <th>Factura</th>
+                  <th>Origem</th>
+                  <th>Destino</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="cotacoesTable"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       <div id="clientView" class="hidden">
         <div class="card">
-          <h2>Portal do Cliente</h2>
-          <div class="row">
-            <input id="facturaSearch" placeholder="Pesquisar por factura, ex: 0101" />
-            <button onclick="buscarFactura()">Pesquisar</button>
+          <div class="hero">
+            <div>
+              <h2 class="section-title" style="margin-bottom:10px;">Portal do Cliente</h2>
+              <div class="hero-note">
+                Consulte o estado do seu processo pela factura e envie um pedido de cotação sem precisar ligar.
+              </div>
+            </div>
           </div>
         </div>
 
-        <div id="processoCard" class="card hidden">
-          <div class="row">
-            <div>
-              <h3 id="pcTitulo"></h3>
-              <p class="small" id="pcSub"></p>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="showClientTab('consulta', this)">Consultar processo</button>
+          <button class="tab-btn" onclick="showClientTab('cotacao', this)">Solicitar cotação</button>
+        </div>
+
+        <div id="client-consulta" class="tab-content">
+          <div class="card">
+            <h2 class="section-title">Consultar por número da factura</h2>
+            <div class="row">
+              <div>
+                <label>Número da factura</label>
+                <input id="facturaSearch" placeholder="Ex: 0101" />
+              </div>
+              <div style="max-width:240px;align-self:end;">
+                <button class="btn" onclick="buscarFactura()">Pesquisar</button>
+              </div>
             </div>
-            <div style="max-width:180px">
+          </div>
+
+          <div id="processoCard" class="card hidden">
+            <div class="status-line" style="margin-bottom:18px;">
+              <div>
+                <h2 id="pcTitulo" style="margin:0 0 6px;"></h2>
+                <div id="pcSub" class="small"></div>
+              </div>
               <div id="pcEstado"></div>
             </div>
-          </div>
 
-          <div class="grid g2">
-            <div><strong>Regime</strong><div id="pcRegime"></div></div>
-            <div><strong>Origem</strong><div id="pcOrigem"></div></div>
-            <div><strong>Destino</strong><div id="pcDestino"></div></div>
-            <div><strong>Porto / Fronteira</strong><div id="pcPorto"></div></div>
-            <div><strong>BL / AWB</strong><div id="pcBl"></div></div>
-            <div><strong>Prazo</strong><div id="pcPrazo"></div></div>
-            <div><strong>Docs em falta</strong><div id="pcDocs"></div></div>
-          </div>
+            <div class="grid grid-3">
+              <div><strong>Regime</strong><div id="pcRegime"></div></div>
+              <div><strong>Origem</strong><div id="pcOrigem"></div></div>
+              <div><strong>Destino</strong><div id="pcDestino"></div></div>
+              <div><strong>Porto / Fronteira</strong><div id="pcPorto"></div></div>
+              <div><strong>BL / AWB</strong><div id="pcBl"></div></div>
+              <div><strong>Prazo</strong><div id="pcPrazo"></div></div>
+              <div><strong>Docs em falta</strong><div id="pcDocs"></div></div>
+            </div>
 
-          <hr style="margin:20px 0;border:none;border-top:1px solid #eee" />
-          <strong>Histórico</strong>
-          <div id="pcHistorico" class="small" style="margin-top:10px"></div>
+            <hr style="margin:20px 0;border:none;border-top:1px solid #eee" />
+            <strong>Histórico</strong>
+            <div id="pcHistorico" class="small" style="margin-top:10px"></div>
+          </div>
+        </div>
+
+        <div id="client-cotacao" class="tab-content hidden">
+          <div class="card">
+            <h2 class="section-title">Solicitar cotação</h2>
+            <div class="muted-box" style="margin-bottom:18px;">
+              Preencha os dados abaixo para a equipa receber o pedido e responder com uma cotação.
+            </div>
+
+            <div class="grid">
+              <div class="row">
+                <div>
+                  <label>Nome do cliente</label>
+                  <input id="cot_nome" placeholder="Nome da empresa" />
+                </div>
+                <div>
+                  <label>NUIT</label>
+                  <input id="cot_nuit" placeholder="NUIT" />
+                </div>
+              </div>
+
+              <div class="row">
+                <div>
+                  <label>Contacto</label>
+                  <input id="cot_contacto" placeholder="Telefone" />
+                </div>
+                <div>
+                  <label>Email</label>
+                  <input id="cot_email" placeholder="Email" />
+                </div>
+              </div>
+
+              <div class="row">
+                <div>
+                  <label>Tipo de operação</label>
+                  <select id="cot_tipo">
+                    <option value="">Selecione</option>
+                    <option>Importação</option>
+                    <option>Exportação</option>
+                    <option>Importação Temporária</option>
+                    <option>Exportação Temporária</option>
+                    <option>Cabotagem</option>
+                    <option>Re-importação</option>
+                    <option>Re-exportação</option>
+                    <option>Trânsito</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Número da factura</label>
+                  <input id="cot_factura" placeholder="Número da factura" />
+                </div>
+              </div>
+
+              <div class="row">
+                <div>
+                  <label>Origem</label>
+                  <input id="cot_origem" placeholder="País / cidade de origem" />
+                </div>
+                <div>
+                  <label>Destino</label>
+                  <input id="cot_destino" placeholder="País / cidade de destino" />
+                </div>
+              </div>
+
+              <div>
+                <label>Descrição da mercadoria</label>
+                <textarea id="cot_mercadoria" placeholder="Descreva a mercadoria"></textarea>
+              </div>
+
+              <div>
+                <label>Observações</label>
+                <textarea id="cot_obs" placeholder="Informações adicionais"></textarea>
+              </div>
+
+              <div style="max-width:260px;">
+                <button class="btn" onclick="submeterCotacao()">Enviar pedido</button>
+              </div>
+
+              <p id="cotacaoMsg" class="small"></p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -121,6 +569,27 @@
     const SUPABASE_KEY = "sb_publishable_uOowmqEhVdq8h0uzagYPEA_DXXpGOgA";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    function badgeEstado(estado) {
+      const e = (estado || "").toLowerCase();
+      if (e.includes("liberado")) return `<span class="badge green">${estado}</span>`;
+      if (e.includes("inspec")) return `<span class="badge blue">${estado}</span>`;
+      return `<span class="badge amber">${estado || "Sem estado"}</span>`;
+    }
+
+    function showInternalTab(tab, btn) {
+      document.querySelectorAll("#internalView .tab-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("internal-processos").classList.toggle("hidden", tab !== "processos");
+      document.getElementById("internal-cotacoes").classList.toggle("hidden", tab !== "cotacoes");
+    }
+
+    function showClientTab(tab, btn) {
+      document.querySelectorAll("#clientView .tab-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("client-consulta").classList.toggle("hidden", tab !== "consulta");
+      document.getElementById("client-cotacao").classList.toggle("hidden", tab !== "cotacao");
+    }
+
     async function login() {
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value.trim();
@@ -128,10 +597,12 @@
 
       if (!email || !password) {
         loginMsg.textContent = "Preencha email e password.";
+        loginMsg.className = "message-err";
         return;
       }
 
       loginMsg.textContent = "A entrar...";
+      loginMsg.className = "small";
 
       const { data, error } = await supabaseClient.auth.signInWithPassword({
         email,
@@ -140,11 +611,13 @@
 
       if (error) {
         loginMsg.textContent = error.message;
+        loginMsg.className = "message-err";
         return;
       }
 
       if (!data.user) {
         loginMsg.textContent = "Login não concluído.";
+        loginMsg.className = "message-err";
         return;
       }
 
@@ -157,13 +630,6 @@
       location.reload();
     }
 
-    function estadoBadge(estado) {
-      const e = (estado || "").toLowerCase();
-      if (e.includes("liberado")) return '<span class="badge green">' + estado + '</span>';
-      if (e.includes("inspec")) return '<span class="badge blue">' + estado + '</span>';
-      return '<span class="badge amber">' + estado + '</span>';
-    }
-
     async function loadApp() {
       const { data: userData } = await supabaseClient.auth.getUser();
       const user = userData.user;
@@ -172,13 +638,13 @@
       document.getElementById("loginView").classList.add("hidden");
       document.getElementById("appView").classList.remove("hidden");
 
-      const { data: profile, error: profileError } = await supabaseClient
+      const { data: profile } = await supabaseClient
         .from("users_profile")
         .select("*")
         .eq("id", user.id)
         .single();
 
-      if (profileError || !profile) {
+      if (!profile) {
         document.getElementById("welcome").textContent = user.email;
         return;
       }
@@ -192,17 +658,32 @@
       } else {
         document.getElementById("clientView").classList.remove("hidden");
         document.getElementById("internalView").classList.add("hidden");
+
+        const { data: cliente } = await supabaseClient
+          .from("clientes")
+          .select("*")
+          .eq("id", profile.cliente_id)
+          .single();
+
+        if (cliente) {
+          document.getElementById("cot_nome").value = cliente.nome || "";
+          document.getElementById("cot_nuit").value = cliente.nuit || "";
+          document.getElementById("cot_contacto").value = cliente.contacto || "";
+          document.getElementById("cot_email").value = cliente.email || "";
+        }
       }
     }
 
     async function loadInternal() {
       const { data: clientes } = await supabaseClient.from("clientes").select("*");
       const { data: processos } = await supabaseClient.from("processos").select("*");
+      const { data: cotacoes } = await supabaseClient.from("pedidos_cotacao").select("*").order("created_at", { ascending: false });
 
       document.getElementById("clientesCount").textContent = clientes ? clientes.length : 0;
       document.getElementById("processosCount").textContent = processos ? processos.length : 0;
       document.getElementById("pendenciasCount").textContent =
         processos ? processos.filter(p => p.documentos_em_falta && p.documentos_em_falta.trim() !== "").length : 0;
+      document.getElementById("cotacoesCount").textContent = cotacoes ? cotacoes.length : 0;
 
       const tbody = document.getElementById("processosTable");
       tbody.innerHTML = "";
@@ -214,9 +695,25 @@
           <td>${p.numero_factura || ""}</td>
           <td>${p.importador_exportador || ""}</td>
           <td>${p.regime || ""}</td>
-          <td>${estadoBadge(p.estado || "")}</td>
+          <td>${badgeEstado(p.estado || "")}</td>
         `;
         tbody.appendChild(tr);
+      });
+
+      const ctbody = document.getElementById("cotacoesTable");
+      ctbody.innerHTML = "";
+
+      (cotacoes || []).forEach(c => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${c.nome_cliente || ""}</td>
+          <td>${c.tipo_operacao || ""}</td>
+          <td>${c.numero_factura || ""}</td>
+          <td>${c.origem || ""}</td>
+          <td>${c.destino || ""}</td>
+          <td>${badgeEstado(c.estado || "recebido")}</td>
+        `;
+        ctbody.appendChild(tr);
       });
     }
 
@@ -254,7 +751,7 @@
       document.getElementById("processoCard").classList.remove("hidden");
       document.getElementById("pcTitulo").textContent = "Factura " + (p.numero_factura || "");
       document.getElementById("pcSub").textContent = (p.numero_processo || "") + " • " + (p.importador_exportador || "");
-      document.getElementById("pcEstado").innerHTML = estadoBadge(p.estado || "");
+      document.getElementById("pcEstado").innerHTML = badgeEstado(p.estado || "");
       document.getElementById("pcRegime").textContent = p.regime || "";
       document.getElementById("pcOrigem").textContent = p.pais_origem || "";
       document.getElementById("pcDestino").textContent = p.pais_destino || "";
@@ -263,6 +760,77 @@
       document.getElementById("pcPrazo").textContent = p.prazo || "";
       document.getElementById("pcDocs").textContent = p.documentos_em_falta || "Sem pendências";
       document.getElementById("pcHistorico").innerHTML = "• " + (p.historico || "Sem histórico");
+    }
+
+    async function submeterCotacao() {
+      const msg = document.getElementById("cotacaoMsg");
+
+      const nome_cliente = document.getElementById("cot_nome").value.trim();
+      const nuit = document.getElementById("cot_nuit").value.trim();
+      const contacto = document.getElementById("cot_contacto").value.trim();
+      const email = document.getElementById("cot_email").value.trim();
+      const tipo_operacao = document.getElementById("cot_tipo").value.trim();
+      const origem = document.getElementById("cot_origem").value.trim();
+      const destino = document.getElementById("cot_destino").value.trim();
+      const descricao_mercadoria = document.getElementById("cot_mercadoria").value.trim();
+      const numero_factura = document.getElementById("cot_factura").value.trim();
+      const observacoes = document.getElementById("cot_obs").value.trim();
+
+      if (!nome_cliente || !tipo_operacao || !origem || !destino || !descricao_mercadoria) {
+        msg.textContent = "Preencha os campos obrigatórios.";
+        msg.className = "message-err";
+        return;
+      }
+
+      const { data: userData } = await supabaseClient.auth.getUser();
+      const user = userData.user;
+
+      let cliente_id = null;
+
+      if (user) {
+        const { data: profile } = await supabaseClient
+          .from("users_profile")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+
+        if (profile?.cliente_id) {
+          cliente_id = profile.cliente_id;
+        }
+      }
+
+      const { error } = await supabaseClient
+        .from("pedidos_cotacao")
+        .insert({
+          cliente_id,
+          nome_cliente,
+          nuit,
+          contacto,
+          email,
+          tipo_operacao,
+          origem,
+          destino,
+          descricao_mercadoria,
+          numero_factura,
+          observacoes,
+          estado: "recebido"
+        });
+
+      if (error) {
+        msg.textContent = error.message;
+        msg.className = "message-err";
+        return;
+      }
+
+      msg.textContent = "Pedido enviado com sucesso.";
+      msg.className = "message-ok";
+
+      document.getElementById("cot_tipo").value = "";
+      document.getElementById("cot_origem").value = "";
+      document.getElementById("cot_destino").value = "";
+      document.getElementById("cot_mercadoria").value = "";
+      document.getElementById("cot_factura").value = "";
+      document.getElementById("cot_obs").value = "";
     }
 
     window.addEventListener("load", async () => {
