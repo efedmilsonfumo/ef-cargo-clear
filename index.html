@@ -20,6 +20,7 @@
       --warn-text:#92400e;
       --info-bg:#dbeafe;
       --info-text:#1d4ed8;
+      --danger:#b91c1c;
       --shadow:0 10px 30px rgba(0,0,0,.06);
       --radius:20px;
     }
@@ -304,7 +305,7 @@
     }
 
     .message-err{
-      color:#b91c1c;
+      color:var(--danger);
       font-size:14px;
     }
 
@@ -631,53 +632,93 @@
     }
 
     async function loadApp() {
-      const { data: userData } = await supabaseClient.auth.getUser();
-      const user = userData.user;
-      if (!user) return;
+      try {
+        const { data: userData, error: userError } = await supabaseClient.auth.getUser();
 
-      document.getElementById("loginView").classList.add("hidden");
-      document.getElementById("appView").classList.remove("hidden");
+        if (userError) {
+          document.getElementById("loginMsg").textContent = "Erro ao obter utilizador: " + userError.message;
+          document.getElementById("loginView").classList.remove("hidden");
+          document.getElementById("appView").classList.add("hidden");
+          return;
+        }
 
-      const { data: profile } = await supabaseClient
-        .from("users_profile")
-        .select("*")
-        .eq("id", user.id)
-        .single();
+        const user = userData.user;
+        if (!user) {
+          document.getElementById("loginMsg").textContent = "Utilizador não encontrado após login.";
+          document.getElementById("loginView").classList.remove("hidden");
+          document.getElementById("appView").classList.add("hidden");
+          return;
+        }
 
-      if (!profile) {
-        document.getElementById("welcome").textContent = user.email;
-        return;
-      }
+        document.getElementById("loginView").classList.add("hidden");
+        document.getElementById("appView").classList.remove("hidden");
 
-      document.getElementById("welcome").textContent = `${profile.nome} • ${profile.role}`;
-
-      if (profile.role === "admin" || profile.role === "operador") {
-        document.getElementById("internalView").classList.remove("hidden");
-        document.getElementById("clientView").classList.add("hidden");
-        await loadInternal();
-      } else {
-        document.getElementById("clientView").classList.remove("hidden");
-        document.getElementById("internalView").classList.add("hidden");
-
-        const { data: cliente } = await supabaseClient
-          .from("clientes")
+        const { data: profile, error: profileError } = await supabaseClient
+          .from("users_profile")
           .select("*")
-          .eq("id", profile.cliente_id)
+          .eq("id", user.id)
           .single();
 
-        if (cliente) {
-          document.getElementById("cot_nome").value = cliente.nome || "";
-          document.getElementById("cot_nuit").value = cliente.nuit || "";
-          document.getElementById("cot_contacto").value = cliente.contacto || "";
-          document.getElementById("cot_email").value = cliente.email || "";
+        if (profileError) {
+          document.getElementById("welcome").textContent = "Erro ao carregar perfil: " + profileError.message;
+          return;
         }
+
+        if (!profile) {
+          document.getElementById("welcome").textContent = "Perfil não encontrado para: " + user.email;
+          return;
+        }
+
+        document.getElementById("welcome").textContent = `${profile.nome} • ${profile.role}`;
+
+        if (profile.role === "admin" || profile.role === "operador") {
+          document.getElementById("internalView").classList.remove("hidden");
+          document.getElementById("clientView").classList.add("hidden");
+          await loadInternal();
+        } else {
+          document.getElementById("clientView").classList.remove("hidden");
+          document.getElementById("internalView").classList.add("hidden");
+
+          const { data: cliente, error: clienteError } = await supabaseClient
+            .from("clientes")
+            .select("*")
+            .eq("id", profile.cliente_id)
+            .single();
+
+          if (clienteError) {
+            document.getElementById("welcome").textContent = "Erro ao carregar cliente: " + clienteError.message;
+            return;
+          }
+
+          if (cliente) {
+            document.getElementById("cot_nome").value = cliente.nome || "";
+            document.getElementById("cot_nuit").value = cliente.nuit || "";
+            document.getElementById("cot_contacto").value = cliente.contacto || "";
+            document.getElementById("cot_email").value = cliente.email || "";
+          }
+        }
+      } catch (e) {
+        document.getElementById("loginMsg").textContent = "Erro geral: " + e.message;
       }
     }
 
     async function loadInternal() {
-      const { data: clientes } = await supabaseClient.from("clientes").select("*");
-      const { data: processos } = await supabaseClient.from("processos").select("*");
-      const { data: cotacoes } = await supabaseClient.from("pedidos_cotacao").select("*").order("created_at", { ascending: false });
+      const { data: clientes, error: clientesError } = await supabaseClient.from("clientes").select("*");
+      const { data: processos, error: processosError } = await supabaseClient.from("processos").select("*");
+      const { data: cotacoes, error: cotacoesError } = await supabaseClient.from("pedidos_cotacao").select("*").order("created_at", { ascending: false });
+
+      if (clientesError) {
+        document.getElementById("welcome").textContent = "Erro clientes: " + clientesError.message;
+        return;
+      }
+      if (processosError) {
+        document.getElementById("welcome").textContent = "Erro processos: " + processosError.message;
+        return;
+      }
+      if (cotacoesError) {
+        document.getElementById("welcome").textContent = "Erro cotações: " + cotacoesError.message;
+        return;
+      }
 
       document.getElementById("clientesCount").textContent = clientes ? clientes.length : 0;
       document.getElementById("processosCount").textContent = processos ? processos.length : 0;
