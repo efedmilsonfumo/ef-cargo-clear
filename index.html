@@ -20,8 +20,9 @@
       --warn-bg:#fff3cd;
       --warn-text:#856404;
       --danger:#b91c1c;
-      --shadow:0 10px 30px rgba(0,0,0,.06);
-      --radius:20px;
+      --shadow:0 12px 32px rgba(0,0,0,.07);
+      --shadow-soft:0 6px 18px rgba(0,0,0,.04);
+      --radius:22px;
     }
 
     *{box-sizing:border-box}
@@ -29,12 +30,15 @@
     body{
       margin:0;
       font-family:Arial,sans-serif;
-      background:linear-gradient(180deg,#fafafa 0%, #f1f1f1 100%);
+      background:
+        radial-gradient(circle at top right, rgba(190,0,26,.05), transparent 22%),
+        radial-gradient(circle at bottom left, rgba(190,0,26,.04), transparent 18%),
+        linear-gradient(180deg,#fbfbfb 0%, #f2f2f2 100%);
       color:var(--text);
     }
 
     .wrap{
-      max-width:1200px;
+      max-width:1220px;
       margin:0 auto;
       padding:22px;
     }
@@ -43,9 +47,22 @@
       background:var(--card);
       border-radius:var(--radius);
       box-shadow:var(--shadow);
-      padding:22px;
+      padding:24px;
       margin-bottom:18px;
       border:1px solid rgba(229,231,235,.8);
+    }
+
+    .top-card{
+      overflow:hidden;
+      position:relative;
+    }
+
+    .top-card::before{
+      content:"";
+      position:absolute;
+      inset:0 0 auto 0;
+      height:6px;
+      background:linear-gradient(90deg,var(--primary) 0%, #d91c35 40%, #f0b1b8 100%);
     }
 
     .login-shell{
@@ -62,36 +79,50 @@
 
     .login-card{
       width:100%;
-      max-width:560px;
+      max-width:580px;
       background:#fff;
-      border-radius:26px;
+      border-radius:28px;
       box-shadow:var(--shadow);
-      padding:30px;
+      padding:32px;
       border:1px solid rgba(229,231,235,.8);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .login-card::before{
+      content:"";
+      position:absolute;
+      inset:0 0 auto 0;
+      height:7px;
+      background:linear-gradient(90deg,var(--primary) 0%, #d51b33 45%, #f4c1c8 100%);
     }
 
     .pill{
       display:inline-block;
-      padding:8px 12px;
+      padding:8px 13px;
       font-size:12px;
       border-radius:999px;
       background:rgba(190,0,26,.08);
       color:var(--primary);
-      margin-bottom:16px;
+      margin-bottom:18px;
       font-weight:700;
+      letter-spacing:.02em;
     }
 
     .login-title{
-      margin:0 0 8px;
+      margin:0 0 10px;
       font-size:40px;
       line-height:1;
       color:var(--primary);
+      letter-spacing:-0.03em;
     }
 
     .login-sub{
       margin:0 0 24px;
       color:var(--muted);
       font-size:15px;
+      line-height:1.5;
+      max-width:460px;
     }
 
     .grid{
@@ -123,7 +154,7 @@
       font-size:13px;
       color:var(--muted);
       margin:0 0 8px;
-      font-weight:600;
+      font-weight:700;
     }
 
     input, select, textarea{
@@ -134,7 +165,7 @@
       padding:14px 15px;
       font-size:15px;
       outline:none;
-      transition:border-color .2s, box-shadow .2s;
+      transition:border-color .2s, box-shadow .2s, transform .1s;
     }
 
     input:focus, select:focus, textarea:focus{
@@ -149,18 +180,21 @@
 
     .btn{
       border:none;
-      background:var(--primary);
+      background:linear-gradient(180deg,var(--primary) 0%, var(--primary-dark) 100%);
       color:#fff;
       padding:14px 18px;
       border-radius:16px;
       cursor:pointer;
       font-size:15px;
-      min-height:48px;
-      transition:background .2s ease, transform .1s ease;
+      min-height:50px;
+      transition:background .2s ease, transform .1s ease, box-shadow .2s ease;
+      box-shadow:0 8px 18px rgba(190,0,26,.18);
+      font-weight:700;
     }
 
     .btn:hover{
-      background:var(--primary-dark);
+      background:linear-gradient(180deg,#c6001b 0%, #930015 100%);
+      box-shadow:0 10px 20px rgba(190,0,26,.22);
     }
 
     .btn:active{
@@ -170,51 +204,91 @@
     .btn-outline{
       background:#fff;
       color:var(--text);
-      border:1px solid #cfd6df;
+      border:1px solid #d6d6d6;
+      box-shadow:none;
     }
 
     .btn-outline:hover{
       background:#fafafa;
       color:var(--primary);
       border-color:rgba(190,0,26,.35);
+      box-shadow:none;
     }
 
     .topbar{
       display:flex;
       justify-content:space-between;
       align-items:flex-start;
-      gap:16px;
+      gap:18px;
       flex-wrap:wrap;
+    }
+
+    .brand{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .brand-top{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+
+    .logo-chip{
+      width:54px;
+      height:54px;
+      border-radius:16px;
+      background:linear-gradient(180deg,var(--primary) 0%, var(--primary-dark) 100%);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:800;
+      font-size:26px;
+      box-shadow:0 10px 20px rgba(190,0,26,.18);
+      flex-shrink:0;
     }
 
     .brand h1{
       margin:0;
-      font-size:32px;
-      line-height:1.1;
+      font-size:34px;
+      line-height:1.05;
       color:var(--primary);
-      letter-spacing:-0.02em;
+      letter-spacing:-0.03em;
     }
 
     .brand p{
-      margin:10px 0 0;
+      margin:0;
       color:#4A4A4A;
       font-size:14px;
-      font-weight:600;
+      font-weight:700;
+      letter-spacing:.02em;
+    }
+
+    .subline{
+      color:var(--muted);
+      font-size:13px;
+      margin-top:2px;
     }
 
     .small{
       font-size:13px;
       color:var(--muted);
+      line-height:1.45;
     }
 
     .message-ok{
       color:#166534;
       font-size:14px;
+      font-weight:600;
     }
 
     .message-err{
       color:#b91c1c;
       font-size:14px;
+      font-weight:600;
     }
 
     .hidden{
@@ -222,24 +296,37 @@
     }
 
     .kpi{
-      padding:20px;
-      border-radius:20px;
+      padding:22px;
+      border-radius:22px;
       background:linear-gradient(180deg,#ffffff 0%, #fcfcfc 100%);
-      box-shadow:var(--shadow);
-      border:1px solid rgba(229,231,235,.8);
+      box-shadow:var(--shadow-soft);
+      border:1px solid rgba(229,231,235,.9);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .kpi::before{
+      content:"";
+      position:absolute;
+      left:0;
+      top:0;
+      bottom:0;
+      width:5px;
+      background:linear-gradient(180deg,var(--primary) 0%, #e56474 100%);
     }
 
     .kpi-title{
       color:var(--muted);
       font-size:14px;
       margin-bottom:10px;
-      font-weight:600;
+      font-weight:700;
     }
 
     .kpi-value{
       font-size:34px;
-      font-weight:700;
+      font-weight:800;
       color:var(--primary);
+      letter-spacing:-0.03em;
     }
 
     .tabs{
@@ -258,17 +345,20 @@
       cursor:pointer;
       font-size:14px;
       transition:.2s;
+      font-weight:700;
     }
 
     .tab-btn:hover{
       border-color:rgba(190,0,26,.25);
       color:var(--primary);
+      background:#fffdfd;
     }
 
     .tab-btn.active{
-      background:var(--primary);
+      background:linear-gradient(180deg,var(--primary) 0%, var(--primary-dark) 100%);
       color:#fff;
       border-color:var(--primary);
+      box-shadow:0 8px 16px rgba(190,0,26,.14);
     }
 
     .tab-content.hidden{
@@ -276,20 +366,34 @@
     }
 
     .section-title{
-      font-size:20px;
-      font-weight:700;
+      font-size:21px;
+      font-weight:800;
       margin:0 0 18px;
-      color:#2b2b2b;
+      color:#232323;
+      letter-spacing:-0.02em;
+    }
+
+    .section-sub{
+      margin-top:-6px;
+      margin-bottom:18px;
+      color:var(--muted);
+      font-size:14px;
     }
 
     table{
       width:100%;
-      border-collapse:collapse;
+      border-collapse:separate;
+      border-spacing:0;
+      overflow:hidden;
+    }
+
+    thead tr{
+      background:#fafafa;
     }
 
     th,td{
       text-align:left;
-      padding:15px 12px;
+      padding:16px 12px;
       border-bottom:1px solid var(--line);
       font-size:15px;
       vertical-align:top;
@@ -297,7 +401,14 @@
 
     th{
       color:#374151;
-      font-size:14px;
+      font-size:13px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.03em;
+    }
+
+    tbody tr:hover{
+      background:#fcfcfc;
     }
 
     .badge{
@@ -308,7 +419,7 @@
       border-radius:999px;
       font-size:13px;
       white-space:nowrap;
-      font-weight:600;
+      font-weight:700;
     }
 
     .amber{
@@ -322,12 +433,46 @@
     }
 
     .muted-box{
-      background:var(--soft);
+      background:linear-gradient(180deg,#fafafa 0%, #f7f7f7 100%);
       border:1px solid var(--line);
-      border-radius:16px;
-      padding:16px;
+      border-radius:18px;
+      padding:18px;
       color:var(--muted);
       font-size:14px;
+      line-height:1.5;
+    }
+
+    .data-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:20px 26px;
+    }
+
+    .data-item strong{
+      display:block;
+      margin-bottom:6px;
+      color:#1f2937;
+    }
+
+    .hero-strip{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:16px;
+      flex-wrap:wrap;
+      padding-top:6px;
+    }
+
+    .hero-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      background:rgba(190,0,26,.06);
+      color:var(--primary);
+      padding:9px 14px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:700;
     }
 
     hr{
@@ -342,6 +487,9 @@
       .grid-3{
         grid-template-columns:1fr;
       }
+      .data-grid{
+        grid-template-columns:1fr;
+      }
     }
 
     @media (max-width: 640px){
@@ -352,7 +500,7 @@
         padding:18px;
       }
       .login-card{
-        padding:22px;
+        padding:24px;
       }
       .login-title{
         font-size:32px;
@@ -362,6 +510,15 @@
       }
       .brand h1{
         font-size:28px;
+      }
+      .logo-chip{
+        width:48px;
+        height:48px;
+        font-size:22px;
+      }
+      th,td{
+        padding:14px 8px;
+        font-size:14px;
       }
     }
   </style>
@@ -392,11 +549,17 @@
 
   <div id="appView" class="hidden">
     <div class="wrap">
-      <div class="card">
+      <div class="card top-card">
         <div class="topbar">
           <div class="brand">
-            <h1>EF Cargo Clear</h1>
-            <p id="welcome">A carregar...</p>
+            <div class="brand-top">
+              <div class="logo-chip">F</div>
+              <div>
+                <h1>EF Cargo Clear</h1>
+                <p>EF & Associados • Despachantes Aduaneiros</p>
+              </div>
+            </div>
+            <div id="welcome" class="subline">A carregar...</div>
           </div>
           <button class="btn btn-outline" style="min-width:180px" onclick="logout()">Sair</button>
         </div>
@@ -418,6 +581,7 @@
         <div id="internal-processos" class="tab-content">
           <div class="card">
             <h2 class="section-title">Processos</h2>
+            <div class="section-sub">Acompanhe os processos ativos e o respetivo estado operacional.</div>
             <table>
               <thead>
                 <tr>
@@ -436,6 +600,7 @@
         <div id="internal-cotacoes" class="tab-content hidden">
           <div class="card">
             <h2 class="section-title">Pedidos de cotação recebidos</h2>
+            <div class="section-sub">Solicitações submetidas pelos clientes para análise comercial e operacional.</div>
             <table>
               <thead>
                 <tr>
@@ -454,9 +619,14 @@
       </div>
 
       <div id="clientView" class="hidden">
-        <div class="card">
-          <h2 class="section-title" style="margin-bottom:10px;">Portal do Cliente</h2>
-          <div class="small">Consulte o estado do seu processo pela factura e envie um pedido de cotação sem precisar ligar.</div>
+        <div class="card top-card">
+          <div class="hero-strip">
+            <div>
+              <h2 class="section-title" style="margin-bottom:8px;">Portal do Cliente</h2>
+              <div class="small">Consulte o estado do seu processo pela factura e envie um pedido de cotação sem precisar ligar.</div>
+            </div>
+            <div class="hero-pill">Atendimento digital EF</div>
+          </div>
         </div>
 
         <div class="tabs">
@@ -467,6 +637,7 @@
         <div id="client-consulta" class="tab-content">
           <div class="card">
             <h2 class="section-title">Consultar por número da factura</h2>
+            <div class="section-sub">Digite o número da factura para localizar o processo correspondente.</div>
             <div class="row">
               <div>
                 <label>Número da factura</label>
@@ -480,20 +651,20 @@
 
           <div id="processoCard" class="card hidden">
             <h2 id="pcTitulo" style="margin:0 0 6px;"></h2>
-            <div id="pcSub" class="small" style="margin-bottom:12px;"></div>
-            <div id="pcEstado" style="margin-bottom:16px;"></div>
+            <div id="pcSub" class="small" style="margin-bottom:14px;"></div>
+            <div id="pcEstado" style="margin-bottom:18px;"></div>
 
-            <div class="grid grid-3">
-              <div><strong>Regime</strong><div id="pcRegime"></div></div>
-              <div><strong>Origem</strong><div id="pcOrigem"></div></div>
-              <div><strong>Destino</strong><div id="pcDestino"></div></div>
-              <div><strong>Porto / Fronteira</strong><div id="pcPorto"></div></div>
-              <div><strong>BL / AWB</strong><div id="pcBl"></div></div>
-              <div><strong>Prazo</strong><div id="pcPrazo"></div></div>
-              <div><strong>Docs em falta</strong><div id="pcDocs"></div></div>
+            <div class="data-grid">
+              <div class="data-item"><strong>Regime</strong><div id="pcRegime"></div></div>
+              <div class="data-item"><strong>Origem</strong><div id="pcOrigem"></div></div>
+              <div class="data-item"><strong>Destino</strong><div id="pcDestino"></div></div>
+              <div class="data-item"><strong>Porto / Fronteira</strong><div id="pcPorto"></div></div>
+              <div class="data-item"><strong>BL / AWB</strong><div id="pcBl"></div></div>
+              <div class="data-item"><strong>Prazo</strong><div id="pcPrazo"></div></div>
+              <div class="data-item"><strong>Docs em falta</strong><div id="pcDocs"></div></div>
             </div>
 
-            <hr style="margin:20px 0;" />
+            <hr style="margin:22px 0;" />
             <strong>Histórico</strong>
             <div id="pcHistorico" class="small" style="margin-top:10px"></div>
           </div>
@@ -684,6 +855,7 @@
         );
 
         if (cliente) {
+          document.getElementById("welcome").textContent = `${cliente.nome} • cliente`;
           document.getElementById("cot_nome").value = cliente.nome || "";
           document.getElementById("cot_nuit").value = cliente.nuit || "";
           document.getElementById("cot_contacto").value = cliente.contacto || "";
