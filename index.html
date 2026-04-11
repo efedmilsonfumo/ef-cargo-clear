@@ -179,6 +179,13 @@
       resize:vertical;
     }
 
+    .file-box{
+      border:1px dashed #d7dee8;
+      border-radius:16px;
+      padding:16px;
+      background:#fafafa;
+    }
+
     .btn{
       border:none;
       background:linear-gradient(180deg,var(--primary) 0%, var(--primary-dark) 100%);
@@ -587,6 +594,7 @@
                   <th>Cliente</th>
                   <th>Tipo</th>
                   <th>Factura</th>
+                  <th>Documento</th>
                   <th>Origem</th>
                   <th>Destino</th>
                   <th>Estado</th>
@@ -601,7 +609,7 @@
       <div id="clientView" class="hidden">
         <div class="card hero-card">
           <h2 class="section-title">Portal do Cliente</h2>
-          <div class="section-sub">Consulte o estado do seu processo pela factura e envie um pedido de cotação sem precisar ligar.</div>
+          <div class="section-sub">Consulte o estado do seu processo pela factura e envie um pedido de cotação com factura anexada.</div>
         </div>
 
         <div class="tabs">
@@ -649,7 +657,7 @@
           <div class="card">
             <h2 class="section-title">Solicitar cotação</h2>
             <div class="muted-box" style="margin-bottom:18px;">
-              Preencha os dados abaixo para a equipa receber o pedido e responder com uma cotação.
+              Preencha os dados abaixo, anexe a factura e envie o pedido para a equipa analisar.
             </div>
 
             <div class="grid">
@@ -717,6 +725,12 @@
                 <textarea id="cot_obs" placeholder="Informações adicionais"></textarea>
               </div>
 
+              <div class="file-box">
+                <label for="cot_factura_file">Anexar factura (PDF, JPG, PNG)</label>
+                <input id="cot_factura_file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" />
+                <div id="cot_factura_file_name" class="small" style="margin-top:8px;">Nenhum ficheiro selecionado.</div>
+              </div>
+
               <div style="max-width:260px;">
                 <button class="btn" onclick="submeterCotacao()">Enviar pedido</button>
               </div>
@@ -733,6 +747,15 @@
     const SUPABASE_URL = "https://fefkyzutcouoklbiwybs.supabase.co";
     const SUPABASE_KEY = "sb_publishable_uOowmqEhVdq8h0uzagYPEA_DXXpGOgA";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const facturaInput = document.getElementById("cot_factura_file");
+    if (facturaInput) {
+      facturaInput.addEventListener("change", () => {
+        const file = facturaInput.files?.[0];
+        document.getElementById("cot_factura_file_name").textContent =
+          file ? file.name : "Nenhum ficheiro selecionado.";
+      });
+    }
 
     function withTimeout(promise, ms = 8000) {
       return Promise.race([
@@ -882,6 +905,7 @@
             <td>${c.nome_cliente || ""}</td>
             <td>${c.tipo_operacao || ""}</td>
             <td>${c.numero_factura || ""}</td>
+            <td>${c.factura_filename || "-"}</td>
             <td>${c.origem || ""}</td>
             <td>${c.destino || ""}</td>
             <td>${badgeEstado(c.estado || "recebido")}</td>
@@ -926,6 +950,33 @@
       }
     }
 
+    async function uploadFactura(file) {
+      const ext = (file.name.split(".").pop() || "bin").toLowerCase();
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `cotacoes/${Date.now()}_${safeName}`;
+
+      const { error } = await withTimeout(
+        supabaseClient.storage
+          .from("cotacoes")
+          .upload(path, file, {
+            cacheControl: "3600",
+            upsert: false,
+            contentType: file.type || "application/octet-stream"
+          }),
+        15000
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      return {
+        path,
+        filename: file.name,
+        ext
+      };
+    }
+
     async function submeterCotacao() {
       const msg = document.getElementById("cotacaoMsg");
 
@@ -939,6 +990,7 @@
       const descricao_mercadoria = document.getElementById("cot_mercadoria").value.trim();
       const numero_factura = document.getElementById("cot_factura").value.trim();
       const observacoes = document.getElementById("cot_obs").value.trim();
+      const facturaFile = document.getElementById("cot_factura_file").files?.[0] || null;
 
       if (!nome_cliente || !tipo_operacao || !origem || !destino || !descricao_mercadoria) {
         msg.textContent = "Preencha os campos obrigatórios.";
@@ -946,7 +998,19 @@
         return;
       }
 
+      msg.textContent = "A enviar pedido...";
+      msg.className = "small";
+
       try {
+        let factura_path = null;
+        let factura_filename = null;
+
+        if (facturaFile) {
+          const uploaded = await uploadFactura(facturaFile);
+          factura_path = uploaded.path;
+          factura_filename = uploaded.filename;
+        }
+
         const { error } = await withTimeout(
           supabaseClient.from("pedidos_cotacao").insert({
             nome_cliente,
@@ -959,6 +1023,8 @@
             descricao_mercadoria,
             numero_factura,
             observacoes,
+            factura_path,
+            factura_filename,
             estado: "recebido"
           }),
           8000
@@ -979,8 +1045,10 @@
         document.getElementById("cot_mercadoria").value = "";
         document.getElementById("cot_factura").value = "";
         document.getElementById("cot_obs").value = "";
+        document.getElementById("cot_factura_file").value = "";
+        document.getElementById("cot_factura_file_name").textContent = "Nenhum ficheiro selecionado.";
       } catch (e) {
-        msg.textContent = e.message;
+        msg.textContent = e.message || "Erro ao enviar pedido.";
         msg.className = "message-err";
       }
     }
