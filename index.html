@@ -223,6 +223,22 @@
       box-shadow:none;
     }
 
+    .btn-mini{
+      border:none;
+      background:var(--primary);
+      color:#fff;
+      padding:8px 12px;
+      border-radius:10px;
+      cursor:pointer;
+      font-size:12px;
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    .btn-mini:hover{
+      background:var(--primary-dark);
+    }
+
     .topbar{
       display:flex;
       justify-content:space-between;
@@ -748,21 +764,23 @@
     const SUPABASE_KEY = "sb_publishable_uOowmqEhVdq8h0uzagYPEA_DXXpGOgA";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const facturaInput = document.getElementById("cot_factura_file");
-    if (facturaInput) {
-      facturaInput.addEventListener("change", () => {
-        const file = facturaInput.files?.[0];
-        document.getElementById("cot_factura_file_name").textContent =
-          file ? file.name : "Nenhum ficheiro selecionado.";
-      });
-    }
-
     function withTimeout(promise, ms = 8000) {
       return Promise.race([
         promise,
         new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout ao carregar dados.")), ms))
       ]);
     }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const facturaInput = document.getElementById("cot_factura_file");
+      if (facturaInput) {
+        facturaInput.addEventListener("change", () => {
+          const file = facturaInput.files?.[0];
+          document.getElementById("cot_factura_file_name").textContent =
+            file ? file.name : "Nenhum ficheiro selecionado.";
+        });
+      }
+    });
 
     function badgeEstado(estado) {
       const e = (estado || "").toLowerCase();
@@ -866,6 +884,34 @@
       }
     }
 
+    async function openFactura(path, filename) {
+      if (!path) {
+        alert("Este pedido não tem factura anexada.");
+        return;
+      }
+
+      try {
+        const { data, error } = await withTimeout(
+          supabaseClient.storage.from("cotacoes").createSignedUrl(path, 300),
+          10000
+        );
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        if (!data?.signedUrl) {
+          alert("Não foi possível gerar o link da factura.");
+          return;
+        }
+
+        window.open(data.signedUrl, "_blank");
+      } catch (e) {
+        alert(e.message || "Erro ao abrir factura.");
+      }
+    }
+
     async function loadInternal() {
       try {
         const [{ data: clientes }, { data: processos }, { data: cotacoes }] = await Promise.all([
@@ -905,7 +951,11 @@
             <td>${c.nome_cliente || ""}</td>
             <td>${c.tipo_operacao || ""}</td>
             <td>${c.numero_factura || ""}</td>
-            <td>${c.factura_filename || "-"}</td>
+            <td>
+              ${c.factura_path
+                ? `<button class="btn-mini" onclick="openFactura('${String(c.factura_path).replace(/'/g, "\\'")}', '${String(c.factura_filename || "").replace(/'/g, "\\'")}')">Ver factura</button>`
+                : '-'}
+            </td>
             <td>${c.origem || ""}</td>
             <td>${c.destino || ""}</td>
             <td>${badgeEstado(c.estado || "recebido")}</td>
@@ -951,7 +1001,6 @@
     }
 
     async function uploadFactura(file) {
-      const ext = (file.name.split(".").pop() || "bin").toLowerCase();
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
       const path = `cotacoes/${Date.now()}_${safeName}`;
 
@@ -972,8 +1021,7 @@
 
       return {
         path,
-        filename: file.name,
-        ext
+        filename: file.name
       };
     }
 
