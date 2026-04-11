@@ -985,7 +985,7 @@
           pais_destino: cotacao.destino || "",
           porto_fronteira: "",
           bl_awb_manifesto: "",
-          prazo: "",
+          prazo: null,
           estado: "Cotação convertida",
           documentos_em_falta: cotacao.factura_path ? "" : "Factura em falta",
           historico: `Processo criado a partir da cotação ${cotacao.numero_factura || ""}. Mercadoria: ${cotacao.descricao_mercadoria || ""}`
