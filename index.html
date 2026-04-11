@@ -233,10 +233,20 @@
       font-size:12px;
       font-weight:700;
       white-space:nowrap;
+      margin-right:6px;
+      margin-bottom:6px;
     }
 
     .btn-mini:hover{
       background:var(--primary-dark);
+    }
+
+    .btn-mini.secondary{
+      background:#374151;
+    }
+
+    .btn-mini.secondary:hover{
+      background:#1f2937;
     }
 
     .topbar{
@@ -611,6 +621,7 @@
                   <th>Tipo</th>
                   <th>Factura</th>
                   <th>Documento</th>
+                  <th>Converter</th>
                   <th>Origem</th>
                   <th>Destino</th>
                   <th>Estado</th>
@@ -764,13 +775,6 @@
     const SUPABASE_KEY = "sb_publishable_uOowmqEhVdq8h0uzagYPEA_DXXpGOgA";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    function withTimeout(promise, ms = 8000) {
-      return Promise.race([
-        promise,
-        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout ao carregar dados.")), ms))
-      ]);
-    }
-
     document.addEventListener("DOMContentLoaded", () => {
       const facturaInput = document.getElementById("cot_factura_file");
       if (facturaInput) {
@@ -781,6 +785,13 @@
         });
       }
     });
+
+    function withTimeout(promise, ms = 8000) {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout ao carregar dados.")), ms))
+      ]);
+    }
 
     function badgeEstado(estado) {
       const e = (estado || "").toLowerCase();
@@ -884,7 +895,7 @@
       }
     }
 
-    async function openFactura(path, filename) {
+    async function openFactura(path) {
       if (!path) {
         alert("Este pedido não tem factura anexada.");
         return;
@@ -909,6 +920,113 @@
         window.open(data.signedUrl, "_blank");
       } catch (e) {
         alert(e.message || "Erro ao abrir factura.");
+      }
+    }
+
+    function gerarNumeroProcesso() {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      const h = String(d.getHours()).padStart(2, "0");
+      const min = String(d.getMinutes()).padStart(2, "0");
+      return `EF-${y}${m}${day}-${h}${min}`;
+    }
+
+    async function converterCotacaoEmProcesso(cotacaoId) {
+      if (!confirm("Converter esta cotação em processo?")) return;
+
+      try {
+        const { data: cotacao, error: cotacaoError } = await withTimeout(
+          supabaseClient
+            .from("pedidos_cotacao")
+            .select("*")
+            .eq("id", cotacaoId)
+            .single(),
+          10000
+        );
+
+        if (cotacaoError || !cotacao) {
+          alert(cotacaoError?.message || "Cotação não encontrada.");
+          return;
+        }
+
+        if (cotacao.convertido_em_processo) {
+          alert("Esta cotação já foi convertida.");
+          return;
+        }
+
+        let cliente_id = null;
+
+        if (cotacao.email) {
+          const { data: clienteByEmail } = await withTimeout(
+            supabaseClient
+              .from("clientes")
+              .select("id")
+              .eq("email", cotacao.email)
+              .maybeSingle(),
+            8000
+          );
+
+          if (clienteByEmail?.id) {
+            cliente_id = clienteByEmail.id;
+          }
+        }
+
+        const numeroProcesso = gerarNumeroProcesso();
+
+        const payloadProcesso = {
+          cliente_id,
+          numero_processo: numeroProcesso,
+          numero_factura: cotacao.numero_factura || "",
+          importador_exportador: cotacao.nome_cliente || "",
+          regime: cotacao.tipo_operacao || "",
+          pais_origem: cotacao.origem || "",
+          pais_destino: cotacao.destino || "",
+          porto_fronteira: "",
+          bl_awb_manifesto: "",
+          prazo: "",
+          estado: "Cotação convertida",
+          documentos_em_falta: cotacao.factura_path ? "" : "Factura em falta",
+          historico: `Processo criado a partir da cotação ${cotacao.numero_factura || ""}. Mercadoria: ${cotacao.descricao_mercadoria || ""}`
+        };
+
+        const { data: novoProcesso, error: processoError } = await withTimeout(
+          supabaseClient
+            .from("processos")
+            .insert(payloadProcesso)
+            .select("id, numero_processo")
+            .single(),
+          10000
+        );
+
+        if (processoError || !novoProcesso) {
+          alert(processoError?.message || "Erro ao criar processo.");
+          return;
+        }
+
+        const { error: updateError } = await withTimeout(
+          supabaseClient
+            .from("pedidos_cotacao")
+            .update({
+              convertido_em_processo: true,
+              processo_id: novoProcesso.id,
+              estado: "convertido em processo"
+            })
+            .eq("id", cotacaoId),
+          10000
+        );
+
+        if (updateError) {
+          alert(updateError.message);
+          return;
+        }
+
+        alert(`Cotação convertida com sucesso. Processo criado: ${novoProcesso.numero_processo}`);
+        await loadInternal();
+        showInternalTab("processos", document.querySelectorAll("#internalView .tab-btn")[0]);
+      } catch (e) {
+        alert(e.message || "Erro ao converter cotação em processo.");
       }
     }
 
@@ -946,6 +1064,7 @@
         const ctbody = document.getElementById("cotacoesTable");
         ctbody.innerHTML = "";
         (cotacoes || []).forEach(c => {
+          const convertido = c.convertido_em_processo === true;
           const tr = document.createElement("tr");
           tr.innerHTML = `
             <td>${c.nome_cliente || ""}</td>
@@ -953,8 +1072,13 @@
             <td>${c.numero_factura || ""}</td>
             <td>
               ${c.factura_path
-                ? `<button class="btn-mini" onclick="openFactura('${String(c.factura_path).replace(/'/g, "\\'")}', '${String(c.factura_filename || "").replace(/'/g, "\\'")}')">Ver factura</button>`
+                ? `<button class="btn-mini secondary" onclick="openFactura('${String(c.factura_path).replace(/'/g, "\\'")}')">Ver factura</button>`
                 : '-'}
+            </td>
+            <td>
+              ${convertido
+                ? `<span class="small">Convertido</span>`
+                : `<button class="btn-mini" onclick="converterCotacaoEmProcesso('${String(c.id).replace(/'/g, "\\'")}')">Converter</button>`}
             </td>
             <td>${c.origem || ""}</td>
             <td>${c.destino || ""}</td>
