@@ -39,7 +39,7 @@
       color:var(--text);
     }
 
-    .wrap{max-width:1280px;margin:0 auto;padding:22px}
+    .wrap{max-width:1320px;margin:0 auto;padding:22px}
     .card{
       background:var(--card);
       border-radius:var(--radius);
@@ -207,6 +207,8 @@
     .btn-mini.secondary:hover{background:#1f2937}
     .btn-mini.info{background:#0369a1}
     .btn-mini.info:hover{background:#075985}
+    .btn-mini.green{background:#15803d}
+    .btn-mini.green:hover{background:#166534}
 
     .link-btn{
       background:none;
@@ -428,7 +430,29 @@
       font-size:12px;
     }
 
+    .toolbar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:end;
+      margin-bottom:16px;
+    }
+
+    .toolbar .field{
+      min-width:180px;
+      flex:1;
+    }
+
+    .table-scroll{overflow:auto}
+
     hr{border:none;border-top:1px solid var(--line)}
+
+    @media print {
+      body { background:#fff; }
+      .no-print { display:none !important; }
+      .card { box-shadow:none; border:1px solid #ddd; }
+      .wrap { max-width:none; padding:0; }
+    }
 
     @media (max-width:1100px){
       .grid-5{grid-template-columns:repeat(2,1fr)}
@@ -532,7 +556,7 @@
             </div>
             <div id="welcome" class="welcome-line">A carregar...</div>
           </div>
-          <button class="btn btn-outline" style="min-width:180px" onclick="logout()">Sair</button>
+          <button class="btn btn-outline no-print" style="min-width:180px" onclick="logout()">Sair</button>
         </div>
       </div>
 
@@ -551,7 +575,7 @@
           <div class="kpi"><div class="kpi-title">Margem total</div><div class="kpi-value" id="margemTotal">0</div></div>
         </div>
 
-        <div class="tabs">
+        <div class="tabs no-print">
           <button class="tab-btn active" onclick="showInternalTab('processos', this)">Processos</button>
           <button class="tab-btn" onclick="showInternalTab('cotacoes', this)">Pedidos de cotação</button>
           <button class="tab-btn" onclick="showInternalTab('financeiro', this)">Financeiro</button>
@@ -561,22 +585,58 @@
           <div class="card">
             <h2 class="section-title">Processos</h2>
             <div class="section-sub">Atualize o estado, documentos em falta, financeiro e documentos do processo.</div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Processo</th>
-                  <th>Factura</th>
-                  <th>Cliente</th>
-                  <th>Regime</th>
-                  <th>Estado</th>
-                  <th>Docs em falta</th>
-                  <th>Financeiro</th>
-                  <th>Documentos</th>
-                  <th>Histórico</th>
-                </tr>
-              </thead>
-              <tbody id="processosTable"></tbody>
-            </table>
+
+            <div class="toolbar no-print">
+              <div class="field">
+                <label>Pesquisa global</label>
+                <input id="globalSearch" placeholder="Pesquisar tudo..." oninput="applyFilters()" />
+              </div>
+              <div class="field">
+                <label>Cliente</label>
+                <input id="filterCliente" placeholder="Nome do cliente" oninput="applyFilters()" />
+              </div>
+              <div class="field">
+                <label>Factura</label>
+                <input id="filterFactura" placeholder="Número da factura" oninput="applyFilters()" />
+              </div>
+              <div class="field">
+                <label>Estado</label>
+                <select id="filterEstado" onchange="applyFilters()">
+                  <option value="">Todos</option>
+                  <option>Recebido</option>
+                  <option>Em análise</option>
+                  <option>Documentos em falta</option>
+                  <option>Submetido</option>
+                  <option>Em desembaraço</option>
+                  <option>Liberado</option>
+                  <option>Entregue</option>
+                </select>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn-mini info" onclick="clearFilters()">Limpar</button>
+                <button class="btn-mini green" onclick="exportProcessosCSV()">Excel/CSV</button>
+                <button class="btn-mini secondary" onclick="printSection('internal-processos','Relatório de Processos')">PDF</button>
+              </div>
+            </div>
+
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Processo</th>
+                    <th>Factura</th>
+                    <th>Cliente</th>
+                    <th>Regime</th>
+                    <th>Estado</th>
+                    <th>Docs em falta</th>
+                    <th>Financeiro</th>
+                    <th>Documentos</th>
+                    <th>Histórico</th>
+                  </tr>
+                </thead>
+                <tbody id="processosTable"></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -584,21 +644,31 @@
           <div class="card">
             <h2 class="section-title">Pedidos de cotação recebidos</h2>
             <div class="section-sub">Solicitações submetidas pelos clientes para análise comercial e operacional.</div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Cliente</th>
-                  <th>Tipo</th>
-                  <th>Factura</th>
-                  <th>Documento</th>
-                  <th>Converter</th>
-                  <th>Origem</th>
-                  <th>Destino</th>
-                  <th>Estado</th>
-                </tr>
-              </thead>
-              <tbody id="cotacoesTable"></tbody>
-            </table>
+
+            <div class="toolbar no-print">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn-mini green" onclick="exportCotacoesCSV()">Excel/CSV</button>
+                <button class="btn-mini secondary" onclick="printSection('internal-cotacoes','Pedidos de Cotação')">PDF</button>
+              </div>
+            </div>
+
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Cliente</th>
+                    <th>Tipo</th>
+                    <th>Factura</th>
+                    <th>Documento</th>
+                    <th>Converter</th>
+                    <th>Origem</th>
+                    <th>Destino</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody id="cotacoesTable"></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -606,19 +676,29 @@
           <div class="card">
             <h2 class="section-title">Painel financeiro</h2>
             <div class="section-sub">Resumo básico por processo com valor cobrado, custos e margem.</div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Processo</th>
-                  <th>Cliente</th>
-                  <th>Factura</th>
-                  <th>Valor cobrado</th>
-                  <th>Custos</th>
-                  <th>Margem</th>
-                </tr>
-              </thead>
-              <tbody id="financeiroTable"></tbody>
-            </table>
+
+            <div class="toolbar no-print">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn-mini green" onclick="exportFinanceiroCSV()">Excel/CSV</button>
+                <button class="btn-mini secondary" onclick="printSection('internal-financeiro','Painel Financeiro')">PDF</button>
+              </div>
+            </div>
+
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Processo</th>
+                    <th>Cliente</th>
+                    <th>Factura</th>
+                    <th>Valor cobrado</th>
+                    <th>Custos</th>
+                    <th>Margem</th>
+                  </tr>
+                </thead>
+                <tbody id="financeiroTable"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -626,10 +706,10 @@
       <div id="clientView" class="hidden">
         <div class="card hero-card">
           <h2 class="section-title">Portal do Cliente</h2>
-          <div class="section-sub">Consulte o estado do seu processo, envie pedidos de cotação e veja o histórico dos pedidos submetidos.</div>
+          <div class="section-sub">Consulte o estado do seu processo, veja documentos do processo, envie pedidos de cotação e acompanhe o histórico.</div>
         </div>
 
-        <div class="tabs">
+        <div class="tabs no-print">
           <button class="tab-btn active" onclick="showClientTab('consulta', this)">Consultar processo</button>
           <button class="tab-btn" onclick="showClientTab('cotacao', this)">Solicitar cotação</button>
           <button class="tab-btn" onclick="showClientTab('historico', this)">Minhas cotações</button>
@@ -639,7 +719,7 @@
           <div class="card">
             <h2 class="section-title">Consultar por número da factura</h2>
             <div class="section-sub">Digite o número da factura para localizar o processo correspondente.</div>
-            <div class="row">
+            <div class="row no-print">
               <div>
                 <label>Número da factura</label>
                 <input id="facturaSearch" placeholder="Ex: 0101" />
@@ -668,6 +748,10 @@
             <hr style="margin:22px 0;" />
             <strong>Histórico</strong>
             <div id="pcHistorico" class="history-box" style="margin-top:10px"></div>
+
+            <hr style="margin:22px 0;" />
+            <strong>Documentos do processo</strong>
+            <div id="pcDocsList" class="doc-list" style="margin-top:10px"></div>
           </div>
         </div>
 
@@ -743,7 +827,7 @@
                 <textarea id="cot_obs" placeholder="Informações adicionais"></textarea>
               </div>
 
-              <div class="file-box">
+              <div class="muted-box">
                 <label for="cot_factura_file">Anexar factura (PDF, JPG, PNG)</label>
                 <input id="cot_factura_file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" />
                 <div id="cot_factura_file_name" class="small" style="margin-top:8px;">Nenhum ficheiro selecionado.</div>
@@ -762,20 +846,30 @@
           <div class="card">
             <h2 class="section-title">Minhas cotações</h2>
             <div class="section-sub">Aqui pode acompanhar todos os pedidos de cotação já enviados pela sua empresa.</div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Factura</th>
-                  <th>Tipo</th>
-                  <th>Origem</th>
-                  <th>Destino</th>
-                  <th>Documento</th>
-                  <th>Estado</th>
-                </tr>
-              </thead>
-              <tbody id="clientCotacoesTable"></tbody>
-            </table>
+
+            <div class="toolbar no-print">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn-mini green" onclick="exportClientCotacoesCSV()">Excel/CSV</button>
+                <button class="btn-mini secondary" onclick="printSection('client-historico','Minhas Cotações')">PDF</button>
+              </div>
+            </div>
+
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Factura</th>
+                    <th>Tipo</th>
+                    <th>Origem</th>
+                    <th>Destino</th>
+                    <th>Documento</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody id="clientCotacoesTable"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -786,6 +880,11 @@
     const SUPABASE_URL = "https://fefkyzutcouoklbiwybs.supabase.co";
     const SUPABASE_KEY = "sb_publishable_uOowmqEhVdq8h0uzagYPEA_DXXpGOgA";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let processosCache = [];
+    let cotacoesCache = [];
+    let docsCache = [];
+    let clientCotacoesCache = [];
 
     document.addEventListener("DOMContentLoaded", () => {
       const facturaInput = document.getElementById("cot_factura_file");
@@ -839,6 +938,55 @@
     function formatMoney(value) {
       const n = Number(value || 0);
       return n.toLocaleString("pt-PT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function csvEscape(v) {
+      const value = v == null ? "" : String(v);
+      return `"${value.replace(/"/g, '""')}"`;
+    }
+
+    function downloadCSV(filename, headers, rows) {
+      const csv = [
+        headers.map(csvEscape).join(";"),
+        ...rows.map(row => row.map(csvEscape).join(";"))
+      ].join("\n");
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function printSection(sectionId, title) {
+      const section = document.getElementById(sectionId);
+      if (!section) return;
+
+      const win = window.open("", "_blank");
+      const html = `
+        <html>
+          <head>
+            <title>${title}</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; color: #111; }
+              h1 { margin-bottom: 16px; }
+              table { width: 100%; border-collapse: collapse; }
+              th, td { border: 1px solid #ddd; padding: 10px; text-align: left; vertical-align: top; }
+              th { background: #f4f4f4; }
+            </style>
+          </head>
+          <body>
+            <h1>${title}</h1>
+            ${section.innerHTML}
+            <script>window.onload = () => window.print();<\/script>
+          </body>
+        </html>
+      `;
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
     }
 
     function showInternalTab(tab, btn) {
@@ -1205,6 +1353,7 @@
 
     async function uploadProcessoDocumento(processoId) {
       const input = document.getElementById("procfile_" + processoId);
+      const visibleInput = document.getElementById("procvis_" + processoId);
       const file = input.files?.[0];
 
       if (!file) {
@@ -1236,7 +1385,9 @@
           supabaseClient.from("processos_documentos").insert({
             processo_id: processoId,
             nome_ficheiro: file.name,
-            ficheiro_path: path
+            ficheiro_path: path,
+            visivel_cliente: !!visibleInput?.checked,
+            uploaded_by: "admin"
           }),
           10000
         );
@@ -1354,6 +1505,232 @@
       }
     }
 
+    function applyFilters() {
+      renderProcessosTable();
+      renderFinanceiroTable();
+    }
+
+    function clearFilters() {
+      document.getElementById("globalSearch").value = "";
+      document.getElementById("filterCliente").value = "";
+      document.getElementById("filterFactura").value = "";
+      document.getElementById("filterEstado").value = "";
+      applyFilters();
+    }
+
+    function getFilteredProcessos() {
+      const g = (document.getElementById("globalSearch")?.value || "").trim().toLowerCase();
+      const cliente = (document.getElementById("filterCliente")?.value || "").trim().toLowerCase();
+      const factura = (document.getElementById("filterFactura")?.value || "").trim().toLowerCase();
+      const estado = (document.getElementById("filterEstado")?.value || "").trim().toLowerCase();
+
+      return processosCache.filter(p => {
+        const blob = [
+          p.numero_processo,
+          p.numero_factura,
+          p.importador_exportador,
+          p.regime,
+          p.estado,
+          p.pais_origem,
+          p.pais_destino,
+          p.documentos_em_falta,
+          p.historico
+        ].join(" ").toLowerCase();
+
+        const okGlobal = !g || blob.includes(g);
+        const okCliente = !cliente || String(p.importador_exportador || "").toLowerCase().includes(cliente);
+        const okFactura = !factura || String(p.numero_factura || "").toLowerCase().includes(factura);
+        const okEstado = !estado || String(p.estado || "").toLowerCase() === estado;
+
+        return okGlobal && okCliente && okFactura && okEstado;
+      });
+    }
+
+    function renderProcessosTable() {
+      const procList = getFilteredProcessos();
+      const docsByProcess = {};
+      docsCache.forEach(d => {
+        if (!docsByProcess[d.processo_id]) docsByProcess[d.processo_id] = [];
+        docsByProcess[d.processo_id].push(d);
+      });
+
+      const tbody = document.getElementById("processosTable");
+      tbody.innerHTML = "";
+
+      procList.forEach(p => {
+        const procDocs = docsByProcess[p.id] || [];
+        const historicoHtml = (p.historico || "Sem histórico").replace(/\n/g, "<br>");
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${p.numero_processo || ""}</td>
+          <td>${p.numero_factura || ""}</td>
+          <td>${p.importador_exportador || ""}</td>
+          <td>${p.regime || ""}</td>
+          <td>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+              <select id="estado_${p.id}" style="min-width:170px;">
+                <option ${p.estado === "Recebido" ? "selected" : ""}>Recebido</option>
+                <option ${p.estado === "Em análise" ? "selected" : ""}>Em análise</option>
+                <option ${p.estado === "Documentos em falta" ? "selected" : ""}>Documentos em falta</option>
+                <option ${p.estado === "Submetido" ? "selected" : ""}>Submetido</option>
+                <option ${p.estado === "Em desembaraço" ? "selected" : ""}>Em desembaraço</option>
+                <option ${p.estado === "Liberado" ? "selected" : ""}>Liberado</option>
+                <option ${p.estado === "Entregue" ? "selected" : ""}>Entregue</option>
+              </select>
+              <button class="btn-mini" onclick="atualizarEstado('${p.id}')">Atualizar</button>
+            </div>
+          </td>
+          <td>
+            <textarea id="docs_${p.id}" style="min-height:90px;">${p.documentos_em_falta || ""}</textarea>
+            <div style="margin-top:8px;">
+              <button class="btn-mini info" onclick="salvarDocsEmFalta('${p.id}')">Guardar docs</button>
+            </div>
+          </td>
+          <td>
+            <label style="margin-top:0;">Valor cobrado</label>
+            <input id="cobrado_${p.id}" type="number" step="0.01" value="${Number(p.valor_cobrado || 0)}" />
+            <label style="margin-top:8px;">Custos</label>
+            <input id="custos_${p.id}" type="number" step="0.01" value="${Number(p.custos_processo || 0)}" />
+            <div class="small" style="margin-top:8px;">Margem atual: ${formatMoney(p.margem_lucro || 0)}</div>
+            <div style="margin-top:8px;">
+              <button class="btn-mini info" onclick="salvarFinanceiro('${p.id}')">Guardar financeiro</button>
+            </div>
+          </td>
+          <td>
+            <input id="procfile_${p.id}" type="file" />
+            <label style="margin-top:8px;display:flex;gap:8px;align-items:center;">
+              <input id="procvis_${p.id}" type="checkbox" checked style="width:auto;" />
+              <span class="small">Visível ao cliente</span>
+            </label>
+            <div style="margin-top:8px;">
+              <button class="btn-mini secondary" onclick="uploadProcessoDocumento('${p.id}')">Anexar</button>
+            </div>
+            <div class="doc-list">
+              ${procDocs.length
+                ? procDocs.map(d => `
+                  <span class="doc-chip">
+                    <span>${d.nome_ficheiro || "Documento"}</span>
+                    <button class="btn-mini secondary" style="margin:0;padding:4px 8px;" onclick="openProcessoDocumento('${String(d.ficheiro_path).replace(/'/g, "\\'")}')">Abrir</button>
+                  </span>
+                `).join("")
+                : '<span class="small">Sem documentos</span>'}
+            </div>
+          </td>
+          <td><div class="history-box">${historicoHtml}</div></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderCotacoesTable() {
+      const ctbody = document.getElementById("cotacoesTable");
+      ctbody.innerHTML = "";
+      cotacoesCache.forEach(c => {
+        const convertido = c.convertido_em_processo === true;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${c.nome_cliente || ""}</td>
+          <td>${c.tipo_operacao || ""}</td>
+          <td>${c.numero_factura || ""}</td>
+          <td>
+            ${c.factura_path
+              ? `<button class="btn-mini secondary" onclick="openFactura('${String(c.factura_path).replace(/'/g, "\\'")}')">Ver factura</button>`
+              : '-'}
+          </td>
+          <td>
+            ${convertido
+              ? `<span class="small">Convertido</span>`
+              : `<button class="btn-mini" onclick="converterCotacaoEmProcesso('${String(c.id).replace(/'/g, "\\'")}')">Converter</button>`}
+          </td>
+          <td>${c.origem || ""}</td>
+          <td>${c.destino || ""}</td>
+          <td>${badgeEstado(c.estado || "recebido")}</td>
+        `;
+        ctbody.appendChild(tr);
+      });
+    }
+
+    function renderFinanceiroTable() {
+      const ftbody = document.getElementById("financeiroTable");
+      ftbody.innerHTML = "";
+      getFilteredProcessos().forEach(p => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${p.numero_processo || ""}</td>
+          <td>${p.importador_exportador || ""}</td>
+          <td>${p.numero_factura || ""}</td>
+          <td>${formatMoney(p.valor_cobrado || 0)}</td>
+          <td>${formatMoney(p.custos_processo || 0)}</td>
+          <td>${formatMoney(p.margem_lucro || 0)}</td>
+        `;
+        ftbody.appendChild(tr);
+      });
+    }
+
+    function exportProcessosCSV() {
+      const rows = getFilteredProcessos().map(p => [
+        p.numero_processo || "",
+        p.numero_factura || "",
+        p.importador_exportador || "",
+        p.regime || "",
+        p.estado || "",
+        p.documentos_em_falta || "",
+        p.valor_cobrado || 0,
+        p.custos_processo || 0,
+        p.margem_lucro || 0
+      ]);
+      downloadCSV("processos.csv",
+        ["Processo","Factura","Cliente","Regime","Estado","Docs em falta","Valor cobrado","Custos","Margem"],
+        rows
+      );
+    }
+
+    function exportFinanceiroCSV() {
+      const rows = getFilteredProcessos().map(p => [
+        p.numero_processo || "",
+        p.importador_exportador || "",
+        p.numero_factura || "",
+        p.valor_cobrado || 0,
+        p.custos_processo || 0,
+        p.margem_lucro || 0
+      ]);
+      downloadCSV("financeiro.csv",
+        ["Processo","Cliente","Factura","Valor cobrado","Custos","Margem"],
+        rows
+      );
+    }
+
+    function exportCotacoesCSV() {
+      const rows = cotacoesCache.map(c => [
+        c.nome_cliente || "",
+        c.tipo_operacao || "",
+        c.numero_factura || "",
+        c.origem || "",
+        c.destino || "",
+        c.estado || ""
+      ]);
+      downloadCSV("cotacoes.csv",
+        ["Cliente","Tipo","Factura","Origem","Destino","Estado"],
+        rows
+      );
+    }
+
+    function exportClientCotacoesCSV() {
+      const rows = clientCotacoesCache.map(c => [
+        formatDate(c.created_at),
+        c.numero_factura || "",
+        c.tipo_operacao || "",
+        c.origem || "",
+        c.destino || "",
+        c.estado || ""
+      ]);
+      downloadCSV("minhas_cotacoes.csv",
+        ["Data","Factura","Tipo","Origem","Destino","Estado"],
+        rows
+      );
+    }
+
     async function loadInternal() {
       try {
         const [{ data: clientes }, { data: processos }, { data: cotacoes }, { data: docs }] = await Promise.all([
@@ -1363,136 +1740,29 @@
           withTimeout(supabaseClient.from("processos_documentos").select("*").order("created_at", { ascending: false }), 8000)
         ]);
 
-        const procList = processos || [];
-        const cotList = cotacoes || [];
-        const docsList = docs || [];
+        processosCache = processos || [];
+        cotacoesCache = cotacoes || [];
+        docsCache = docs || [];
 
-        const totalCobrado = procList.reduce((s, p) => s + Number(p.valor_cobrado || 0), 0);
-        const totalCustos = procList.reduce((s, p) => s + Number(p.custos_processo || 0), 0);
-        const totalMargem = procList.reduce((s, p) => s + Number(p.margem_lucro || 0), 0);
-        const liberados = procList.filter(p => ["Liberado", "Entregue"].includes(p.estado)).length;
+        const totalCobrado = processosCache.reduce((s, p) => s + Number(p.valor_cobrado || 0), 0);
+        const totalCustos = processosCache.reduce((s, p) => s + Number(p.custos_processo || 0), 0);
+        const totalMargem = processosCache.reduce((s, p) => s + Number(p.margem_lucro || 0), 0);
+        const liberados = processosCache.filter(p => ["Liberado", "Entregue"].includes(p.estado)).length;
 
         document.getElementById("clientesCount").textContent = clientes ? clientes.length : 0;
-        document.getElementById("processosCount").textContent = procList.length;
+        document.getElementById("processosCount").textContent = processosCache.length;
         document.getElementById("liberadosCount").textContent = liberados;
         document.getElementById("pendenciasCount").textContent =
-          procList.filter(p => p.documentos_em_falta && p.documentos_em_falta.trim() !== "").length;
-        document.getElementById("cotacoesCount").textContent = cotList.length;
+          processosCache.filter(p => p.documentos_em_falta && p.documentos_em_falta.trim() !== "").length;
+        document.getElementById("cotacoesCount").textContent = cotacoesCache.length;
 
         document.getElementById("valorCobradoTotal").textContent = formatMoney(totalCobrado);
         document.getElementById("custosTotal").textContent = formatMoney(totalCustos);
         document.getElementById("margemTotal").textContent = formatMoney(totalMargem);
 
-        const docsByProcess = {};
-        docsList.forEach(d => {
-          if (!docsByProcess[d.processo_id]) docsByProcess[d.processo_id] = [];
-          docsByProcess[d.processo_id].push(d);
-        });
-
-        const tbody = document.getElementById("processosTable");
-        tbody.innerHTML = "";
-
-        procList.forEach(p => {
-          const procDocs = docsByProcess[p.id] || [];
-          const historicoHtml = (p.historico || "Sem histórico").replace(/\n/g, "<br>");
-
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${p.numero_processo || ""}</td>
-            <td>${p.numero_factura || ""}</td>
-            <td>${p.importador_exportador || ""}</td>
-            <td>${p.regime || ""}</td>
-            <td>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-                <select id="estado_${p.id}" style="min-width:170px;">
-                  <option ${p.estado === "Recebido" ? "selected" : ""}>Recebido</option>
-                  <option ${p.estado === "Em análise" ? "selected" : ""}>Em análise</option>
-                  <option ${p.estado === "Documentos em falta" ? "selected" : ""}>Documentos em falta</option>
-                  <option ${p.estado === "Submetido" ? "selected" : ""}>Submetido</option>
-                  <option ${p.estado === "Em desembaraço" ? "selected" : ""}>Em desembaraço</option>
-                  <option ${p.estado === "Liberado" ? "selected" : ""}>Liberado</option>
-                  <option ${p.estado === "Entregue" ? "selected" : ""}>Entregue</option>
-                </select>
-                <button class="btn-mini" onclick="atualizarEstado('${p.id}')">Atualizar</button>
-              </div>
-            </td>
-            <td>
-              <textarea id="docs_${p.id}" style="min-height:90px;">${p.documentos_em_falta || ""}</textarea>
-              <div style="margin-top:8px;">
-                <button class="btn-mini info" onclick="salvarDocsEmFalta('${p.id}')">Guardar docs</button>
-              </div>
-            </td>
-            <td>
-              <label style="margin-top:0;">Valor cobrado</label>
-              <input id="cobrado_${p.id}" type="number" step="0.01" value="${Number(p.valor_cobrado || 0)}" />
-              <label style="margin-top:8px;">Custos</label>
-              <input id="custos_${p.id}" type="number" step="0.01" value="${Number(p.custos_processo || 0)}" />
-              <div class="small" style="margin-top:8px;">Margem atual: ${formatMoney(p.margem_lucro || 0)}</div>
-              <div style="margin-top:8px;">
-                <button class="btn-mini info" onclick="salvarFinanceiro('${p.id}')">Guardar financeiro</button>
-              </div>
-            </td>
-            <td>
-              <input id="procfile_${p.id}" type="file" />
-              <div style="margin-top:8px;">
-                <button class="btn-mini secondary" onclick="uploadProcessoDocumento('${p.id}')">Anexar</button>
-              </div>
-              <div class="doc-list">
-                ${procDocs.length
-                  ? procDocs.map(d => `
-                    <span class="doc-chip">
-                      <span>${d.nome_ficheiro || "Documento"}</span>
-                      <button class="btn-mini secondary" style="margin:0;padding:4px 8px;" onclick="openProcessoDocumento('${String(d.ficheiro_path).replace(/'/g, "\\'")}')">Abrir</button>
-                    </span>
-                  `).join("")
-                  : '<span class="small">Sem documentos</span>'}
-              </div>
-            </td>
-            <td><div class="history-box">${historicoHtml}</div></td>
-          `;
-          tbody.appendChild(tr);
-        });
-
-        const ctbody = document.getElementById("cotacoesTable");
-        ctbody.innerHTML = "";
-        cotList.forEach(c => {
-          const convertido = c.convertido_em_processo === true;
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${c.nome_cliente || ""}</td>
-            <td>${c.tipo_operacao || ""}</td>
-            <td>${c.numero_factura || ""}</td>
-            <td>
-              ${c.factura_path
-                ? `<button class="btn-mini secondary" onclick="openFactura('${String(c.factura_path).replace(/'/g, "\\'")}')">Ver factura</button>`
-                : '-'}
-            </td>
-            <td>
-              ${convertido
-                ? `<span class="small">Convertido</span>`
-                : `<button class="btn-mini" onclick="converterCotacaoEmProcesso('${String(c.id).replace(/'/g, "\\'")}')">Converter</button>`}
-            </td>
-            <td>${c.origem || ""}</td>
-            <td>${c.destino || ""}</td>
-            <td>${badgeEstado(c.estado || "recebido")}</td>
-          `;
-          ctbody.appendChild(tr);
-        });
-
-        const ftbody = document.getElementById("financeiroTable");
-        ftbody.innerHTML = "";
-        procList.forEach(p => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${p.numero_processo || ""}</td>
-            <td>${p.importador_exportador || ""}</td>
-            <td>${p.numero_factura || ""}</td>
-            <td>${formatMoney(p.valor_cobrado || 0)}</td>
-            <td>${formatMoney(p.custos_processo || 0)}</td>
-            <td>${formatMoney(p.margem_lucro || 0)}</td>
-          `;
-          ftbody.appendChild(tr);
-        });
+        renderProcessosTable();
+        renderCotacoesTable();
+        renderFinanceiroTable();
       } catch (e) {
         document.getElementById("welcome").textContent = "Edmilson Fumo • admin • " + e.message;
       }
@@ -1522,13 +1792,15 @@
           return;
         }
 
-        if (!cotacoes || cotacoes.length === 0) {
+        clientCotacoesCache = cotacoes || [];
+
+        if (!clientCotacoesCache.length) {
           tbody.innerHTML = `<tr><td colspan="7">Ainda não enviou nenhuma cotação.</td></tr>`;
           return;
         }
 
         tbody.innerHTML = "";
-        cotacoes.forEach(c => {
+        clientCotacoesCache.forEach(c => {
           const tr = document.createElement("tr");
           tr.innerHTML = `
             <td>${formatDate(c.created_at)}</td>
@@ -1566,6 +1838,16 @@
           return;
         }
 
+        const { data: docs } = await withTimeout(
+          supabaseClient
+            .from("processos_documentos")
+            .select("*")
+            .eq("processo_id", p.id)
+            .eq("visivel_cliente", true)
+            .order("created_at", { ascending: false }),
+          10000
+        );
+
         document.getElementById("processoCard").classList.remove("hidden");
         document.getElementById("pcTitulo").textContent = "Factura " + (p.numero_factura || "");
         document.getElementById("pcSub").textContent = (p.numero_processo || "") + " • " + (p.importador_exportador || "");
@@ -1578,6 +1860,22 @@
         document.getElementById("pcPrazo").textContent = p.prazo || "";
         document.getElementById("pcDocs").textContent = p.documentos_em_falta || "Sem pendências";
         document.getElementById("pcHistorico").textContent = p.historico || "Sem histórico";
+
+        const list = document.getElementById("pcDocsList");
+        list.innerHTML = "";
+        if (docs && docs.length) {
+          docs.forEach(d => {
+            const chip = document.createElement("span");
+            chip.className = "doc-chip";
+            chip.innerHTML = `
+              <span>${d.nome_ficheiro || "Documento"}</span>
+              <button class="btn-mini secondary" style="margin:0;padding:4px 8px;" onclick="openProcessoDocumento('${String(d.ficheiro_path).replace(/'/g, "\\'")}')">Abrir</button>
+            `;
+            list.appendChild(chip);
+          });
+        } else {
+          list.innerHTML = `<span class="small">Sem documentos visíveis para o cliente.</span>`;
+        }
       } catch (e) {
         alert(e.message);
       }
@@ -1599,7 +1897,6 @@
       );
 
       if (error) throw error;
-
       return { path, filename: file.name };
     }
 
