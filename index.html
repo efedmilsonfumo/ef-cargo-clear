@@ -80,7 +80,7 @@
 
     .login-card{
       width:100%;
-      max-width:580px;
+      max-width:620px;
       background:#fff;
       border-radius:28px;
       box-shadow:var(--shadow);
@@ -247,6 +247,16 @@
 
     .btn-mini.secondary:hover{
       background:#1f2937;
+    }
+
+    .link-btn{
+      background:none;
+      border:none;
+      padding:0;
+      color:var(--primary);
+      cursor:pointer;
+      font-weight:700;
+      font-size:14px;
     }
 
     .topbar{
@@ -540,23 +550,69 @@
 
   <div id="loginView" class="login-shell">
     <div class="login-card">
-      <div class="pill">EF Cargo Clear</div>
-      <h1 class="login-title">Entrar no sistema</h1>
-      <p class="login-sub">Painel interno e portal do cliente para acompanhamento de despachos e pedidos de cotação.</p>
+      <div id="loginMode">
+        <div class="pill">EF Cargo Clear</div>
+        <h1 class="login-title">Entrar no sistema</h1>
+        <p class="login-sub">Painel interno e portal do cliente para acompanhamento de despachos e pedidos de cotação.</p>
 
-      <div class="grid">
-        <div>
-          <label>Email</label>
-          <input id="email" placeholder="Digite o email" />
+        <div class="grid">
+          <div>
+            <label>Email</label>
+            <input id="email" placeholder="Digite o email" />
+          </div>
+          <div>
+            <label>Password</label>
+            <input id="password" type="password" placeholder="Digite a password" />
+          </div>
+          <button class="btn" onclick="login()">Entrar</button>
         </div>
-        <div>
-          <label>Password</label>
-          <input id="password" type="password" placeholder="Digite a password" />
-        </div>
-        <button class="btn" onclick="login()">Entrar</button>
+
+        <p style="margin-top:16px;">
+          <button class="link-btn" onclick="showRegister()">Criar conta</button>
+        </p>
+
+        <p id="loginMsg" class="small" style="margin-top:14px;"></p>
       </div>
 
-      <p id="loginMsg" class="small" style="margin-top:14px;"></p>
+      <div id="registerMode" class="hidden">
+        <div class="pill">Novo cliente</div>
+        <h1 class="login-title">Criar conta</h1>
+        <p class="login-sub">Registe a sua empresa para entrar no portal e solicitar cotações diretamente no sistema.</p>
+
+        <div class="grid">
+          <div>
+            <label>Nome da empresa</label>
+            <input id="reg_nome" placeholder="Nome da empresa" />
+          </div>
+          <div>
+            <label>NUIT</label>
+            <input id="reg_nuit" placeholder="NUIT" />
+          </div>
+          <div>
+            <label>Contacto</label>
+            <input id="reg_contacto" placeholder="Telefone" />
+          </div>
+          <div>
+            <label>Email</label>
+            <input id="reg_email" placeholder="Email" />
+          </div>
+          <div>
+            <label>Password</label>
+            <input id="reg_password" type="password" placeholder="Password" />
+          </div>
+          <div>
+            <label>Confirmar password</label>
+            <input id="reg_password2" type="password" placeholder="Confirmar password" />
+          </div>
+          <button class="btn" onclick="registerClient()">Criar conta</button>
+        </div>
+
+        <p style="margin-top:16px;">
+          <button class="link-btn" onclick="showLogin()">Voltar ao login</button>
+        </p>
+
+        <p id="registerMsg" class="small" style="margin-top:14px;"></p>
+      </div>
     </div>
   </div>
 
@@ -786,6 +842,16 @@
       }
     });
 
+    function showRegister() {
+      document.getElementById("loginMode").classList.add("hidden");
+      document.getElementById("registerMode").classList.remove("hidden");
+    }
+
+    function showLogin() {
+      document.getElementById("registerMode").classList.add("hidden");
+      document.getElementById("loginMode").classList.remove("hidden");
+    }
+
     function withTimeout(promise, ms = 8000) {
       return Promise.race([
         promise,
@@ -811,6 +877,97 @@
       btn.classList.add("active");
       document.getElementById("client-consulta").classList.toggle("hidden", tab !== "consulta");
       document.getElementById("client-cotacao").classList.toggle("hidden", tab !== "cotacao");
+    }
+
+    async function registerClient() {
+      const msg = document.getElementById("registerMsg");
+
+      const nome = document.getElementById("reg_nome").value.trim();
+      const nuit = document.getElementById("reg_nuit").value.trim();
+      const contacto = document.getElementById("reg_contacto").value.trim();
+      const email = document.getElementById("reg_email").value.trim().toLowerCase();
+      const password = document.getElementById("reg_password").value;
+      const password2 = document.getElementById("reg_password2").value;
+
+      if (!nome || !email || !password) {
+        msg.textContent = "Preencha nome, email e password.";
+        msg.className = "message-err";
+        return;
+      }
+
+      if (password.length < 6) {
+        msg.textContent = "A password deve ter pelo menos 6 caracteres.";
+        msg.className = "message-err";
+        return;
+      }
+
+      if (password !== password2) {
+        msg.textContent = "As passwords não coincidem.";
+        msg.className = "message-err";
+        return;
+      }
+
+      msg.textContent = "A criar conta...";
+      msg.className = "small";
+
+      try {
+        const { data, error } = await withTimeout(
+          supabaseClient.auth.signUp({
+            email,
+            password
+          }),
+          12000
+        );
+
+        if (error) {
+          msg.textContent = error.message;
+          msg.className = "message-err";
+          return;
+        }
+
+        const userId = data?.user?.id;
+        if (!userId) {
+          msg.textContent = "Conta criada, mas não foi possível obter o utilizador.";
+          msg.className = "message-err";
+          return;
+        }
+
+        const { error: clienteError } = await withTimeout(
+          supabaseClient.from("clientes").insert({
+            id: userId,
+            nome,
+            email,
+            nuit,
+            contacto
+          }),
+          10000
+        );
+
+        if (clienteError) {
+          msg.textContent = clienteError.message;
+          msg.className = "message-err";
+          return;
+        }
+
+        msg.textContent = "Conta criada com sucesso. Já pode entrar no sistema.";
+        msg.className = "message-ok";
+
+        document.getElementById("reg_nome").value = "";
+        document.getElementById("reg_nuit").value = "";
+        document.getElementById("reg_contacto").value = "";
+        document.getElementById("reg_email").value = "";
+        document.getElementById("reg_password").value = "";
+        document.getElementById("reg_password2").value = "";
+
+        setTimeout(() => {
+          showLogin();
+          document.getElementById("email").value = email;
+        }, 1200);
+
+      } catch (e) {
+        msg.textContent = e.message || "Erro ao criar conta.";
+        msg.className = "message-err";
+      }
     }
 
     async function login() {
@@ -938,11 +1095,7 @@
 
       try {
         const { data: cotacao, error: cotacaoError } = await withTimeout(
-          supabaseClient
-            .from("pedidos_cotacao")
-            .select("*")
-            .eq("id", cotacaoId)
-            .single(),
+          supabaseClient.from("pedidos_cotacao").select("*").eq("id", cotacaoId).single(),
           10000
         );
 
@@ -960,11 +1113,7 @@
 
         if (cotacao.email) {
           const { data: clienteByEmail } = await withTimeout(
-            supabaseClient
-              .from("clientes")
-              .select("id")
-              .eq("email", cotacao.email)
-              .maybeSingle(),
+            supabaseClient.from("clientes").select("id").eq("email", cotacao.email).maybeSingle(),
             8000
           );
 
@@ -992,11 +1141,7 @@
         };
 
         const { data: novoProcesso, error: processoError } = await withTimeout(
-          supabaseClient
-            .from("processos")
-            .insert(payloadProcesso)
-            .select("id, numero_processo")
-            .single(),
+          supabaseClient.from("processos").insert(payloadProcesso).select("id, numero_processo").single(),
           10000
         );
 
@@ -1035,10 +1180,7 @@
         const [{ data: clientes }, { data: processos }, { data: cotacoes }] = await Promise.all([
           withTimeout(supabaseClient.from("clientes").select("*"), 8000),
           withTimeout(supabaseClient.from("processos").select("*"), 8000),
-          withTimeout(
-            supabaseClient.from("pedidos_cotacao").select("*").order("created_at", { ascending: false }),
-            8000
-          )
+          withTimeout(supabaseClient.from("pedidos_cotacao").select("*").order("created_at", { ascending: false }), 8000)
         ]);
 
         document.getElementById("clientesCount").textContent = clientes ? clientes.length : 0;
@@ -1139,9 +1281,7 @@
         15000
       );
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       return {
         path,
