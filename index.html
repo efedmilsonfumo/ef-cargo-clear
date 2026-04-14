@@ -7,8 +7,9 @@
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <style>
     :root{
-      --bg:#f7f7f8;
+      --bg:#f4f6f8;
       --card:#ffffff;
+      --card-2:#fbfbfc;
       --text:#1f2937;
       --muted:#6b7280;
       --line:#e5e7eb;
@@ -23,33 +24,44 @@
       --info-bg:#e0f2fe;
       --info-text:#075985;
       --danger:#b91c1c;
-      --shadow:0 12px 32px rgba(0,0,0,.07);
-      --shadow-soft:0 6px 18px rgba(0,0,0,.04);
-      --radius:22px;
+      --shadow:0 18px 40px rgba(15,23,42,.08);
+      --shadow-soft:0 10px 24px rgba(15,23,42,.05);
+      --radius:24px;
+      --radius-sm:16px;
     }
 
     *{box-sizing:border-box}
+
     body{
       margin:0;
       font-family:Arial,sans-serif;
       background:
-        radial-gradient(circle at top right, rgba(190,0,26,.05), transparent 22%),
-        radial-gradient(circle at bottom left, rgba(190,0,26,.04), transparent 18%),
-        linear-gradient(180deg,#fbfbfb 0%, #f2f2f3 100%);
+        radial-gradient(circle at top right, rgba(190,0,26,.06), transparent 22%),
+        radial-gradient(circle at bottom left, rgba(190,0,26,.05), transparent 18%),
+        linear-gradient(180deg,#fafafa 0%, #f2f4f7 100%);
       color:var(--text);
     }
 
-    .wrap{max-width:1320px;margin:0 auto;padding:22px}
+    .wrap{
+      max-width:1380px;
+      margin:0 auto;
+      padding:22px;
+    }
+
     .card{
       background:var(--card);
       border-radius:var(--radius);
       box-shadow:var(--shadow);
       padding:24px;
       margin-bottom:18px;
-      border:1px solid rgba(229,231,235,.9);
+      border:1px solid rgba(229,231,235,.95);
     }
 
-    .hero-card{position:relative;overflow:hidden}
+    .hero-card{
+      position:relative;
+      overflow:hidden;
+    }
+
     .hero-card::before{
       content:"";
       position:absolute;
@@ -124,8 +136,16 @@
     .grid-3{grid-template-columns:repeat(3,1fr)}
     .grid-2{grid-template-columns:repeat(2,1fr)}
 
-    .row{display:flex;gap:14px;flex-wrap:wrap}
-    .row > *{flex:1;min-width:220px}
+    .row{
+      display:flex;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+
+    .row > *{
+      flex:1;
+      min-width:220px;
+    }
 
     label{
       display:block;
@@ -143,15 +163,19 @@
       padding:14px 15px;
       font-size:15px;
       outline:none;
-      transition:border-color .2s, box-shadow .2s;
+      transition:border-color .2s, box-shadow .2s, background .2s;
     }
 
     input:focus, select:focus, textarea:focus{
       border-color:rgba(190,0,26,.45);
       box-shadow:0 0 0 4px rgba(190,0,26,.08);
+      background:#fff;
     }
 
-    textarea{min-height:110px;resize:vertical}
+    textarea{
+      min-height:110px;
+      resize:vertical;
+    }
 
     .btn{
       border:none;
@@ -169,10 +193,12 @@
 
     .btn:hover{
       background:linear-gradient(180deg,#c6001b 0%, #930015 100%);
-      box-shadow:0 10px 20px rgba(190,0,26,.22);
+      box-shadow:0 12px 20px rgba(190,0,26,.22);
     }
 
-    .btn:active{transform:translateY(1px)}
+    .btn:active{
+      transform:translateY(1px);
+    }
 
     .btn-outline{
       background:#fff;
@@ -228,12 +254,22 @@
       flex-wrap:wrap;
     }
 
-    .brand{display:flex;flex-direction:column;gap:10px}
-    .brand-line{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+    .brand{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .brand-line{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      flex-wrap:wrap;
+    }
 
     .brand-badge{
-      width:56px;
-      height:56px;
+      width:58px;
+      height:58px;
       border-radius:18px;
       background:linear-gradient(180deg,var(--primary) 0%, var(--primary-dark) 100%);
       color:#fff;
@@ -242,7 +278,7 @@
       justify-content:center;
       font-weight:800;
       font-size:28px;
-      box-shadow:0 10px 20px rgba(190,0,26,.18);
+      box-shadow:0 12px 24px rgba(190,0,26,.18);
       flex-shrink:0;
     }
 
@@ -264,11 +300,75 @@
       line-height:1.35;
     }
 
-    .welcome-line{color:var(--muted);font-size:14px;margin-top:2px}
+    .welcome-line{
+      color:var(--muted);
+      font-size:14px;
+      margin-top:2px;
+    }
+
     .small{font-size:13px;color:var(--muted);line-height:1.45}
     .message-ok{color:#166534;font-size:14px;font-weight:600}
     .message-err{color:#b91c1c;font-size:14px;font-weight:600}
     .hidden{display:none}
+
+    .admin-shell{
+      display:grid;
+      grid-template-columns:280px 1fr;
+      gap:18px;
+      align-items:start;
+    }
+
+    .sidebar{
+      position:sticky;
+      top:16px;
+      background:linear-gradient(180deg,#ffffff 0%, #fcfcfc 100%);
+      border:1px solid rgba(229,231,235,.95);
+      border-radius:24px;
+      box-shadow:var(--shadow);
+      padding:20px;
+    }
+
+    .sidebar-title{
+      font-size:13px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color:var(--muted);
+      margin-bottom:14px;
+      font-weight:800;
+    }
+
+    .sidebar-menu{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .sidebar-btn{
+      width:100%;
+      text-align:left;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--text);
+      padding:14px 16px;
+      border-radius:16px;
+      cursor:pointer;
+      font-weight:700;
+      font-size:14px;
+      transition:.2s;
+    }
+
+    .sidebar-btn:hover{
+      border-color:rgba(190,0,26,.25);
+      color:var(--primary);
+      background:#fffdfd;
+    }
+
+    .sidebar-btn.active{
+      background:linear-gradient(180deg,var(--primary) 0%, var(--primary-dark) 100%);
+      color:#fff;
+      border-color:var(--primary);
+      box-shadow:0 10px 18px rgba(190,0,26,.14);
+    }
 
     .kpi{
       padding:22px;
@@ -290,10 +390,26 @@
       background:linear-gradient(180deg,var(--primary) 0%, #e56474 100%);
     }
 
-    .kpi-title{color:var(--muted);font-size:14px;margin-bottom:10px;font-weight:700}
-    .kpi-value{font-size:34px;font-weight:800;color:var(--primary);letter-spacing:-0.03em}
+    .kpi-title{
+      color:var(--muted);
+      font-size:14px;
+      margin-bottom:10px;
+      font-weight:700;
+    }
 
-    .tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+    .kpi-value{
+      font-size:34px;
+      font-weight:800;
+      color:var(--primary);
+      letter-spacing:-0.03em;
+    }
+
+    .tabs{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:18px;
+    }
 
     .tab-btn{
       background:#fff;
@@ -323,7 +439,7 @@
     .tab-content.hidden{display:none}
 
     .section-title{
-      font-size:22px;
+      font-size:24px;
       font-weight:800;
       margin:0 0 10px;
       color:#232323;
@@ -335,6 +451,21 @@
       color:var(--muted);
       font-size:14px;
       line-height:1.5;
+    }
+
+    .panel-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+
+    .panel-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
     }
 
     table{
@@ -356,13 +487,15 @@
 
     th{
       color:#374151;
-      font-size:13px;
+      font-size:12px;
       font-weight:800;
       text-transform:uppercase;
-      letter-spacing:.03em;
+      letter-spacing:.04em;
     }
 
-    tbody tr:hover{background:#fcfcfc}
+    tbody tr:hover{
+      background:#fcfcfc;
+    }
 
     .badge{
       display:inline-flex;
@@ -445,24 +578,39 @@
 
     .table-scroll{overflow:auto}
 
+    .stat-row{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:18px;
+    }
+
     hr{border:none;border-top:1px solid var(--line)}
 
     @media print {
       body { background:#fff; }
       .no-print { display:none !important; }
-      .card { box-shadow:none; border:1px solid #ddd; }
+      .card, .sidebar { box-shadow:none; border:1px solid #ddd; }
       .wrap { max-width:none; padding:0; }
+    }
+
+    @media (max-width:1180px){
+      .admin-shell{
+        grid-template-columns:1fr;
+      }
+      .sidebar{
+        position:static;
+      }
     }
 
     @media (max-width:1100px){
       .grid-5{grid-template-columns:repeat(2,1fr)}
       .grid-4{grid-template-columns:repeat(2,1fr)}
-      .grid-3,.detail-grid,.grid-2{grid-template-columns:1fr}
+      .grid-3,.detail-grid,.grid-2,.stat-row{grid-template-columns:1fr}
     }
 
     @media (max-width:640px){
       .wrap{padding:14px}
-      .card,.kpi{padding:18px}
+      .card,.kpi,.sidebar{padding:18px}
       .login-card{padding:24px}
       .login-title{font-size:32px}
       .grid-5,.grid-4{grid-template-columns:1fr}
@@ -561,143 +709,158 @@
       </div>
 
       <div id="internalView" class="hidden">
-        <div class="grid grid-5">
-          <div class="kpi"><div class="kpi-title">Clientes</div><div class="kpi-value" id="clientesCount">0</div></div>
-          <div class="kpi"><div class="kpi-title">Processos</div><div class="kpi-value" id="processosCount">0</div></div>
-          <div class="kpi"><div class="kpi-title">Liberados</div><div class="kpi-value" id="liberadosCount">0</div></div>
-          <div class="kpi"><div class="kpi-title">Pendências</div><div class="kpi-value" id="pendenciasCount">0</div></div>
-          <div class="kpi"><div class="kpi-title">Pedidos de cotação</div><div class="kpi-value" id="cotacoesCount">0</div></div>
-        </div>
+        <div class="admin-shell">
+          <aside class="sidebar no-print">
+            <div class="sidebar-title">Painel Admin</div>
+            <div class="sidebar-menu">
+              <button class="sidebar-btn active" id="side-processos" onclick="showInternalTab('processos', this)">Processos</button>
+              <button class="sidebar-btn" id="side-cotacoes" onclick="showInternalTab('cotacoes', this)">Pedidos de cotação</button>
+              <button class="sidebar-btn" id="side-financeiro" onclick="showInternalTab('financeiro', this)">Financeiro</button>
+            </div>
+          </aside>
 
-        <div class="grid grid-3">
-          <div class="kpi"><div class="kpi-title">Valor cobrado</div><div class="kpi-value" id="valorCobradoTotal">0</div></div>
-          <div class="kpi"><div class="kpi-title">Custos do processo</div><div class="kpi-value" id="custosTotal">0</div></div>
-          <div class="kpi"><div class="kpi-title">Margem total</div><div class="kpi-value" id="margemTotal">0</div></div>
-        </div>
+          <div>
+            <div class="grid grid-5">
+              <div class="kpi"><div class="kpi-title">Clientes</div><div class="kpi-value" id="clientesCount">0</div></div>
+              <div class="kpi"><div class="kpi-title">Processos</div><div class="kpi-value" id="processosCount">0</div></div>
+              <div class="kpi"><div class="kpi-title">Liberados</div><div class="kpi-value" id="liberadosCount">0</div></div>
+              <div class="kpi"><div class="kpi-title">Pendências</div><div class="kpi-value" id="pendenciasCount">0</div></div>
+              <div class="kpi"><div class="kpi-title">Pedidos de cotação</div><div class="kpi-value" id="cotacoesCount">0</div></div>
+            </div>
 
-        <div class="tabs no-print">
-          <button class="tab-btn active" onclick="showInternalTab('processos', this)">Processos</button>
-          <button class="tab-btn" onclick="showInternalTab('cotacoes', this)">Pedidos de cotação</button>
-          <button class="tab-btn" onclick="showInternalTab('financeiro', this)">Financeiro</button>
-        </div>
+            <div class="stat-row" style="margin-top:18px;">
+              <div class="kpi"><div class="kpi-title">Valor cobrado</div><div class="kpi-value" id="valorCobradoTotal">0</div></div>
+              <div class="kpi"><div class="kpi-title">Custos do processo</div><div class="kpi-value" id="custosTotal">0</div></div>
+              <div class="kpi"><div class="kpi-title">Margem total</div><div class="kpi-value" id="margemTotal">0</div></div>
+            </div>
 
-        <div id="internal-processos" class="tab-content">
-          <div class="card">
-            <h2 class="section-title">Processos</h2>
-            <div class="section-sub">Atualize o estado, documentos em falta, financeiro e documentos do processo.</div>
+            <div id="internal-processos" class="tab-content" style="margin-top:18px;">
+              <div class="card">
+                <div class="panel-head">
+                  <div>
+                    <h2 class="section-title">Gestão de Processos</h2>
+                    <div class="section-sub">Atualize estado, documentos em falta, financeiro e documentos do processo.</div>
+                  </div>
+                  <div class="panel-actions no-print">
+                    <button class="btn-mini green" onclick="exportProcessosCSV()">Excel/CSV</button>
+                    <button class="btn-mini secondary" onclick="printSection('internal-processos','Relatório de Processos')">PDF</button>
+                  </div>
+                </div>
 
-            <div class="toolbar no-print">
-              <div class="field">
-                <label>Pesquisa global</label>
-                <input id="globalSearch" placeholder="Pesquisar tudo..." oninput="applyFilters()" />
-              </div>
-              <div class="field">
-                <label>Cliente</label>
-                <input id="filterCliente" placeholder="Nome do cliente" oninput="applyFilters()" />
-              </div>
-              <div class="field">
-                <label>Factura</label>
-                <input id="filterFactura" placeholder="Número da factura" oninput="applyFilters()" />
-              </div>
-              <div class="field">
-                <label>Estado</label>
-                <select id="filterEstado" onchange="applyFilters()">
-                  <option value="">Todos</option>
-                  <option>Recebido</option>
-                  <option>Em análise</option>
-                  <option>Documentos em falta</option>
-                  <option>Submetido</option>
-                  <option>Em desembaraço</option>
-                  <option>Liberado</option>
-                  <option>Entregue</option>
-                </select>
-              </div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <button class="btn-mini info" onclick="clearFilters()">Limpar</button>
-                <button class="btn-mini green" onclick="exportProcessosCSV()">Excel/CSV</button>
-                <button class="btn-mini secondary" onclick="printSection('internal-processos','Relatório de Processos')">PDF</button>
+                <div class="toolbar no-print">
+                  <div class="field">
+                    <label>Pesquisa global</label>
+                    <input id="globalSearch" placeholder="Pesquisar tudo..." oninput="applyFilters()" />
+                  </div>
+                  <div class="field">
+                    <label>Cliente</label>
+                    <input id="filterCliente" placeholder="Nome do cliente" oninput="applyFilters()" />
+                  </div>
+                  <div class="field">
+                    <label>Factura</label>
+                    <input id="filterFactura" placeholder="Número da factura" oninput="applyFilters()" />
+                  </div>
+                  <div class="field">
+                    <label>Estado</label>
+                    <select id="filterEstado" onchange="applyFilters()">
+                      <option value="">Todos</option>
+                      <option>Recebido</option>
+                      <option>Em análise</option>
+                      <option>Documentos em falta</option>
+                      <option>Submetido</option>
+                      <option>Em desembaraço</option>
+                      <option>Liberado</option>
+                      <option>Entregue</option>
+                    </select>
+                  </div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn-mini info" onclick="clearFilters()">Limpar</button>
+                  </div>
+                </div>
+
+                <div class="table-scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Processo</th>
+                        <th>Factura</th>
+                        <th>Cliente</th>
+                        <th>Regime</th>
+                        <th>Estado</th>
+                        <th>Docs em falta</th>
+                        <th>Financeiro</th>
+                        <th>Documentos</th>
+                        <th>Histórico</th>
+                      </tr>
+                    </thead>
+                    <tbody id="processosTable"></tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
-            <div class="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Processo</th>
-                    <th>Factura</th>
-                    <th>Cliente</th>
-                    <th>Regime</th>
-                    <th>Estado</th>
-                    <th>Docs em falta</th>
-                    <th>Financeiro</th>
-                    <th>Documentos</th>
-                    <th>Histórico</th>
-                  </tr>
-                </thead>
-                <tbody id="processosTable"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+            <div id="internal-cotacoes" class="tab-content hidden" style="margin-top:18px;">
+              <div class="card">
+                <div class="panel-head">
+                  <div>
+                    <h2 class="section-title">Pedidos de Cotação</h2>
+                    <div class="section-sub">Solicitações submetidas pelos clientes para análise comercial e operacional.</div>
+                  </div>
+                  <div class="panel-actions no-print">
+                    <button class="btn-mini green" onclick="exportCotacoesCSV()">Excel/CSV</button>
+                    <button class="btn-mini secondary" onclick="printSection('internal-cotacoes','Pedidos de Cotação')">PDF</button>
+                  </div>
+                </div>
 
-        <div id="internal-cotacoes" class="tab-content hidden">
-          <div class="card">
-            <h2 class="section-title">Pedidos de cotação recebidos</h2>
-            <div class="section-sub">Solicitações submetidas pelos clientes para análise comercial e operacional.</div>
-
-            <div class="toolbar no-print">
-              <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <button class="btn-mini green" onclick="exportCotacoesCSV()">Excel/CSV</button>
-                <button class="btn-mini secondary" onclick="printSection('internal-cotacoes','Pedidos de Cotação')">PDF</button>
+                <div class="table-scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Cliente</th>
+                        <th>Tipo</th>
+                        <th>Factura</th>
+                        <th>Documento</th>
+                        <th>Converter</th>
+                        <th>Origem</th>
+                        <th>Destino</th>
+                        <th>Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody id="cotacoesTable"></tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
-            <div class="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Cliente</th>
-                    <th>Tipo</th>
-                    <th>Factura</th>
-                    <th>Documento</th>
-                    <th>Converter</th>
-                    <th>Origem</th>
-                    <th>Destino</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody id="cotacoesTable"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+            <div id="internal-financeiro" class="tab-content hidden" style="margin-top:18px;">
+              <div class="card">
+                <div class="panel-head">
+                  <div>
+                    <h2 class="section-title">Painel Financeiro</h2>
+                    <div class="section-sub">Resumo básico por processo com valor cobrado, custos e margem.</div>
+                  </div>
+                  <div class="panel-actions no-print">
+                    <button class="btn-mini green" onclick="exportFinanceiroCSV()">Excel/CSV</button>
+                    <button class="btn-mini secondary" onclick="printSection('internal-financeiro','Painel Financeiro')">PDF</button>
+                  </div>
+                </div>
 
-        <div id="internal-financeiro" class="tab-content hidden">
-          <div class="card">
-            <h2 class="section-title">Painel financeiro</h2>
-            <div class="section-sub">Resumo básico por processo com valor cobrado, custos e margem.</div>
-
-            <div class="toolbar no-print">
-              <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <button class="btn-mini green" onclick="exportFinanceiroCSV()">Excel/CSV</button>
-                <button class="btn-mini secondary" onclick="printSection('internal-financeiro','Painel Financeiro')">PDF</button>
+                <div class="table-scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Processo</th>
+                        <th>Cliente</th>
+                        <th>Factura</th>
+                        <th>Valor cobrado</th>
+                        <th>Custos</th>
+                        <th>Margem</th>
+                      </tr>
+                    </thead>
+                    <tbody id="financeiroTable"></tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-
-            <div class="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Processo</th>
-                    <th>Cliente</th>
-                    <th>Factura</th>
-                    <th>Valor cobrado</th>
-                    <th>Custos</th>
-                    <th>Margem</th>
-                  </tr>
-                </thead>
-                <tbody id="financeiroTable"></tbody>
-              </table>
             </div>
           </div>
         </div>
@@ -844,11 +1007,12 @@
 
         <div id="client-historico" class="tab-content hidden">
           <div class="card">
-            <h2 class="section-title">Minhas cotações</h2>
-            <div class="section-sub">Aqui pode acompanhar todos os pedidos de cotação já enviados pela sua empresa.</div>
-
-            <div class="toolbar no-print">
-              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <div class="panel-head">
+              <div>
+                <h2 class="section-title">Minhas cotações</h2>
+                <div class="section-sub">Aqui pode acompanhar todos os pedidos de cotação já enviados pela sua empresa.</div>
+              </div>
+              <div class="panel-actions no-print">
                 <button class="btn-mini green" onclick="exportClientCotacoesCSV()">Excel/CSV</button>
                 <button class="btn-mini secondary" onclick="printSection('client-historico','Minhas Cotações')">PDF</button>
               </div>
@@ -1005,9 +1169,13 @@
       win.document.close();
     }
 
-    function showInternalTab(tab, btn) {
-      document.querySelectorAll("#internalView .tab-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
+    function showInternalTab(tab) {
+      document.querySelectorAll(".sidebar-btn").forEach(b => b.classList.remove("active"));
+
+      if (tab === "processos") document.getElementById("side-processos")?.classList.add("active");
+      if (tab === "cotacoes") document.getElementById("side-cotacoes")?.classList.add("active");
+      if (tab === "financeiro") document.getElementById("side-financeiro")?.classList.add("active");
+
       document.getElementById("internal-processos").classList.toggle("hidden", tab !== "processos");
       document.getElementById("internal-cotacoes").classList.toggle("hidden", tab !== "cotacoes");
       document.getElementById("internal-financeiro").classList.toggle("hidden", tab !== "financeiro");
@@ -1515,7 +1683,7 @@
 
         alert(`Cotação convertida com sucesso. Processo criado: ${novoProcesso.numero_processo}`);
         await loadInternal();
-        showInternalTab("processos", document.querySelectorAll("#internalView .tab-btn")[0]);
+        showInternalTab("processos");
       } catch (e) {
         alert(e.message || "Erro ao converter cotação em processo.");
       }
@@ -1565,6 +1733,7 @@
     function renderProcessosTable() {
       const procList = getFilteredProcessos();
       const docsByProcess = {};
+
       docsCache.forEach(d => {
         if (!docsByProcess[d.processo_id]) docsByProcess[d.processo_id] = [];
         docsByProcess[d.processo_id].push(d);
@@ -1579,13 +1748,14 @@
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${p.numero_processo || ""}</td>
+          <td><strong>${p.numero_processo || ""}</strong></td>
           <td>${p.numero_factura || ""}</td>
-          <td>${p.importador_exportador || ""}</td>
+          <td><strong>${p.importador_exportador || ""}</strong></td>
           <td>${p.regime || ""}</td>
           <td>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-              <select id="estado_${p.id}" style="min-width:170px;">
+            <div style="display:flex;flex-direction:column;gap:8px;min-width:180px;">
+              <div>${badgeEstado(p.estado || "Recebido")}</div>
+              <select id="estado_${p.id}">
                 <option ${p.estado === "Recebido" ? "selected" : ""}>Recebido</option>
                 <option ${p.estado === "Em análise" ? "selected" : ""}>Em análise</option>
                 <option ${p.estado === "Documentos em falta" ? "selected" : ""}>Documentos em falta</option>
@@ -1597,13 +1767,13 @@
               <button class="btn-mini" onclick="atualizarEstado('${p.id}')">Atualizar</button>
             </div>
           </td>
-          <td>
+          <td style="min-width:220px;">
             <textarea id="docs_${p.id}" style="min-height:90px;">${p.documentos_em_falta || ""}</textarea>
             <div style="margin-top:8px;">
               <button class="btn-mini info" onclick="salvarDocsEmFalta('${p.id}')">Guardar docs</button>
             </div>
           </td>
-          <td>
+          <td style="min-width:220px;">
             <label style="margin-top:0;">Valor cobrado</label>
             <input id="cobrado_${p.id}" type="number" step="0.01" value="${Number(p.valor_cobrado || 0)}" />
             <label style="margin-top:8px;">Custos</label>
@@ -1613,7 +1783,7 @@
               <button class="btn-mini info" onclick="salvarFinanceiro('${p.id}')">Guardar financeiro</button>
             </div>
           </td>
-          <td>
+          <td style="min-width:240px;">
             <input id="procfile_${p.id}" type="file" />
             <label style="margin-top:8px;display:flex;gap:8px;align-items:center;">
               <input id="procvis_${p.id}" type="checkbox" checked style="width:auto;" />
@@ -1633,7 +1803,9 @@
                 : '<span class="small">Sem documentos</span>'}
             </div>
           </td>
-          <td><div class="history-box">${historicoHtml}</div></td>
+          <td style="min-width:260px;">
+            <div class="history-box">${historicoHtml}</div>
+          </td>
         `;
         tbody.appendChild(tr);
       });
@@ -1642,11 +1814,12 @@
     function renderCotacoesTable() {
       const ctbody = document.getElementById("cotacoesTable");
       ctbody.innerHTML = "";
+
       cotacoesCache.forEach(c => {
         const convertido = c.convertido_em_processo === true;
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${c.nome_cliente || ""}</td>
+          <td><strong>${c.nome_cliente || ""}</strong></td>
           <td>${c.tipo_operacao || ""}</td>
           <td>${c.numero_factura || ""}</td>
           <td>
@@ -1656,7 +1829,7 @@
           </td>
           <td>
             ${convertido
-              ? `<span class="small">Convertido</span>`
+              ? `<span class="badge green">Convertido</span>`
               : `<button class="btn-mini" onclick="converterCotacaoEmProcesso('${String(c.id).replace(/'/g, "\\'")}')">Converter</button>`}
           </td>
           <td>${c.origem || ""}</td>
@@ -1670,15 +1843,21 @@
     function renderFinanceiroTable() {
       const ftbody = document.getElementById("financeiroTable");
       ftbody.innerHTML = "";
+
       getFilteredProcessos().forEach(p => {
+        const margem = Number(p.margem_lucro || 0);
+        const margemBadge = margem > 0
+          ? `<span class="badge green">${formatMoney(margem)}</span>`
+          : `<span class="badge amber">${formatMoney(margem)}</span>`;
+
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${p.numero_processo || ""}</td>
+          <td><strong>${p.numero_processo || ""}</strong></td>
           <td>${p.importador_exportador || ""}</td>
           <td>${p.numero_factura || ""}</td>
           <td>${formatMoney(p.valor_cobrado || 0)}</td>
           <td>${formatMoney(p.custos_processo || 0)}</td>
-          <td>${formatMoney(p.margem_lucro || 0)}</td>
+          <td>${margemBadge}</td>
         `;
         ftbody.appendChild(tr);
       });
