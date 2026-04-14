@@ -20,6 +20,8 @@
       --success-text:#166534;
       --warn-bg:#fff3cd;
       --warn-text:#856404;
+      --info-bg:#e0f2fe;
+      --info-text:#075985;
       --danger:#b91c1c;
       --shadow:0 12px 32px rgba(0,0,0,.07);
       --shadow-soft:0 6px 18px rgba(0,0,0,.04);
@@ -27,7 +29,6 @@
     }
 
     *{box-sizing:border-box}
-
     body{
       margin:0;
       font-family:Arial,sans-serif;
@@ -38,12 +39,7 @@
       color:var(--text);
     }
 
-    .wrap{
-      max-width:1200px;
-      margin:0 auto;
-      padding:22px;
-    }
-
+    .wrap{max-width:1280px;margin:0 auto;padding:22px}
     .card{
       background:var(--card);
       border-radius:var(--radius);
@@ -53,11 +49,7 @@
       border:1px solid rgba(229,231,235,.9);
     }
 
-    .hero-card{
-      position:relative;
-      overflow:hidden;
-    }
-
+    .hero-card{position:relative;overflow:hidden}
     .hero-card::before{
       content:"";
       position:absolute;
@@ -126,29 +118,14 @@
       max-width:500px;
     }
 
-    .grid{
-      display:grid;
-      gap:18px;
-    }
+    .grid{display:grid;gap:18px}
+    .grid-5{grid-template-columns:repeat(5,1fr)}
+    .grid-4{grid-template-columns:repeat(4,1fr)}
+    .grid-3{grid-template-columns:repeat(3,1fr)}
+    .grid-2{grid-template-columns:repeat(2,1fr)}
 
-    .grid-4{
-      grid-template-columns:repeat(4,1fr);
-    }
-
-    .grid-3{
-      grid-template-columns:repeat(3,1fr);
-    }
-
-    .row{
-      display:flex;
-      gap:14px;
-      flex-wrap:wrap;
-    }
-
-    .row > *{
-      flex:1;
-      min-width:220px;
-    }
+    .row{display:flex;gap:14px;flex-wrap:wrap}
+    .row > *{flex:1;min-width:220px}
 
     label{
       display:block;
@@ -174,17 +151,7 @@
       box-shadow:0 0 0 4px rgba(190,0,26,.08);
     }
 
-    textarea{
-      min-height:110px;
-      resize:vertical;
-    }
-
-    .file-box{
-      border:1px dashed #d7dee8;
-      border-radius:16px;
-      padding:16px;
-      background:#fafafa;
-    }
+    textarea{min-height:110px;resize:vertical}
 
     .btn{
       border:none;
@@ -205,9 +172,7 @@
       box-shadow:0 10px 20px rgba(190,0,26,.22);
     }
 
-    .btn:active{
-      transform:translateY(1px);
-    }
+    .btn:active{transform:translateY(1px)}
 
     .btn-outline{
       background:#fff;
@@ -237,17 +202,11 @@
       margin-bottom:6px;
     }
 
-    .btn-mini:hover{
-      background:var(--primary-dark);
-    }
-
-    .btn-mini.secondary{
-      background:#374151;
-    }
-
-    .btn-mini.secondary:hover{
-      background:#1f2937;
-    }
+    .btn-mini:hover{background:var(--primary-dark)}
+    .btn-mini.secondary{background:#374151}
+    .btn-mini.secondary:hover{background:#1f2937}
+    .btn-mini.info{background:#0369a1}
+    .btn-mini.info:hover{background:#075985}
 
     .link-btn{
       background:none;
@@ -267,18 +226,8 @@
       flex-wrap:wrap;
     }
 
-    .brand{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-
-    .brand-line{
-      display:flex;
-      align-items:center;
-      gap:14px;
-      flex-wrap:wrap;
-    }
+    .brand{display:flex;flex-direction:column;gap:10px}
+    .brand-line{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 
     .brand-badge{
       width:56px;
@@ -313,33 +262,11 @@
       line-height:1.35;
     }
 
-    .welcome-line{
-      color:var(--muted);
-      font-size:14px;
-      margin-top:2px;
-    }
-
-    .small{
-      font-size:13px;
-      color:var(--muted);
-      line-height:1.45;
-    }
-
-    .message-ok{
-      color:#166534;
-      font-size:14px;
-      font-weight:600;
-    }
-
-    .message-err{
-      color:#b91c1c;
-      font-size:14px;
-      font-weight:600;
-    }
-
-    .hidden{
-      display:none;
-    }
+    .welcome-line{color:var(--muted);font-size:14px;margin-top:2px}
+    .small{font-size:13px;color:var(--muted);line-height:1.45}
+    .message-ok{color:#166534;font-size:14px;font-weight:600}
+    .message-err{color:#b91c1c;font-size:14px;font-weight:600}
+    .hidden{display:none}
 
     .kpi{
       padding:22px;
@@ -361,26 +288,10 @@
       background:linear-gradient(180deg,var(--primary) 0%, #e56474 100%);
     }
 
-    .kpi-title{
-      color:var(--muted);
-      font-size:14px;
-      margin-bottom:10px;
-      font-weight:700;
-    }
+    .kpi-title{color:var(--muted);font-size:14px;margin-bottom:10px;font-weight:700}
+    .kpi-value{font-size:34px;font-weight:800;color:var(--primary);letter-spacing:-0.03em}
 
-    .kpi-value{
-      font-size:36px;
-      font-weight:800;
-      color:var(--primary);
-      letter-spacing:-0.03em;
-    }
-
-    .tabs{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-bottom:18px;
-    }
+    .tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
 
     .tab-btn{
       background:#fff;
@@ -407,9 +318,7 @@
       box-shadow:0 8px 16px rgba(190,0,26,.14);
     }
 
-    .tab-content.hidden{
-      display:none;
-    }
+    .tab-content.hidden{display:none}
 
     .section-title{
       font-size:22px;
@@ -433,9 +342,7 @@
       overflow:hidden;
     }
 
-    thead tr{
-      background:#fafafa;
-    }
+    thead tr{background:#fafafa}
 
     th,td{
       text-align:left;
@@ -453,9 +360,7 @@
       letter-spacing:.03em;
     }
 
-    tbody tr:hover{
-      background:#fcfcfc;
-    }
+    tbody tr:hover{background:#fcfcfc}
 
     .badge{
       display:inline-flex;
@@ -468,15 +373,9 @@
       font-weight:700;
     }
 
-    .amber{
-      background:var(--warn-bg);
-      color:var(--warn-text);
-    }
-
-    .green{
-      background:var(--success-bg);
-      color:var(--success-text);
-    }
+    .amber{background:var(--warn-bg);color:var(--warn-text)}
+    .green{background:var(--success-bg);color:var(--success-text)}
+    .blue{background:var(--info-bg);color:var(--info-text)}
 
     .muted-box{
       background:linear-gradient(180deg,#fafafa 0%, #f7f7f7 100%);
@@ -501,48 +400,51 @@
       font-size:14px;
     }
 
-    hr{
-      border:none;
-      border-top:1px solid var(--line);
+    .history-box{
+      background:#fafafa;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      white-space:pre-wrap;
+      line-height:1.5;
+      font-size:14px;
     }
 
-    @media (max-width: 980px){
-      .grid-4{
-        grid-template-columns:repeat(2,1fr);
-      }
-      .grid-3,.detail-grid{
-        grid-template-columns:1fr;
-      }
+    .doc-list{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:10px;
     }
 
-    @media (max-width: 640px){
-      .wrap{
-        padding:14px;
-      }
-      .card,.kpi{
-        padding:18px;
-      }
-      .login-card{
-        padding:24px;
-      }
-      .login-title{
-        font-size:32px;
-      }
-      .grid-4{
-        grid-template-columns:1fr;
-      }
-      .brand h1{
-        font-size:28px;
-      }
-      .brand-badge{
-        width:48px;
-        height:48px;
-        font-size:22px;
-      }
-      th,td{
-        padding:14px 8px;
-        font-size:14px;
-      }
+    .doc-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      background:#f3f4f6;
+      border:1px solid #e5e7eb;
+      font-size:12px;
+    }
+
+    hr{border:none;border-top:1px solid var(--line)}
+
+    @media (max-width:1100px){
+      .grid-5{grid-template-columns:repeat(2,1fr)}
+      .grid-4{grid-template-columns:repeat(2,1fr)}
+      .grid-3,.detail-grid,.grid-2{grid-template-columns:1fr}
+    }
+
+    @media (max-width:640px){
+      .wrap{padding:14px}
+      .card,.kpi{padding:18px}
+      .login-card{padding:24px}
+      .login-title{font-size:32px}
+      .grid-5,.grid-4{grid-template-columns:1fr}
+      .brand h1{font-size:28px}
+      .brand-badge{width:48px;height:48px;font-size:22px}
+      th,td{padding:14px 8px;font-size:14px}
     }
   </style>
 </head>
@@ -635,22 +537,30 @@
       </div>
 
       <div id="internalView" class="hidden">
-        <div class="grid grid-4">
+        <div class="grid grid-5">
           <div class="kpi"><div class="kpi-title">Clientes</div><div class="kpi-value" id="clientesCount">0</div></div>
           <div class="kpi"><div class="kpi-title">Processos</div><div class="kpi-value" id="processosCount">0</div></div>
+          <div class="kpi"><div class="kpi-title">Liberados</div><div class="kpi-value" id="liberadosCount">0</div></div>
           <div class="kpi"><div class="kpi-title">Pendências</div><div class="kpi-value" id="pendenciasCount">0</div></div>
           <div class="kpi"><div class="kpi-title">Pedidos de cotação</div><div class="kpi-value" id="cotacoesCount">0</div></div>
+        </div>
+
+        <div class="grid grid-3">
+          <div class="kpi"><div class="kpi-title">Valor cobrado</div><div class="kpi-value" id="valorCobradoTotal">0</div></div>
+          <div class="kpi"><div class="kpi-title">Custos do processo</div><div class="kpi-value" id="custosTotal">0</div></div>
+          <div class="kpi"><div class="kpi-title">Margem total</div><div class="kpi-value" id="margemTotal">0</div></div>
         </div>
 
         <div class="tabs">
           <button class="tab-btn active" onclick="showInternalTab('processos', this)">Processos</button>
           <button class="tab-btn" onclick="showInternalTab('cotacoes', this)">Pedidos de cotação</button>
+          <button class="tab-btn" onclick="showInternalTab('financeiro', this)">Financeiro</button>
         </div>
 
         <div id="internal-processos" class="tab-content">
           <div class="card">
             <h2 class="section-title">Processos</h2>
-            <div class="section-sub">Acompanhe os processos ativos e atualize o estado operacional.</div>
+            <div class="section-sub">Atualize o estado, documentos em falta, financeiro e documentos do processo.</div>
             <table>
               <thead>
                 <tr>
@@ -659,6 +569,10 @@
                   <th>Cliente</th>
                   <th>Regime</th>
                   <th>Estado</th>
+                  <th>Docs em falta</th>
+                  <th>Financeiro</th>
+                  <th>Documentos</th>
+                  <th>Histórico</th>
                 </tr>
               </thead>
               <tbody id="processosTable"></tbody>
@@ -687,12 +601,32 @@
             </table>
           </div>
         </div>
+
+        <div id="internal-financeiro" class="tab-content hidden">
+          <div class="card">
+            <h2 class="section-title">Painel financeiro</h2>
+            <div class="section-sub">Resumo básico por processo com valor cobrado, custos e margem.</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Processo</th>
+                  <th>Cliente</th>
+                  <th>Factura</th>
+                  <th>Valor cobrado</th>
+                  <th>Custos</th>
+                  <th>Margem</th>
+                </tr>
+              </thead>
+              <tbody id="financeiroTable"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <div id="clientView" class="hidden">
         <div class="card hero-card">
           <h2 class="section-title">Portal do Cliente</h2>
-          <div class="section-sub">Consulte o estado do seu processo pela factura, envie pedidos de cotação e veja o histórico dos pedidos submetidos.</div>
+          <div class="section-sub">Consulte o estado do seu processo, envie pedidos de cotação e veja o histórico dos pedidos submetidos.</div>
         </div>
 
         <div class="tabs">
@@ -733,7 +667,7 @@
 
             <hr style="margin:22px 0;" />
             <strong>Histórico</strong>
-            <div id="pcHistorico" class="small" style="margin-top:10px"></div>
+            <div id="pcHistorico" class="history-box" style="margin-top:10px"></div>
           </div>
         </div>
 
@@ -844,7 +778,6 @@
             </table>
           </div>
         </div>
-
       </div>
     </div>
   </div>
@@ -884,7 +817,8 @@
 
     function badgeEstado(estado) {
       const e = (estado || "").toLowerCase();
-      if (e.includes("liberado")) return `<span class="badge green">${estado}</span>`;
+      if (e.includes("liberado") || e.includes("entregue")) return `<span class="badge green">${estado}</span>`;
+      if (e.includes("análise") || e.includes("submetido") || e.includes("desembaraço")) return `<span class="badge blue">${estado}</span>`;
       return `<span class="badge amber">${estado || "Sem estado"}</span>`;
     }
 
@@ -902,11 +836,17 @@
       });
     }
 
+    function formatMoney(value) {
+      const n = Number(value || 0);
+      return n.toLocaleString("pt-PT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
     function showInternalTab(tab, btn) {
       document.querySelectorAll("#internalView .tab-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       document.getElementById("internal-processos").classList.toggle("hidden", tab !== "processos");
       document.getElementById("internal-cotacoes").classList.toggle("hidden", tab !== "cotacoes");
+      document.getElementById("internal-financeiro").classList.toggle("hidden", tab !== "financeiro");
     }
 
     function showClientTab(tab, btn) {
@@ -916,9 +856,7 @@
       document.getElementById("client-cotacao").classList.toggle("hidden", tab !== "cotacao");
       document.getElementById("client-historico").classList.toggle("hidden", tab !== "historico");
 
-      if (tab === "historico") {
-        loadClientCotacoes();
-      }
+      if (tab === "historico") loadClientCotacoes();
     }
 
     async function registerClient() {
@@ -954,10 +892,7 @@
 
       try {
         const { data, error } = await withTimeout(
-          supabaseClient.auth.signUp({
-            email,
-            password
-          }),
+          supabaseClient.auth.signUp({ email, password }),
           12000
         );
 
@@ -1091,20 +1026,20 @@
         }
 
         await loadClientCotacoes();
-      } catch (e) {
+      } catch (_) {
         document.getElementById("welcome").textContent = "Cliente • portal";
       }
     }
 
-    async function openFactura(path) {
+    async function openSignedFromBucket(bucket, path) {
       if (!path) {
-        alert("Este pedido não tem factura anexada.");
+        alert("Documento não encontrado.");
         return;
       }
 
       try {
         const { data, error } = await withTimeout(
-          supabaseClient.storage.from("cotacoes").createSignedUrl(path, 300),
+          supabaseClient.storage.from(bucket).createSignedUrl(path, 300),
           10000
         );
 
@@ -1114,14 +1049,22 @@
         }
 
         if (!data?.signedUrl) {
-          alert("Não foi possível gerar o link da factura.");
+          alert("Não foi possível gerar o link.");
           return;
         }
 
         window.open(data.signedUrl, "_blank");
       } catch (e) {
-        alert(e.message || "Erro ao abrir factura.");
+        alert(e.message || "Erro ao abrir documento.");
       }
+    }
+
+    async function openFactura(path) {
+      return openSignedFromBucket("cotacoes", path);
+    }
+
+    async function openProcessoDocumento(path) {
+      return openSignedFromBucket("processos", path);
     }
 
     function gerarNumeroProcesso() {
@@ -1140,11 +1083,7 @@
 
       try {
         const { data: processo, error: processoReadError } = await withTimeout(
-          supabaseClient
-            .from("processos")
-            .select("historico")
-            .eq("id", processoId)
-            .single(),
+          supabaseClient.from("processos").select("historico").eq("id", processoId).single(),
           8000
         );
 
@@ -1155,17 +1094,12 @@
 
         const historicoAtual = processo?.historico || "";
         const agora = new Date().toLocaleString("pt-PT");
-        const novoHistorico =
-          historicoAtual +
-          `\n• ${agora} - Estado alterado para: ${novoEstado}`;
+        const novoHistorico = `${historicoAtual}\n• ${agora} - Estado alterado para: ${novoEstado}`.trim();
 
         const { error } = await withTimeout(
           supabaseClient
             .from("processos")
-            .update({
-              estado: novoEstado,
-              historico: novoHistorico
-            })
+            .update({ estado: novoEstado, historico: novoHistorico })
             .eq("id", processoId),
           10000
         );
@@ -1179,6 +1113,158 @@
         await loadInternal();
       } catch (e) {
         alert(e.message);
+      }
+    }
+
+    async function salvarDocsEmFalta(processoId) {
+      const textarea = document.getElementById("docs_" + processoId);
+      const valor = textarea.value.trim();
+
+      try {
+        const { data: processo, error: readError } = await withTimeout(
+          supabaseClient.from("processos").select("historico").eq("id", processoId).single(),
+          8000
+        );
+
+        if (readError) {
+          alert(readError.message);
+          return;
+        }
+
+        const historicoAtual = processo?.historico || "";
+        const agora = new Date().toLocaleString("pt-PT");
+        const novoHistorico = `${historicoAtual}\n• ${agora} - Documentos em falta atualizados.`.trim();
+
+        const { error } = await withTimeout(
+          supabaseClient
+            .from("processos")
+            .update({
+              documentos_em_falta: valor,
+              historico: novoHistorico
+            })
+            .eq("id", processoId),
+          10000
+        );
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        alert("Documentos em falta atualizados");
+        await loadInternal();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    async function salvarFinanceiro(processoId) {
+      const valorCobrado = Number(document.getElementById("cobrado_" + processoId).value || 0);
+      const custos = Number(document.getElementById("custos_" + processoId).value || 0);
+      const margem = valorCobrado - custos;
+
+      try {
+        const { data: processo, error: readError } = await withTimeout(
+          supabaseClient.from("processos").select("historico").eq("id", processoId).single(),
+          8000
+        );
+
+        if (readError) {
+          alert(readError.message);
+          return;
+        }
+
+        const historicoAtual = processo?.historico || "";
+        const agora = new Date().toLocaleString("pt-PT");
+        const novoHistorico = `${historicoAtual}\n• ${agora} - Financeiro atualizado. Cobrado: ${valorCobrado.toFixed(2)} | Custos: ${custos.toFixed(2)} | Margem: ${margem.toFixed(2)}`.trim();
+
+        const { error } = await withTimeout(
+          supabaseClient
+            .from("processos")
+            .update({
+              valor_cobrado: valorCobrado,
+              custos_processo: custos,
+              margem_lucro: margem,
+              historico: novoHistorico
+            })
+            .eq("id", processoId),
+          10000
+        );
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        alert("Financeiro atualizado");
+        await loadInternal();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    async function uploadProcessoDocumento(processoId) {
+      const input = document.getElementById("procfile_" + processoId);
+      const file = input.files?.[0];
+
+      if (!file) {
+        alert("Escolha um ficheiro.");
+        return;
+      }
+
+      try {
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const path = `${processoId}/${Date.now()}_${safeName}`;
+
+        const { error: uploadError } = await withTimeout(
+          supabaseClient.storage
+            .from("processos")
+            .upload(path, file, {
+              cacheControl: "3600",
+              upsert: false,
+              contentType: file.type || "application/octet-stream"
+            }),
+          15000
+        );
+
+        if (uploadError) {
+          alert(uploadError.message);
+          return;
+        }
+
+        const { error: insertError } = await withTimeout(
+          supabaseClient.from("processos_documentos").insert({
+            processo_id: processoId,
+            nome_ficheiro: file.name,
+            ficheiro_path: path
+          }),
+          10000
+        );
+
+        if (insertError) {
+          alert(insertError.message);
+          return;
+        }
+
+        const { data: processo } = await withTimeout(
+          supabaseClient.from("processos").select("historico").eq("id", processoId).single(),
+          8000
+        );
+
+        const historicoAtual = processo?.historico || "";
+        const agora = new Date().toLocaleString("pt-PT");
+        await withTimeout(
+          supabaseClient.from("processos")
+            .update({ historico: `${historicoAtual}\n• ${agora} - Documento anexado: ${file.name}`.trim() })
+            .eq("id", processoId),
+          10000
+        );
+
+        alert("Documento anexado com sucesso");
+        input.value = "";
+        await loadInternal();
+      } catch (e) {
+        alert(e.message || "Erro ao anexar documento.");
       }
     }
 
@@ -1209,9 +1295,7 @@
             8000
           );
 
-          if (clienteByEmail?.id) {
-            cliente_id = clienteByEmail.id;
-          }
+          if (clienteByEmail?.id) cliente_id = clienteByEmail.id;
         }
 
         const numeroProcesso = gerarNumeroProcesso();
@@ -1229,6 +1313,9 @@
           prazo: null,
           estado: "Recebido",
           documentos_em_falta: cotacao.factura_path ? "" : "Factura em falta",
+          valor_cobrado: 0,
+          custos_processo: 0,
+          margem_lucro: 0,
           historico: `• ${new Date().toLocaleString("pt-PT")} - Processo criado a partir da cotação ${cotacao.numero_factura || ""}. Mercadoria: ${cotacao.descricao_mercadoria || ""}`
         };
 
@@ -1269,22 +1356,46 @@
 
     async function loadInternal() {
       try {
-        const [{ data: clientes }, { data: processos }, { data: cotacoes }] = await Promise.all([
+        const [{ data: clientes }, { data: processos }, { data: cotacoes }, { data: docs }] = await Promise.all([
           withTimeout(supabaseClient.from("clientes").select("*"), 8000),
           withTimeout(supabaseClient.from("processos").select("*").order("created_at", { ascending: false }), 8000),
-          withTimeout(supabaseClient.from("pedidos_cotacao").select("*").order("created_at", { ascending: false }), 8000)
+          withTimeout(supabaseClient.from("pedidos_cotacao").select("*").order("created_at", { ascending: false }), 8000),
+          withTimeout(supabaseClient.from("processos_documentos").select("*").order("created_at", { ascending: false }), 8000)
         ]);
 
+        const procList = processos || [];
+        const cotList = cotacoes || [];
+        const docsList = docs || [];
+
+        const totalCobrado = procList.reduce((s, p) => s + Number(p.valor_cobrado || 0), 0);
+        const totalCustos = procList.reduce((s, p) => s + Number(p.custos_processo || 0), 0);
+        const totalMargem = procList.reduce((s, p) => s + Number(p.margem_lucro || 0), 0);
+        const liberados = procList.filter(p => ["Liberado", "Entregue"].includes(p.estado)).length;
+
         document.getElementById("clientesCount").textContent = clientes ? clientes.length : 0;
-        document.getElementById("processosCount").textContent = processos ? processos.length : 0;
+        document.getElementById("processosCount").textContent = procList.length;
+        document.getElementById("liberadosCount").textContent = liberados;
         document.getElementById("pendenciasCount").textContent =
-          processos ? processos.filter(p => p.documentos_em_falta && p.documentos_em_falta.trim() !== "").length : 0;
-        document.getElementById("cotacoesCount").textContent = cotacoes ? cotacoes.length : 0;
+          procList.filter(p => p.documentos_em_falta && p.documentos_em_falta.trim() !== "").length;
+        document.getElementById("cotacoesCount").textContent = cotList.length;
+
+        document.getElementById("valorCobradoTotal").textContent = formatMoney(totalCobrado);
+        document.getElementById("custosTotal").textContent = formatMoney(totalCustos);
+        document.getElementById("margemTotal").textContent = formatMoney(totalMargem);
+
+        const docsByProcess = {};
+        docsList.forEach(d => {
+          if (!docsByProcess[d.processo_id]) docsByProcess[d.processo_id] = [];
+          docsByProcess[d.processo_id].push(d);
+        });
 
         const tbody = document.getElementById("processosTable");
         tbody.innerHTML = "";
 
-        (processos || []).forEach(p => {
+        procList.forEach(p => {
+          const procDocs = docsByProcess[p.id] || [];
+          const historicoHtml = (p.historico || "Sem histórico").replace(/\n/g, "<br>");
+
           const tr = document.createElement("tr");
           tr.innerHTML = `
             <td>${p.numero_processo || ""}</td>
@@ -1293,7 +1404,7 @@
             <td>${p.regime || ""}</td>
             <td>
               <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-                <select id="estado_${p.id}" style="min-width:180px;">
+                <select id="estado_${p.id}" style="min-width:170px;">
                   <option ${p.estado === "Recebido" ? "selected" : ""}>Recebido</option>
                   <option ${p.estado === "Em análise" ? "selected" : ""}>Em análise</option>
                   <option ${p.estado === "Documentos em falta" ? "selected" : ""}>Documentos em falta</option>
@@ -1305,13 +1416,46 @@
                 <button class="btn-mini" onclick="atualizarEstado('${p.id}')">Atualizar</button>
               </div>
             </td>
+            <td>
+              <textarea id="docs_${p.id}" style="min-height:90px;">${p.documentos_em_falta || ""}</textarea>
+              <div style="margin-top:8px;">
+                <button class="btn-mini info" onclick="salvarDocsEmFalta('${p.id}')">Guardar docs</button>
+              </div>
+            </td>
+            <td>
+              <label style="margin-top:0;">Valor cobrado</label>
+              <input id="cobrado_${p.id}" type="number" step="0.01" value="${Number(p.valor_cobrado || 0)}" />
+              <label style="margin-top:8px;">Custos</label>
+              <input id="custos_${p.id}" type="number" step="0.01" value="${Number(p.custos_processo || 0)}" />
+              <div class="small" style="margin-top:8px;">Margem atual: ${formatMoney(p.margem_lucro || 0)}</div>
+              <div style="margin-top:8px;">
+                <button class="btn-mini info" onclick="salvarFinanceiro('${p.id}')">Guardar financeiro</button>
+              </div>
+            </td>
+            <td>
+              <input id="procfile_${p.id}" type="file" />
+              <div style="margin-top:8px;">
+                <button class="btn-mini secondary" onclick="uploadProcessoDocumento('${p.id}')">Anexar</button>
+              </div>
+              <div class="doc-list">
+                ${procDocs.length
+                  ? procDocs.map(d => `
+                    <span class="doc-chip">
+                      <span>${d.nome_ficheiro || "Documento"}</span>
+                      <button class="btn-mini secondary" style="margin:0;padding:4px 8px;" onclick="openProcessoDocumento('${String(d.ficheiro_path).replace(/'/g, "\\'")}')">Abrir</button>
+                    </span>
+                  `).join("")
+                  : '<span class="small">Sem documentos</span>'}
+              </div>
+            </td>
+            <td><div class="history-box">${historicoHtml}</div></td>
           `;
           tbody.appendChild(tr);
         });
 
         const ctbody = document.getElementById("cotacoesTable");
         ctbody.innerHTML = "";
-        (cotacoes || []).forEach(c => {
+        cotList.forEach(c => {
           const convertido = c.convertido_em_processo === true;
           const tr = document.createElement("tr");
           tr.innerHTML = `
@@ -1334,6 +1478,21 @@
           `;
           ctbody.appendChild(tr);
         });
+
+        const ftbody = document.getElementById("financeiroTable");
+        ftbody.innerHTML = "";
+        procList.forEach(p => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${p.numero_processo || ""}</td>
+            <td>${p.importador_exportador || ""}</td>
+            <td>${p.numero_factura || ""}</td>
+            <td>${formatMoney(p.valor_cobrado || 0)}</td>
+            <td>${formatMoney(p.custos_processo || 0)}</td>
+            <td>${formatMoney(p.margem_lucro || 0)}</td>
+          `;
+          ftbody.appendChild(tr);
+        });
       } catch (e) {
         document.getElementById("welcome").textContent = "Edmilson Fumo • admin • " + e.message;
       }
@@ -1346,11 +1505,7 @@
       tbody.innerHTML = `<tr><td colspan="7">A carregar...</td></tr>`;
 
       try {
-        const { data: userData } = await withTimeout(
-          supabaseClient.auth.getUser(),
-          8000
-        );
-
+        const { data: userData } = await withTimeout(supabaseClient.auth.getUser(), 8000);
         const user = userData?.user;
         if (!user?.email) {
           tbody.innerHTML = `<tr><td colspan="7">Não foi possível identificar o utilizador.</td></tr>`;
@@ -1358,11 +1513,7 @@
         }
 
         const { data: cotacoes, error } = await withTimeout(
-          supabaseClient
-            .from("pedidos_cotacao")
-            .select("*")
-            .eq("email", user.email)
-            .order("created_at", { ascending: false }),
+          supabaseClient.from("pedidos_cotacao").select("*").eq("email", user.email).order("created_at", { ascending: false }),
           10000
         );
 
@@ -1377,7 +1528,6 @@
         }
 
         tbody.innerHTML = "";
-
         cotacoes.forEach(c => {
           const tr = document.createElement("tr");
           tr.innerHTML = `
@@ -1427,7 +1577,7 @@
         document.getElementById("pcBl").textContent = p.bl_awb_manifesto || "";
         document.getElementById("pcPrazo").textContent = p.prazo || "";
         document.getElementById("pcDocs").textContent = p.documentos_em_falta || "Sem pendências";
-        document.getElementById("pcHistorico").innerHTML = (p.historico || "Sem histórico").replace(/\n/g, "<br>");
+        document.getElementById("pcHistorico").textContent = p.historico || "Sem histórico";
       } catch (e) {
         alert(e.message);
       }
@@ -1450,10 +1600,7 @@
 
       if (error) throw error;
 
-      return {
-        path,
-        filename: file.name
-      };
+      return { path, filename: file.name };
     }
 
     async function submeterCotacao() {
