@@ -27,7 +27,6 @@
       --shadow:0 18px 40px rgba(15,23,42,.08);
       --shadow-soft:0 10px 24px rgba(15,23,42,.05);
       --radius:24px;
-      --radius-sm:16px;
     }
 
     *{box-sizing:border-box}
@@ -43,7 +42,7 @@
     }
 
     .wrap{
-      max-width:1380px;
+      max-width:1440px;
       margin:0 auto;
       padding:22px;
     }
@@ -235,6 +234,8 @@
     .btn-mini.info:hover{background:#075985}
     .btn-mini.green{background:#15803d}
     .btn-mini.green:hover{background:#166534}
+    .btn-mini.danger{background:#b91c1c}
+    .btn-mini.danger:hover{background:#991b1b}
 
     .link-btn{
       background:none;
@@ -265,6 +266,29 @@
       align-items:center;
       gap:14px;
       flex-wrap:wrap;
+    }
+
+    .brand-logo-wrap{
+      width:64px;
+      height:64px;
+      border-radius:18px;
+      background:#fff;
+      border:1px solid rgba(229,231,235,.95);
+      box-shadow:0 12px 24px rgba(190,0,26,.12);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      flex-shrink:0;
+    }
+
+    .brand-logo{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      background:#fff;
+      display:none;
+      padding:6px;
     }
 
     .brand-badge{
@@ -584,6 +608,71 @@
       gap:18px;
     }
 
+    .client-card{
+      padding:18px;
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:linear-gradient(180deg,#fff 0%, #fcfcfc 100%);
+      box-shadow:var(--shadow-soft);
+    }
+
+    .client-name{
+      font-size:18px;
+      font-weight:800;
+      margin:0 0 8px;
+      color:#111827;
+    }
+
+    .client-meta{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px 16px;
+      margin-top:12px;
+    }
+
+    .client-meta div{
+      font-size:14px;
+      color:#374151;
+    }
+
+    .client-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+
+    .modal-backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:1000;
+    }
+
+    .modal{
+      width:100%;
+      max-width:760px;
+      background:#fff;
+      border-radius:24px;
+      box-shadow:0 24px 60px rgba(15,23,42,.18);
+      border:1px solid rgba(229,231,235,.95);
+      padding:24px;
+      max-height:90vh;
+      overflow:auto;
+    }
+
+    .modal-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:16px;
+    }
+
     hr{border:none;border-top:1px solid var(--line)}
 
     @media print {
@@ -605,17 +694,17 @@
     @media (max-width:1100px){
       .grid-5{grid-template-columns:repeat(2,1fr)}
       .grid-4{grid-template-columns:repeat(2,1fr)}
-      .grid-3,.detail-grid,.grid-2,.stat-row{grid-template-columns:1fr}
+      .grid-3,.detail-grid,.grid-2,.stat-row,.client-meta{grid-template-columns:1fr}
     }
 
     @media (max-width:640px){
       .wrap{padding:14px}
-      .card,.kpi,.sidebar{padding:18px}
+      .card,.kpi,.sidebar,.client-card{padding:18px}
       .login-card{padding:24px}
       .login-title{font-size:32px}
       .grid-5,.grid-4{grid-template-columns:1fr}
       .brand h1{font-size:28px}
-      .brand-badge{width:48px;height:48px;font-size:22px}
+      .brand-badge,.brand-logo-wrap{width:48px;height:48px;font-size:22px}
       th,td{padding:14px 8px;font-size:14px}
     }
   </style>
@@ -696,7 +785,10 @@
         <div class="topbar">
           <div class="brand">
             <div class="brand-line">
-              <div class="brand-badge">F</div>
+              <div class="brand-logo-wrap">
+                <img id="companyLogo" class="brand-logo" alt="Logo da empresa" />
+                <div id="companyLogoFallback" class="brand-badge">F</div>
+              </div>
               <div>
                 <h1>EF Cargo Clear</h1>
                 <p>EF & Associados • Despachantes Aduaneiros</p>
@@ -713,9 +805,10 @@
           <aside class="sidebar no-print">
             <div class="sidebar-title">Painel Admin</div>
             <div class="sidebar-menu">
-              <button class="sidebar-btn active" id="side-processos" onclick="showInternalTab('processos', this)">Processos</button>
-              <button class="sidebar-btn" id="side-cotacoes" onclick="showInternalTab('cotacoes', this)">Pedidos de cotação</button>
-              <button class="sidebar-btn" id="side-financeiro" onclick="showInternalTab('financeiro', this)">Financeiro</button>
+              <button class="sidebar-btn active" id="side-processos" onclick="showInternalTab('processos')">Processos</button>
+              <button class="sidebar-btn" id="side-cotacoes" onclick="showInternalTab('cotacoes')">Pedidos de cotação</button>
+              <button class="sidebar-btn" id="side-financeiro" onclick="showInternalTab('financeiro')">Financeiro</button>
+              <button class="sidebar-btn" id="side-clientes" onclick="showInternalTab('clientes')">Clientes</button>
             </div>
           </aside>
 
@@ -860,6 +953,49 @@
                     <tbody id="financeiroTable"></tbody>
                   </table>
                 </div>
+              </div>
+            </div>
+
+            <div id="internal-clientes" class="tab-content hidden" style="margin-top:18px;">
+              <div class="card">
+                <div class="panel-head">
+                  <div>
+                    <h2 class="section-title">Gestão de Clientes</h2>
+                    <div class="section-sub">Criar, pesquisar, editar e eliminar clientes do sistema.</div>
+                  </div>
+                </div>
+
+                <div class="card" style="background:#fafafa;border-radius:20px;">
+                  <h3 style="margin-top:0;">Novo cliente</h3>
+                  <div class="grid grid-2">
+                    <div>
+                      <label>Nome</label>
+                      <input id="cli_nome" />
+                    </div>
+                    <div>
+                      <label>Email</label>
+                      <input id="cli_email" />
+                    </div>
+                    <div>
+                      <label>NUIT</label>
+                      <input id="cli_nuit" />
+                    </div>
+                    <div>
+                      <label>Contacto</label>
+                      <input id="cli_contacto" />
+                    </div>
+                  </div>
+                  <button class="btn" style="margin-top:14px;" onclick="criarCliente()">Criar cliente</button>
+                </div>
+
+                <div class="toolbar no-print" style="margin-top:18px;">
+                  <div class="field">
+                    <label>Pesquisar cliente</label>
+                    <input id="clientSearch" placeholder="Nome, email, contacto ou NUIT" oninput="renderClientesGrid()" />
+                  </div>
+                </div>
+
+                <div id="clientesGrid" class="grid grid-2"></div>
               </div>
             </div>
           </div>
@@ -1040,16 +1176,56 @@
     </div>
   </div>
 
+  <div id="clienteModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <h2 class="section-title" style="margin-bottom:4px;">Editar cliente</h2>
+          <div class="small">Atualize os dados do cliente registado.</div>
+        </div>
+        <button class="btn-mini secondary" onclick="closeClienteModal()">Fechar</button>
+      </div>
+
+      <input type="hidden" id="edit_cliente_id" />
+
+      <div class="grid grid-2">
+        <div>
+          <label>Nome</label>
+          <input id="edit_cliente_nome" />
+        </div>
+        <div>
+          <label>Email</label>
+          <input id="edit_cliente_email" />
+        </div>
+        <div>
+          <label>Contacto</label>
+          <input id="edit_cliente_contacto" />
+        </div>
+        <div>
+          <label>NUIT</label>
+          <input id="edit_cliente_nuit" />
+        </div>
+      </div>
+
+      <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn" onclick="saveClienteEdit()">Guardar alterações</button>
+        <button class="btn btn-outline" onclick="closeClienteModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const SUPABASE_URL = "https://fefkyzutcouoklbiwybs.supabase.co";
     const SUPABASE_KEY = "sb_publishable_uOowmqEhVdq8h0uzagYPEA_DXXpGOgA";
     const ADMIN_EMAIL = "ef.edmilsonfumo@gmail.com";
+    const COMPANY_LOGO_URL = "COLE_AQUI_O_LINK_DO_LOGO";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let processosCache = [];
     let cotacoesCache = [];
     let docsCache = [];
     let clientCotacoesCache = [];
+    let clientesCache = [];
 
     document.addEventListener("DOMContentLoaded", () => {
       const facturaInput = document.getElementById("cot_factura_file");
@@ -1060,7 +1236,32 @@
             file ? file.name : "Nenhum ficheiro selecionado.";
         });
       }
+      setupCompanyLogo();
     });
+
+    function setupCompanyLogo() {
+      const img = document.getElementById("companyLogo");
+      const fallback = document.getElementById("companyLogoFallback");
+      if (!img || !fallback) return;
+
+      if (!COMPANY_LOGO_URL || COMPANY_LOGO_URL === "COLE_AQUI_O_LINK_DO_LOGO") {
+        img.style.display = "none";
+        fallback.style.display = "flex";
+        return;
+      }
+
+      img.onload = () => {
+        img.style.display = "block";
+        fallback.style.display = "none";
+      };
+
+      img.onerror = () => {
+        img.style.display = "none";
+        fallback.style.display = "flex";
+      };
+
+      img.src = COMPANY_LOGO_URL;
+    }
 
     function showRegister() {
       document.getElementById("loginMode").classList.add("hidden");
@@ -1175,10 +1376,12 @@
       if (tab === "processos") document.getElementById("side-processos")?.classList.add("active");
       if (tab === "cotacoes") document.getElementById("side-cotacoes")?.classList.add("active");
       if (tab === "financeiro") document.getElementById("side-financeiro")?.classList.add("active");
+      if (tab === "clientes") document.getElementById("side-clientes")?.classList.add("active");
 
       document.getElementById("internal-processos").classList.toggle("hidden", tab !== "processos");
       document.getElementById("internal-cotacoes").classList.toggle("hidden", tab !== "cotacoes");
       document.getElementById("internal-financeiro").classList.toggle("hidden", tab !== "financeiro");
+      document.getElementById("internal-clientes").classList.toggle("hidden", tab !== "clientes");
     }
 
     function showClientTab(tab, btn) {
@@ -1689,6 +1892,118 @@
       }
     }
 
+    async function criarCliente() {
+      const nome = document.getElementById("cli_nome").value.trim();
+      const email = document.getElementById("cli_email").value.trim();
+      const nuit = document.getElementById("cli_nuit").value.trim();
+      const contacto = document.getElementById("cli_contacto").value.trim();
+
+      if (!nome || !email) {
+        alert("Nome e email obrigatórios");
+        return;
+      }
+
+      try {
+        const { error } = await withTimeout(
+          supabaseClient.from("clientes").insert({
+            nome,
+            email,
+            nuit,
+            contacto
+          }),
+          10000
+        );
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        alert("Cliente criado com sucesso");
+        document.getElementById("cli_nome").value = "";
+        document.getElementById("cli_email").value = "";
+        document.getElementById("cli_nuit").value = "";
+        document.getElementById("cli_contacto").value = "";
+
+        await loadInternal();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    function openClienteModal(clienteId) {
+      const c = clientesCache.find(x => String(x.id) === String(clienteId));
+      if (!c) return;
+
+      document.getElementById("edit_cliente_id").value = c.id || "";
+      document.getElementById("edit_cliente_nome").value = c.nome || "";
+      document.getElementById("edit_cliente_email").value = c.email || "";
+      document.getElementById("edit_cliente_contacto").value = c.contacto || "";
+      document.getElementById("edit_cliente_nuit").value = c.nuit || "";
+
+      document.getElementById("clienteModalBackdrop").style.display = "flex";
+    }
+
+    function closeClienteModal() {
+      document.getElementById("clienteModalBackdrop").style.display = "none";
+    }
+
+    async function saveClienteEdit() {
+      const id = document.getElementById("edit_cliente_id").value;
+      const nome = document.getElementById("edit_cliente_nome").value.trim();
+      const email = document.getElementById("edit_cliente_email").value.trim();
+      const contacto = document.getElementById("edit_cliente_contacto").value.trim();
+      const nuit = document.getElementById("edit_cliente_nuit").value.trim();
+
+      if (!id) return;
+
+      try {
+        const { error } = await withTimeout(
+          supabaseClient
+            .from("clientes")
+            .update({ nome, email, contacto, nuit })
+            .eq("id", id),
+          10000
+        );
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        alert("Cliente atualizado com sucesso");
+        closeClienteModal();
+        await loadInternal();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    async function deleteCliente(clienteId) {
+      const c = clientesCache.find(x => String(x.id) === String(clienteId));
+      if (!c) return;
+
+      const ok = confirm(`Eliminar o cliente "${c.nome || c.email || clienteId}"?`);
+      if (!ok) return;
+
+      try {
+        const { error } = await withTimeout(
+          supabaseClient.from("clientes").delete().eq("id", clienteId),
+          10000
+        );
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        alert("Cliente eliminado com sucesso");
+        await loadInternal();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
     function applyFilters() {
       renderProcessosTable();
       renderFinanceiroTable();
@@ -1863,6 +2178,64 @@
       });
     }
 
+    function renderClientesGrid() {
+      const grid = document.getElementById("clientesGrid");
+      if (!grid) return;
+
+      const q = (document.getElementById("clientSearch")?.value || "").trim().toLowerCase();
+
+      const filtered = clientesCache.filter(c => {
+        const blob = [
+          c.nome,
+          c.email,
+          c.contacto,
+          c.nuit
+        ].join(" ").toLowerCase();
+
+        return !q || blob.includes(q);
+      });
+
+      grid.innerHTML = "";
+
+      if (!filtered.length) {
+        grid.innerHTML = `<div class="muted-box">Nenhum cliente encontrado.</div>`;
+        return;
+      }
+
+      filtered.forEach(c => {
+        const processosDoCliente = processosCache.filter(p => {
+          const byEmail = (c.email || "").trim().toLowerCase();
+          const procCliente = (p.importador_exportador || "").trim().toLowerCase();
+          const nomeCliente = (c.nome || "").trim().toLowerCase();
+          return procCliente === nomeCliente || procCliente === byEmail;
+        }).length;
+
+        const cotacoesDoCliente = cotacoesCache.filter(x => {
+          return String(x.email || "").trim().toLowerCase() === String(c.email || "").trim().toLowerCase();
+        }).length;
+
+        const card = document.createElement("div");
+        card.className = "client-card";
+        card.innerHTML = `
+          <div class="client-name">${c.nome || "Sem nome"}</div>
+          <div class="small">${c.email || "Sem email"}</div>
+
+          <div class="client-meta">
+            <div><strong>NUIT:</strong> ${c.nuit || "-"}</div>
+            <div><strong>Contacto:</strong> ${c.contacto || "-"}</div>
+            <div><strong>Processos:</strong> ${processosDoCliente}</div>
+            <div><strong>Cotações:</strong> ${cotacoesDoCliente}</div>
+          </div>
+
+          <div class="client-actions">
+            <button class="btn-mini" onclick="openClienteModal('${String(c.id).replace(/'/g, "\\'")}')">Editar</button>
+            <button class="btn-mini danger" onclick="deleteCliente('${String(c.id).replace(/'/g, "\\'")}')">Eliminar</button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
     function exportProcessosCSV() {
       const rows = getFilteredProcessos().map(p => [
         p.numero_processo || "",
@@ -1929,12 +2302,13 @@
     async function loadInternal() {
       try {
         const [{ data: clientes }, { data: processos }, { data: cotacoes }, { data: docs }] = await Promise.all([
-          withTimeout(supabaseClient.from("clientes").select("*"), 8000),
+          withTimeout(supabaseClient.from("clientes").select("*").order("created_at", { ascending: false }), 8000),
           withTimeout(supabaseClient.from("processos").select("*").order("created_at", { ascending: false }), 8000),
           withTimeout(supabaseClient.from("pedidos_cotacao").select("*").order("created_at", { ascending: false }), 8000),
           withTimeout(supabaseClient.from("processos_documentos").select("*").order("created_at", { ascending: false }), 8000)
         ]);
 
+        clientesCache = clientes || [];
         processosCache = processos || [];
         cotacoesCache = cotacoes || [];
         docsCache = docs || [];
@@ -1944,7 +2318,7 @@
         const totalMargem = processosCache.reduce((s, p) => s + Number(p.margem_lucro || 0), 0);
         const liberados = processosCache.filter(p => ["Liberado", "Entregue"].includes(p.estado)).length;
 
-        document.getElementById("clientesCount").textContent = clientes ? clientes.length : 0;
+        document.getElementById("clientesCount").textContent = clientesCache.length;
         document.getElementById("processosCount").textContent = processosCache.length;
         document.getElementById("liberadosCount").textContent = liberados;
         document.getElementById("pendenciasCount").textContent =
@@ -1958,6 +2332,7 @@
         renderProcessosTable();
         renderCotacoesTable();
         renderFinanceiroTable();
+        renderClientesGrid();
       } catch (e) {
         document.getElementById("welcome").textContent = "Edmilson Fumo • admin • " + e.message;
       }
