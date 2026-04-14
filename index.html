@@ -879,6 +879,7 @@
   <script>
     const SUPABASE_URL = "https://fefkyzutcouoklbiwybs.supabase.co";
     const SUPABASE_KEY = "sb_publishable_uOowmqEhVdq8h0uzagYPEA_DXXpGOgA";
+    const ADMIN_EMAIL = "ef.edmilsonfumo@gmail.com";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let processosCache = [];
@@ -912,6 +913,21 @@
         promise,
         new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout ao carregar dados.")), ms))
       ]);
+    }
+
+    async function sendEmail(to, subject, html) {
+      try {
+        const res = await fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to, subject, html })
+        });
+
+        const data = await res.json();
+        console.log("EMAIL RESULT:", data);
+      } catch (e) {
+        console.log("Erro ao enviar email:", e);
+      }
     }
 
     function badgeEstado(estado) {
@@ -1961,6 +1977,42 @@
 
         msg.textContent = "Pedido enviado com sucesso.";
         msg.className = "message-ok";
+
+        await sendEmail(
+          ADMIN_EMAIL,
+          "Nova cotação recebida",
+          `<div style="font-family:Arial,sans-serif">
+            <h2>Nova cotação recebida</h2>
+            <p><b>Cliente:</b> ${nome_cliente}</p>
+            <p><b>Email:</b> ${email || "-"}</p>
+            <p><b>Contacto:</b> ${contacto || "-"}</p>
+            <p><b>Factura:</b> ${numero_factura || "-"}</p>
+            <p><b>Tipo:</b> ${tipo_operacao}</p>
+            <p><b>Origem:</b> ${origem}</p>
+            <p><b>Destino:</b> ${destino}</p>
+            <p><b>Mercadoria:</b> ${descricao_mercadoria}</p>
+            <p><b>Observações:</b> ${observacoes || "-"}</p>
+          </div>`
+        );
+
+        if (email) {
+          await sendEmail(
+            email,
+            "Recebemos o seu pedido de cotação",
+            `<div style="font-family:Arial,sans-serif">
+              <h2>Pedido recebido com sucesso</h2>
+              <p>Olá <b>${nome_cliente}</b>,</p>
+              <p>Recebemos o seu pedido de cotação.</p>
+              <p><b>Factura:</b> ${numero_factura || "-"}</p>
+              <p><b>Tipo:</b> ${tipo_operacao}</p>
+              <p><b>Origem:</b> ${origem}</p>
+              <p><b>Destino:</b> ${destino}</p>
+              <p>Vamos analisar e entrar em contacto em breve.</p>
+              <br>
+              <p>EF Cargo Clear</p>
+            </div>`
+          );
+        }
 
         document.getElementById("cot_tipo").value = "";
         document.getElementById("cot_origem").value = "";
