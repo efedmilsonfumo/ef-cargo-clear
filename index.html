@@ -650,7 +650,7 @@
         <div id="internal-processos" class="tab-content">
           <div class="card">
             <h2 class="section-title">Processos</h2>
-            <div class="section-sub">Acompanhe os processos ativos e o respetivo estado operacional.</div>
+            <div class="section-sub">Acompanhe os processos ativos e atualize o estado operacional.</div>
             <table>
               <thead>
                 <tr>
@@ -1134,6 +1134,54 @@
       return `EF-${y}${m}${day}-${h}${min}`;
     }
 
+    async function atualizarEstado(processoId) {
+      const select = document.getElementById("estado_" + processoId);
+      const novoEstado = select.value;
+
+      try {
+        const { data: processo, error: processoReadError } = await withTimeout(
+          supabaseClient
+            .from("processos")
+            .select("historico")
+            .eq("id", processoId)
+            .single(),
+          8000
+        );
+
+        if (processoReadError) {
+          alert(processoReadError.message);
+          return;
+        }
+
+        const historicoAtual = processo?.historico || "";
+        const agora = new Date().toLocaleString("pt-PT");
+        const novoHistorico =
+          historicoAtual +
+          `\n• ${agora} - Estado alterado para: ${novoEstado}`;
+
+        const { error } = await withTimeout(
+          supabaseClient
+            .from("processos")
+            .update({
+              estado: novoEstado,
+              historico: novoHistorico
+            })
+            .eq("id", processoId),
+          10000
+        );
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        alert("Estado atualizado com sucesso");
+        await loadInternal();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
     async function converterCotacaoEmProcesso(cotacaoId) {
       if (!confirm("Converter esta cotação em processo?")) return;
 
@@ -1179,9 +1227,9 @@
           porto_fronteira: "",
           bl_awb_manifesto: "",
           prazo: null,
-          estado: "Cotação convertida",
+          estado: "Recebido",
           documentos_em_falta: cotacao.factura_path ? "" : "Factura em falta",
-          historico: `Processo criado a partir da cotação ${cotacao.numero_factura || ""}. Mercadoria: ${cotacao.descricao_mercadoria || ""}`
+          historico: `• ${new Date().toLocaleString("pt-PT")} - Processo criado a partir da cotação ${cotacao.numero_factura || ""}. Mercadoria: ${cotacao.descricao_mercadoria || ""}`
         };
 
         const { data: novoProcesso, error: processoError } = await withTimeout(
@@ -1223,7 +1271,7 @@
       try {
         const [{ data: clientes }, { data: processos }, { data: cotacoes }] = await Promise.all([
           withTimeout(supabaseClient.from("clientes").select("*"), 8000),
-          withTimeout(supabaseClient.from("processos").select("*"), 8000),
+          withTimeout(supabaseClient.from("processos").select("*").order("created_at", { ascending: false }), 8000),
           withTimeout(supabaseClient.from("pedidos_cotacao").select("*").order("created_at", { ascending: false }), 8000)
         ]);
 
@@ -1235,6 +1283,7 @@
 
         const tbody = document.getElementById("processosTable");
         tbody.innerHTML = "";
+
         (processos || []).forEach(p => {
           const tr = document.createElement("tr");
           tr.innerHTML = `
@@ -1242,7 +1291,20 @@
             <td>${p.numero_factura || ""}</td>
             <td>${p.importador_exportador || ""}</td>
             <td>${p.regime || ""}</td>
-            <td>${badgeEstado(p.estado || "")}</td>
+            <td>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                <select id="estado_${p.id}" style="min-width:180px;">
+                  <option ${p.estado === "Recebido" ? "selected" : ""}>Recebido</option>
+                  <option ${p.estado === "Em análise" ? "selected" : ""}>Em análise</option>
+                  <option ${p.estado === "Documentos em falta" ? "selected" : ""}>Documentos em falta</option>
+                  <option ${p.estado === "Submetido" ? "selected" : ""}>Submetido</option>
+                  <option ${p.estado === "Em desembaraço" ? "selected" : ""}>Em desembaraço</option>
+                  <option ${p.estado === "Liberado" ? "selected" : ""}>Liberado</option>
+                  <option ${p.estado === "Entregue" ? "selected" : ""}>Entregue</option>
+                </select>
+                <button class="btn-mini" onclick="atualizarEstado('${p.id}')">Atualizar</button>
+              </div>
+            </td>
           `;
           tbody.appendChild(tr);
         });
@@ -1284,12 +1346,12 @@
       tbody.innerHTML = `<tr><td colspan="7">A carregar...</td></tr>`;
 
       try {
-        const { data: sessionData } = await withTimeout(
+        const { data: userData } = await withTimeout(
           supabaseClient.auth.getUser(),
           8000
         );
 
-        const user = sessionData?.user;
+        const user = userData?.user;
         if (!user?.email) {
           tbody.innerHTML = `<tr><td colspan="7">Não foi possível identificar o utilizador.</td></tr>`;
           return;
@@ -1365,7 +1427,7 @@
         document.getElementById("pcBl").textContent = p.bl_awb_manifesto || "";
         document.getElementById("pcPrazo").textContent = p.prazo || "";
         document.getElementById("pcDocs").textContent = p.documentos_em_falta || "Sem pendências";
-        document.getElementById("pcHistorico").innerHTML = "• " + (p.historico || "Sem histórico");
+        document.getElementById("pcHistorico").innerHTML = (p.historico || "Sem histórico").replace(/\n/g, "<br>");
       } catch (e) {
         alert(e.message);
       }
