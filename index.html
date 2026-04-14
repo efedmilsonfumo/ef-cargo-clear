@@ -1219,7 +1219,26 @@
     const SUPABASE_KEY = "sb_publishable_uOowmqEhVdq8h0uzagYPEA_DXXpGOgA";
     const ADMIN_EMAIL = "ef.edmilsonfumo@gmail.com";
     const COMPANY_LOGO_URL = "COLE_AQUI_O_LINK_DO_LOGO";
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const tabSessionKey = (() => {
+      const keyName = "ef-cargo-clear-tab-id";
+      let id = window.sessionStorage.getItem(keyName);
+      if (!id) {
+        id = "tab-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+        window.sessionStorage.setItem(keyName, id);
+      }
+      return id;
+    })();
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storage: window.sessionStorage,
+        storageKey: "ef-cargo-clear-session-" + tabSessionKey
+      }
+    });
 
     let processosCache = [];
     let cotacoesCache = [];
