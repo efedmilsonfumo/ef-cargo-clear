@@ -692,12 +692,13 @@
       <div id="clientView" class="hidden">
         <div class="card hero-card">
           <h2 class="section-title">Portal do Cliente</h2>
-          <div class="section-sub">Consulte o estado do seu processo pela factura e envie um pedido de cotação com factura anexada.</div>
+          <div class="section-sub">Consulte o estado do seu processo pela factura, envie pedidos de cotação e veja o histórico dos pedidos submetidos.</div>
         </div>
 
         <div class="tabs">
           <button class="tab-btn active" onclick="showClientTab('consulta', this)">Consultar processo</button>
           <button class="tab-btn" onclick="showClientTab('cotacao', this)">Solicitar cotação</button>
+          <button class="tab-btn" onclick="showClientTab('historico', this)">Minhas cotações</button>
         </div>
 
         <div id="client-consulta" class="tab-content">
@@ -822,6 +823,28 @@
             </div>
           </div>
         </div>
+
+        <div id="client-historico" class="tab-content hidden">
+          <div class="card">
+            <h2 class="section-title">Minhas cotações</h2>
+            <div class="section-sub">Aqui pode acompanhar todos os pedidos de cotação já enviados pela sua empresa.</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Factura</th>
+                  <th>Tipo</th>
+                  <th>Origem</th>
+                  <th>Destino</th>
+                  <th>Documento</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="clientCotacoesTable"></tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -865,6 +888,20 @@
       return `<span class="badge amber">${estado || "Sem estado"}</span>`;
     }
 
+    function formatDate(dateString) {
+      if (!dateString) return "";
+      const d = new Date(dateString);
+      if (isNaN(d.getTime())) return dateString;
+      return d.toLocaleDateString("pt-PT", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }) + " " + d.toLocaleTimeString("pt-PT", {
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
     function showInternalTab(tab, btn) {
       document.querySelectorAll("#internalView .tab-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
@@ -877,6 +914,11 @@
       btn.classList.add("active");
       document.getElementById("client-consulta").classList.toggle("hidden", tab !== "consulta");
       document.getElementById("client-cotacao").classList.toggle("hidden", tab !== "cotacao");
+      document.getElementById("client-historico").classList.toggle("hidden", tab !== "historico");
+
+      if (tab === "historico") {
+        loadClientCotacoes();
+      }
     }
 
     async function registerClient() {
@@ -1047,6 +1089,8 @@
         } else {
           document.getElementById("cot_email").value = user.email || "";
         }
+
+        await loadClientCotacoes();
       } catch (e) {
         document.getElementById("welcome").textContent = "Cliente • portal";
       }
@@ -1233,6 +1277,67 @@
       }
     }
 
+    async function loadClientCotacoes() {
+      const tbody = document.getElementById("clientCotacoesTable");
+      if (!tbody) return;
+
+      tbody.innerHTML = `<tr><td colspan="7">A carregar...</td></tr>`;
+
+      try {
+        const { data: sessionData } = await withTimeout(
+          supabaseClient.auth.getUser(),
+          8000
+        );
+
+        const user = sessionData?.user;
+        if (!user?.email) {
+          tbody.innerHTML = `<tr><td colspan="7">Não foi possível identificar o utilizador.</td></tr>`;
+          return;
+        }
+
+        const { data: cotacoes, error } = await withTimeout(
+          supabaseClient
+            .from("pedidos_cotacao")
+            .select("*")
+            .eq("email", user.email)
+            .order("created_at", { ascending: false }),
+          10000
+        );
+
+        if (error) {
+          tbody.innerHTML = `<tr><td colspan="7">${error.message}</td></tr>`;
+          return;
+        }
+
+        if (!cotacoes || cotacoes.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7">Ainda não enviou nenhuma cotação.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = "";
+
+        cotacoes.forEach(c => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${formatDate(c.created_at)}</td>
+            <td>${c.numero_factura || ""}</td>
+            <td>${c.tipo_operacao || ""}</td>
+            <td>${c.origem || ""}</td>
+            <td>${c.destino || ""}</td>
+            <td>
+              ${c.factura_path
+                ? `<button class="btn-mini secondary" onclick="openFactura('${String(c.factura_path).replace(/'/g, "\\'")}')">Ver factura</button>`
+                : '-'}
+            </td>
+            <td>${badgeEstado(c.estado || "recebido")}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="7">${e.message}</td></tr>`;
+      }
+    }
+
     async function buscarFactura() {
       const termo = document.getElementById("facturaSearch").value.trim();
       if (!termo) return;
@@ -1359,6 +1464,8 @@
         document.getElementById("cot_obs").value = "";
         document.getElementById("cot_factura_file").value = "";
         document.getElementById("cot_factura_file_name").textContent = "Nenhum ficheiro selecionado.";
+
+        await loadClientCotacoes();
       } catch (e) {
         msg.textContent = e.message || "Erro ao enviar pedido.";
         msg.className = "message-err";
