@@ -14,6 +14,7 @@
       --line:#e5e7eb;
       --primary:#BE001A;
       --primary-dark:#980015;
+      --primary-soft:#fff3f5;
       --success-bg:#dcfce7;
       --success-text:#166534;
       --warn-bg:#fff3cd;
@@ -338,6 +339,21 @@
       border-color:var(--primary);
     }
 
+    .unread-dot{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:20px;
+      height:20px;
+      border-radius:999px;
+      background:#ef4444;
+      color:#fff;
+      font-size:11px;
+      font-weight:700;
+      margin-left:8px;
+      padding:0 6px;
+    }
+
     .kpi{
       padding:22px;
       border-radius:22px;
@@ -566,28 +582,141 @@
       margin-bottom:16px;
     }
 
+    .chat-grid{
+      display:grid;
+      grid-template-columns:330px 1fr;
+      gap:18px;
+    }
+
+    .chat-sidebar{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:#fff;
+      max-height:540px;
+      overflow:auto;
+    }
+
+    .chat-thread-item{
+      padding:14px;
+      border-bottom:1px solid var(--line);
+      cursor:pointer;
+    }
+
+    .chat-thread-item:hover{background:#fafafa}
+    .chat-thread-item.active{background:#fff3f5}
+    .chat-thread-name{font-weight:700;color:#111827;margin-bottom:4px}
+    .chat-thread-meta{font-size:12px;color:var(--muted)}
+    .chat-window{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:#fff;
+      display:flex;
+      flex-direction:column;
+      min-height:540px;
+    }
+
+    .chat-messages{
+      flex:1;
+      padding:16px;
+      overflow:auto;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      background:#fafafa;
+      border-bottom:1px solid var(--line);
+    }
+
+    .chat-bubble{
+      max-width:78%;
+      padding:12px 14px;
+      border-radius:16px;
+      font-size:14px;
+      line-height:1.45;
+      white-space:pre-wrap;
+      box-shadow:var(--shadow-soft);
+    }
+
+    .chat-bubble.mine{
+      align-self:flex-end;
+      background:#fee2e2;
+      border:1px solid #fecaca;
+    }
+
+    .chat-bubble.other{
+      align-self:flex-start;
+      background:#fff;
+      border:1px solid #e5e7eb;
+    }
+
+    .chat-meta{
+      font-size:11px;
+      color:var(--muted);
+      margin-top:6px;
+    }
+
+    .chat-compose{
+      padding:16px;
+      background:#fff;
+    }
+
+    .contact-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+    }
+
+    .contact-card{
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:18px;
+      background:linear-gradient(180deg,#fff 0%, #fcfcfc 100%);
+      box-shadow:var(--shadow-soft);
+    }
+
+    .map-frame{
+      width:100%;
+      min-height:320px;
+      border:0;
+      border-radius:18px;
+      background:#f3f4f6;
+    }
+
+    .dash-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:18px;
+    }
+
+    .empty-chat{
+      padding:24px;
+      text-align:center;
+      color:var(--muted);
+    }
+
     hr{border:none;border-top:1px solid var(--line)}
 
     @media (max-width:1180px){
       .admin-shell{grid-template-columns:1fr}
       .sidebar{position:static}
+      .chat-grid,.contact-grid{grid-template-columns:1fr}
     }
 
     @media (max-width:1100px){
       .grid-5{grid-template-columns:repeat(2,1fr)}
       .grid-4{grid-template-columns:repeat(2,1fr)}
-      .grid-3,.detail-grid,.grid-2,.stat-row,.client-meta{grid-template-columns:1fr}
+      .grid-3,.detail-grid,.grid-2,.stat-row,.client-meta,.dash-grid{grid-template-columns:1fr}
     }
 
     @media (max-width:640px){
       .wrap{padding:14px}
-      .card,.kpi,.sidebar,.client-card{padding:18px}
+      .card,.kpi,.sidebar,.client-card,.contact-card{padding:18px}
       .login-card{padding:24px}
       .login-title{font-size:32px}
       .grid-5,.grid-4{grid-template-columns:1fr}
       .brand h1{font-size:28px}
       .brand-badge,.brand-logo-wrap{width:48px;height:48px;font-size:22px}
       th,td{padding:14px 8px;font-size:14px}
+      .chat-bubble{max-width:92%}
     }
   </style>
 </head>
@@ -735,6 +864,9 @@
               <button class="sidebar-btn" id="side-financeiro" onclick="showInternalTab('financeiro')">Financeiro</button>
               <button class="sidebar-btn" id="side-clientes" onclick="showInternalTab('clientes')">Clientes</button>
               <button class="sidebar-btn" id="side-equipa" onclick="showInternalTab('equipa')">Funcionários</button>
+              <button class="sidebar-btn" id="side-mensagens" onclick="showInternalTab('mensagens')">
+                Mensagens <span id="internalUnreadBadge" class="unread-dot hidden">0</span>
+              </button>
             </div>
           </aside>
 
@@ -974,6 +1106,37 @@
               </div>
             </div>
 
+            <div id="internal-mensagens" class="tab-content hidden" style="margin-top:18px;">
+              <div class="card">
+                <div class="panel-head">
+                  <div>
+                    <h2 class="section-title">Mensagens</h2>
+                    <div class="section-sub">Converse com clientes dentro da plataforma, sem email.</div>
+                  </div>
+                </div>
+
+                <div class="chat-grid">
+                  <div class="chat-sidebar" id="adminThreadList"></div>
+
+                  <div class="chat-window">
+                    <div class="chat-messages" id="adminMessagesBox">
+                      <div class="empty-chat">Selecione uma conversa.</div>
+                    </div>
+                    <div class="chat-compose">
+                      <div class="grid">
+                        <div>
+                          <label>Mensagem</label>
+                          <textarea id="adminMessageText" placeholder="Digite a mensagem para o cliente"></textarea>
+                        </div>
+                        <button class="btn" onclick="sendAdminMessage()">Enviar mensagem</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -981,13 +1144,32 @@
       <div id="clientView" class="hidden">
         <div class="card hero-card">
           <h2 class="section-title">Portal do Cliente</h2>
-          <div class="section-sub">Consulte o estado do seu processo, veja documentos do processo, envie pedidos de cotação e acompanhe o histórico.</div>
+          <div class="section-sub">Consulte o estado do seu processo, veja documentos do processo, envie pedidos de cotação, acompanhe o histórico e fale connosco.</div>
+        </div>
+
+        <div id="client-dashboard" class="card">
+          <div class="panel-head">
+            <div>
+              <h2 class="section-title">Dashboard</h2>
+              <div class="section-sub">Resumo rápido da sua atividade no sistema.</div>
+            </div>
+          </div>
+          <div class="dash-grid">
+            <div class="kpi"><div class="kpi-title">Minhas cotações</div><div class="kpi-value" id="clientDashCotacoes">0</div></div>
+            <div class="kpi"><div class="kpi-title">Mensagens não lidas</div><div class="kpi-value" id="clientDashUnread">0</div></div>
+            <div class="kpi"><div class="kpi-title">Docs visíveis</div><div class="kpi-value" id="clientDashDocs">0</div></div>
+            <div class="kpi"><div class="kpi-title">Último estado</div><div class="kpi-value" id="clientDashEstado" style="font-size:20px;">-</div></div>
+          </div>
         </div>
 
         <div class="tabs no-print">
           <button class="tab-btn active" onclick="showClientTab('consulta', this)">Consultar processo</button>
           <button class="tab-btn" onclick="showClientTab('cotacao', this)">Solicitar cotação</button>
           <button class="tab-btn" onclick="showClientTab('historico', this)">Minhas cotações</button>
+          <button class="tab-btn" onclick="showClientTab('mensagens', this)">
+            Mensagens <span id="clientUnreadBadge" class="unread-dot hidden">0</span>
+          </button>
+          <button class="tab-btn" onclick="showClientTab('contactos', this)">Contactos</button>
         </div>
 
         <div id="client-consulta" class="tab-content">
@@ -1149,6 +1331,61 @@
             </div>
           </div>
         </div>
+
+        <div id="client-mensagens" class="tab-content hidden">
+          <div class="card">
+            <div class="panel-head">
+              <div>
+                <h2 class="section-title">Mensagens</h2>
+                <div class="section-sub">Fale connosco diretamente dentro da plataforma.</div>
+              </div>
+            </div>
+
+            <div class="chat-window">
+              <div class="chat-messages" id="clientMessagesBox">
+                <div class="empty-chat">Sem mensagens ainda.</div>
+              </div>
+              <div class="chat-compose">
+                <div class="grid">
+                  <div>
+                    <label>Sua mensagem</label>
+                    <textarea id="clientMessageText" placeholder="Escreva aqui a sua mensagem"></textarea>
+                  </div>
+                  <button class="btn" onclick="sendClientMessage()">Enviar mensagem</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="client-contactos" class="tab-content hidden">
+          <div class="card">
+            <div class="panel-head">
+              <div>
+                <h2 class="section-title">Contactos e localização</h2>
+                <div class="section-sub">Informações úteis da empresa.</div>
+              </div>
+            </div>
+
+            <div class="contact-grid">
+              <div class="contact-card">
+                <div class="detail-grid" style="grid-template-columns:1fr;">
+                  <div class="detail-item"><strong>Empresa</strong><div id="cfgEmpresa">EF Cargo Clear</div></div>
+                  <div class="detail-item"><strong>Telefone</strong><div id="cfgTelefone">-</div></div>
+                  <div class="detail-item"><strong>Email</strong><div id="cfgEmail">-</div></div>
+                  <div class="detail-item"><strong>WhatsApp</strong><div id="cfgWhatsapp">-</div></div>
+                  <div class="detail-item"><strong>Endereço</strong><div id="cfgEndereco">-</div></div>
+                  <div class="detail-item"><strong>Horário</strong><div id="cfgHorario">-</div></div>
+                </div>
+              </div>
+
+              <div class="contact-card">
+                <iframe id="cfgMapa" class="map-frame" src="" loading="lazy"></iframe>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
     </div>
@@ -1268,8 +1505,12 @@
     let clientCotacoesCache = [];
     let clientesCache = [];
     let equipaCache = [];
+    let mensagensCache = [];
     let currentUserRole = "client";
     let currentUserEmail = "";
+    let currentUserName = "";
+    let currentSelectedThread = "";
+    let companyConfig = null;
 
     document.addEventListener("DOMContentLoaded", () => {
       const facturaInput = document.getElementById("cot_factura_file");
@@ -1530,22 +1771,36 @@
       if (tab === "financeiro") document.getElementById("side-financeiro")?.classList.add("active");
       if (tab === "clientes") document.getElementById("side-clientes")?.classList.add("active");
       if (tab === "equipa") document.getElementById("side-equipa")?.classList.add("active");
+      if (tab === "mensagens") document.getElementById("side-mensagens")?.classList.add("active");
 
       document.getElementById("internal-processos").classList.toggle("hidden", tab !== "processos");
       document.getElementById("internal-cotacoes").classList.toggle("hidden", tab !== "cotacoes");
       document.getElementById("internal-financeiro").classList.toggle("hidden", tab !== "financeiro");
       document.getElementById("internal-clientes").classList.toggle("hidden", tab !== "clientes");
       document.getElementById("internal-equipa").classList.toggle("hidden", tab !== "equipa");
+      document.getElementById("internal-mensagens").classList.toggle("hidden", tab !== "mensagens");
+
+      if (tab === "mensagens") {
+        loadInternalMessages();
+      }
     }
 
     function showClientTab(tab, btn) {
       document.querySelectorAll("#clientView .tab-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
+
       document.getElementById("client-consulta").classList.toggle("hidden", tab !== "consulta");
       document.getElementById("client-cotacao").classList.toggle("hidden", tab !== "cotacao");
       document.getElementById("client-historico").classList.toggle("hidden", tab !== "historico");
+      document.getElementById("client-mensagens").classList.toggle("hidden", tab !== "mensagens");
+      document.getElementById("client-contactos").classList.toggle("hidden", tab !== "contactos");
 
       if (tab === "historico") loadClientCotacoes();
+      if (tab === "mensagens") {
+        loadClientMessages();
+        markClientMessagesRead();
+      }
+      if (tab === "contactos") loadCompanyConfig();
     }
 
     function applyInternalPermissions() {
@@ -1701,13 +1956,19 @@
       document.getElementById("loginView").classList.add("hidden");
       document.getElementById("appView").classList.remove("hidden");
 
+      await loadCompanyConfig();
+
       if (currentUserEmail === ADMIN_EMAIL.toLowerCase()) {
         currentUserRole = "admin";
+        currentUserName = "Administrador";
         document.getElementById("welcome").textContent = "Edmilson Fumo • administrador";
         document.getElementById("internalView").classList.remove("hidden");
         document.getElementById("clientView").classList.add("hidden");
         applyInternalPermissions();
-        setTimeout(loadInternal, 100);
+        setTimeout(async () => {
+          await loadInternal();
+          await loadInternalMessages();
+        }, 100);
         return;
       }
 
@@ -1719,17 +1980,20 @@
 
         if (membro) {
           currentUserRole = "employee";
+          currentUserName = membro.nome || "Funcionário";
           document.getElementById("welcome").textContent = `${membro.nome || "Funcionário"} • ${membro.nivel || "operador"}`;
           document.getElementById("internalView").classList.remove("hidden");
           document.getElementById("clientView").classList.add("hidden");
           applyInternalPermissions();
-          setTimeout(loadInternal, 100);
+          setTimeout(async () => {
+            await loadInternal();
+            await loadInternalMessages();
+          }, 100);
           return;
         }
       } catch (_) {}
 
       currentUserRole = "client";
-      document.getElementById("welcome").textContent = "Cliente • portal";
       document.getElementById("clientView").classList.remove("hidden");
       document.getElementById("internalView").classList.add("hidden");
 
@@ -1740,18 +2004,54 @@
         );
 
         if (cliente) {
+          currentUserName = cliente.nome || "Cliente";
           document.getElementById("welcome").textContent = `${cliente.nome} • cliente`;
           document.getElementById("cot_nome").value = cliente.nome || "";
           document.getElementById("cot_nuit").value = cliente.nuit || "";
           document.getElementById("cot_contacto").value = cliente.contacto || "";
           document.getElementById("cot_email").value = cliente.email || "";
         } else {
+          currentUserName = "Cliente";
+          document.getElementById("welcome").textContent = "Cliente • portal";
           document.getElementById("cot_email").value = currentUserEmail || "";
         }
 
         await loadClientCotacoes();
+        await loadClientMessages();
+        await refreshClientDashboard();
       } catch (_) {
         document.getElementById("welcome").textContent = "Cliente • portal";
+      }
+    }
+
+    async function loadCompanyConfig() {
+      try {
+        const { data } = await withTimeout(
+          supabaseClient.from("config_empresa").select("*").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+          8000
+        );
+        companyConfig = data || null;
+        renderCompanyConfig();
+      } catch (_) {}
+    }
+
+    function renderCompanyConfig() {
+      const cfg = companyConfig || {};
+      const setText = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value || "-";
+      };
+
+      setText("cfgEmpresa", cfg.nome_empresa || "EF Cargo Clear");
+      setText("cfgTelefone", cfg.telefone || "-");
+      setText("cfgEmail", cfg.email || "-");
+      setText("cfgWhatsapp", cfg.whatsapp || "-");
+      setText("cfgEndereco", cfg.endereco || "-");
+      setText("cfgHorario", cfg.horario || "-");
+
+      const mapa = document.getElementById("cfgMapa");
+      if (mapa) {
+        mapa.src = cfg.google_maps_embed || "https://www.google.com/maps?q=Maputo&output=embed";
       }
     }
 
@@ -1807,7 +2107,7 @@
 
       try {
         const { data: processo, error: processoReadError } = await withTimeout(
-          supabaseClient.from("processos").select("historico").eq("id", processoId).single(),
+          supabaseClient.from("processos").select("*").eq("id", processoId).single(),
           8000
         );
 
@@ -1833,6 +2133,23 @@
           return;
         }
 
+        if (processo?.cliente_id) {
+          const { data: cli } = await withTimeout(
+            supabaseClient.from("clientes").select("email").eq("id", processo.cliente_id).maybeSingle(),
+            8000
+          );
+          if (cli?.email) {
+            await supabaseClient.from("mensagens").insert({
+              cliente_email: cli.email,
+              remetente: currentUserRole === "admin" ? "admin" : "funcionario",
+              mensagem: `O estado do processo ${processo.numero_processo || ""} foi atualizado para: ${novoEstado}`,
+              processo_numero: processo.numero_processo || "",
+              lido_cliente: false,
+              lido_interno: true
+            });
+          }
+        }
+
         alert("Estado atualizado com sucesso");
         await loadInternal();
       } catch (e) {
@@ -1846,7 +2163,7 @@
 
       try {
         const { data: processo, error: readError } = await withTimeout(
-          supabaseClient.from("processos").select("historico").eq("id", processoId).single(),
+          supabaseClient.from("processos").select("*").eq("id", processoId).single(),
           8000
         );
 
@@ -1995,6 +2312,7 @@
         alert("Documento anexado com sucesso");
         input.value = "";
         await loadInternal();
+        if (currentUserRole === "client") await refreshClientDashboard();
       } catch (e) {
         alert(e.message || "Erro ao anexar documento.");
       }
@@ -2076,6 +2394,17 @@
         if (updateError) {
           alert(updateError.message);
           return;
+        }
+
+        if (cotacao.email) {
+          await supabaseClient.from("mensagens").insert({
+            cliente_email: cotacao.email,
+            remetente: currentUserRole === "admin" ? "admin" : "funcionario",
+            mensagem: `A sua cotação foi convertida em processo. Número do processo: ${novoProcesso.numero_processo}`,
+            processo_numero: novoProcesso.numero_processo,
+            lido_cliente: false,
+            lido_interno: true
+          });
         }
 
         alert(`Cotação convertida com sucesso. Processo criado: ${novoProcesso.numero_processo}`);
@@ -2656,6 +2985,292 @@
       });
     }
 
+    async function loadInternalMessages() {
+      const { data, error } = await withTimeout(
+        supabaseClient.from("mensagens").select("*").order("created_at", { ascending: true }),
+        10000
+      );
+
+      if (error) {
+        document.getElementById("adminThreadList").innerHTML = `<div class="empty-chat">${error.message}</div>`;
+        return;
+      }
+
+      mensagensCache = data || [];
+      renderInternalThreadList();
+      updateUnreadBadges();
+
+      const unread = mensagensCache.filter(m => m.remetente === "cliente" && !m.lido_interno);
+      if (unread.length) {
+        const ids = unread.map(x => x.id);
+        await supabaseClient.from("mensagens").update({ lido_interno: true }).in("id", ids);
+      }
+    }
+
+    function renderInternalThreadList() {
+      const el = document.getElementById("adminThreadList");
+      if (!el) return;
+
+      const grouped = {};
+      mensagensCache.forEach(m => {
+        if (!grouped[m.cliente_email]) grouped[m.cliente_email] = [];
+        grouped[m.cliente_email].push(m);
+      });
+
+      const emails = Object.keys(grouped);
+      if (!emails.length) {
+        el.innerHTML = `<div class="empty-chat">Sem mensagens ainda.</div>`;
+        document.getElementById("adminMessagesBox").innerHTML = `<div class="empty-chat">Selecione uma conversa.</div>`;
+        currentSelectedThread = "";
+        return;
+      }
+
+      if (!currentSelectedThread || !grouped[currentSelectedThread]) {
+        currentSelectedThread = emails[0];
+      }
+
+      el.innerHTML = emails.map(email => {
+        const arr = grouped[email];
+        const last = arr[arr.length - 1];
+        const unread = arr.filter(x => x.remetente === "cliente" && !x.lido_interno).length;
+        return `
+          <div class="chat-thread-item ${currentSelectedThread === email ? "active" : ""}" onclick="selectInternalThread('${String(email).replace(/'/g, "\\'")}')">
+            <div class="chat-thread-name">${email}</div>
+            <div class="chat-thread-meta">${last?.processo_numero || "-"} • ${formatDate(last?.created_at || "")}</div>
+            ${unread ? `<div class="chat-thread-meta" style="margin-top:6px;color:#b91c1c;font-weight:700;">${unread} nova(s)</div>` : ""}
+          </div>
+        `;
+      }).join("");
+
+      renderInternalMessages();
+    }
+
+    function selectInternalThread(email) {
+      currentSelectedThread = email;
+      renderInternalThreadList();
+    }
+
+    function renderInternalMessages() {
+      const box = document.getElementById("adminMessagesBox");
+      if (!box) return;
+
+      if (!currentSelectedThread) {
+        box.innerHTML = `<div class="empty-chat">Selecione uma conversa.</div>`;
+        return;
+      }
+
+      const rows = mensagensCache.filter(m => m.cliente_email === currentSelectedThread);
+      box.innerHTML = rows.map(m => `
+        <div class="chat-bubble ${m.remetente === "cliente" ? "other" : "mine"}">
+          <div>${escapeHtml(m.mensagem || "")}</div>
+          <div class="chat-meta">
+            ${m.processo_numero || "-"} • ${m.remetente} • ${formatDate(m.created_at)}
+          </div>
+        </div>
+      `).join("");
+
+      box.scrollTop = box.scrollHeight;
+    }
+
+    async function sendAdminMessage() {
+      const text = document.getElementById("adminMessageText").value.trim();
+
+      if (!currentSelectedThread) {
+        alert("Selecione uma conversa.");
+        return;
+      }
+
+      if (!text) {
+        alert("Digite a mensagem.");
+        return;
+      }
+
+      try {
+        const { error } = await withTimeout(
+          supabaseClient.from("mensagens").insert({
+            cliente_email: currentSelectedThread,
+            remetente: currentUserRole === "admin" ? "admin" : "funcionario",
+            mensagem: text,
+            processo_numero: "",
+            lido_cliente: false,
+            lido_interno: true
+          }),
+          10000
+        );
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        document.getElementById("adminMessageText").value = "";
+        await loadInternalMessages();
+      } catch (e) {
+        alert(e.message || "Erro ao enviar mensagem.");
+      }
+    }
+
+    async function loadClientMessages() {
+      const box = document.getElementById("clientMessagesBox");
+      if (!box) return;
+
+      try {
+        const { data, error } = await withTimeout(
+          supabaseClient.from("mensagens").select("*").eq("cliente_email", currentUserEmail).order("created_at", { ascending: true }),
+          10000
+        );
+
+        if (error) {
+          box.innerHTML = `<div class="empty-chat">${error.message}</div>`;
+          return;
+        }
+
+        mensagensCache = data || [];
+
+        if (!mensagensCache.length) {
+          box.innerHTML = `<div class="empty-chat">Sem mensagens ainda.</div>`;
+          updateUnreadBadges();
+          return;
+        }
+
+        box.innerHTML = mensagensCache.map(m => `
+          <div class="chat-bubble ${m.remetente === "cliente" ? "mine" : "other"}">
+            <div>${escapeHtml(m.mensagem || "")}</div>
+            <div class="chat-meta">
+              ${m.processo_numero || "-"} • ${m.remetente} • ${formatDate(m.created_at)}
+            </div>
+          </div>
+        `).join("");
+
+        box.scrollTop = box.scrollHeight;
+        updateUnreadBadges();
+      } catch (e) {
+        box.innerHTML = `<div class="empty-chat">${e.message}</div>`;
+      }
+    }
+
+    async function markClientMessagesRead() {
+      try {
+        const { data } = await withTimeout(
+          supabaseClient.from("mensagens").select("id").eq("cliente_email", currentUserEmail).eq("lido_cliente", false).neq("remetente", "cliente"),
+          10000
+        );
+        if (data?.length) {
+          const ids = data.map(x => x.id);
+          await supabaseClient.from("mensagens").update({ lido_cliente: true }).in("id", ids);
+          await loadClientMessages();
+          await refreshClientDashboard();
+        }
+      } catch (_) {}
+    }
+
+    async function sendClientMessage() {
+      const text = document.getElementById("clientMessageText").value.trim();
+      if (!text) {
+        alert("Digite a mensagem.");
+        return;
+      }
+
+      try {
+        const { error } = await withTimeout(
+          supabaseClient.from("mensagens").insert({
+            cliente_email: currentUserEmail,
+            remetente: "cliente",
+            mensagem: text,
+            processo_numero: "",
+            lido_cliente: true,
+            lido_interno: false
+          }),
+          10000
+        );
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        document.getElementById("clientMessageText").value = "";
+        await loadClientMessages();
+      } catch (e) {
+        alert(e.message || "Erro ao enviar mensagem.");
+      }
+    }
+
+    function updateUnreadBadges() {
+      const clientUnread = mensagensCache.filter(m =>
+        m.cliente_email === currentUserEmail &&
+        m.remetente !== "cliente" &&
+        !m.lido_cliente
+      ).length;
+
+      const internalUnread = mensagensCache.filter(m =>
+        m.remetente === "cliente" &&
+        !m.lido_interno
+      ).length;
+
+      const clientEl = document.getElementById("clientUnreadBadge");
+      const internalEl = document.getElementById("internalUnreadBadge");
+
+      if (clientEl) {
+        clientEl.textContent = clientUnread;
+        clientEl.classList.toggle("hidden", clientUnread === 0);
+      }
+
+      if (internalEl) {
+        internalEl.textContent = internalUnread;
+        internalEl.classList.toggle("hidden", internalUnread === 0);
+      }
+
+      const dashUnread = document.getElementById("clientDashUnread");
+      if (dashUnread) dashUnread.textContent = clientUnread;
+    }
+
+    async function refreshClientDashboard() {
+      if (currentUserRole !== "client") return;
+
+      let docsVisible = 0;
+      let lastEstado = "-";
+
+      try {
+        const { data: userData } = await withTimeout(supabaseClient.auth.getUser(), 8000);
+        const user = userData?.user;
+        if (!user?.email) return;
+
+        const { data: cliente } = await withTimeout(
+          supabaseClient.from("clientes").select("*").eq("email", user.email).maybeSingle(),
+          8000
+        );
+
+        if (cliente?.nome) {
+          const { data: processos } = await withTimeout(
+            supabaseClient.from("processos").select("*").eq("importador_exportador", cliente.nome).order("created_at", { ascending: false }),
+            10000
+          );
+
+          if (processos?.length) {
+            lastEstado = processos[0].estado || "-";
+            const ids = processos.map(p => p.id);
+            const { data: docs } = await withTimeout(
+              supabaseClient.from("processos_documentos").select("*").in("processo_id", ids).eq("visivel_cliente", true),
+              10000
+            );
+            docsVisible = docs?.length || 0;
+          }
+        }
+
+        document.getElementById("clientDashCotacoes").textContent = clientCotacoesCache.length;
+        document.getElementById("clientDashDocs").textContent = docsVisible;
+        document.getElementById("clientDashEstado").textContent = lastEstado;
+      } catch (_) {}
+    }
+
+    function escapeHtml(text) {
+      return String(text || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+    }
+
     function exportProcessosCSV() {
       const rows = getFilteredProcessos().map(p => [
         p.numero_processo || "",
@@ -2789,6 +3404,7 @@
 
         if (!clientCotacoesCache.length) {
           tbody.innerHTML = `<tr><td colspan="8">Ainda não enviou nenhuma cotação.</td></tr>`;
+          await refreshClientDashboard();
           return;
         }
 
@@ -2813,6 +3429,8 @@
           `;
           tbody.appendChild(tr);
         });
+
+        await refreshClientDashboard();
       } catch (e) {
         tbody.innerHTML = `<tr><td colspan="8">${e.message}</td></tr>`;
       }
@@ -2992,6 +3610,15 @@
               <p>EF Cargo Clear</p>
             </div>`
           );
+
+          await supabaseClient.from("mensagens").insert({
+            cliente_email: email,
+            remetente: "admin",
+            mensagem: "Recebemos o seu pedido de cotação. A equipa vai responder em breve.",
+            processo_numero: numero_factura || "",
+            lido_cliente: false,
+            lido_interno: true
+          });
         }
 
         document.getElementById("cot_tipo").value = "";
@@ -3004,6 +3631,7 @@
         document.getElementById("cot_factura_file_name").textContent = "Nenhum ficheiro selecionado.";
 
         await loadClientCotacoes();
+        await loadClientMessages();
       } catch (e) {
         msg.textContent = e.message || "Erro ao enviar pedido.";
         msg.className = "message-err";
