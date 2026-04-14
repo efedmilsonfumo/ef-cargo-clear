@@ -1,1967 +1,565 @@
-<!DOCTYPE html>
-<html lang="pt">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EF Cargo Clear</title>
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <style>
-    :root{
-      --bg:#f4f6f8;
-      --card:#ffffff;
-      --text:#1f2937;
-      --muted:#6b7280;
-      --line:#e5e7eb;
-      --primary:#BE001A;
-      --primary-dark:#980015;
-      --primary-soft:#fff3f5;
-      --success-bg:#dcfce7;
-      --success-text:#166534;
-      --warn-bg:#fff3cd;
-      --warn-text:#856404;
-      --info-bg:#e0f2fe;
-      --info-text:#075985;
-      --danger:#b91c1c;
-      --shadow:0 18px 40px rgba(15,23,42,.08);
-      --shadow-soft:0 10px 24px rgba(15,23,42,.05);
-      --radius:24px;
-    }
-
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:Arial,sans-serif;
-      background:
-        radial-gradient(circle at top right, rgba(190,0,26,.06), transparent 22%),
-        radial-gradient(circle at bottom left, rgba(190,0,26,.05), transparent 18%),
-        linear-gradient(180deg,#fafafa 0%, #f2f4f7 100%);
-      color:var(--text);
-    }
-
-    .wrap{max-width:1460px;margin:0 auto;padding:22px}
-    .card{
-      background:var(--card);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding:24px;
-      margin-bottom:18px;
-      border:1px solid rgba(229,231,235,.95);
-    }
-
-    .hero-card{position:relative;overflow:hidden}
-    .hero-card::before{
-      content:"";
-      position:absolute;
-      inset:0 0 auto 0;
-      height:6px;
-      background:linear-gradient(90deg,var(--primary) 0%, #d91b35 45%, #f0b7bf 100%);
-    }
-
-    .login-shell{
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:20px;
-      background:
-        radial-gradient(circle at top right, rgba(190,0,26,.08), transparent 25%),
-        radial-gradient(circle at bottom left, rgba(190,0,26,.06), transparent 20%),
-        linear-gradient(180deg,#fafafa 0%, #f2f2f2 100%);
-    }
-
-    .login-card{
-      width:100%;
-      max-width:640px;
-      background:#fff;
-      border-radius:28px;
-      box-shadow:var(--shadow);
-      padding:32px;
-      border:1px solid rgba(229,231,235,.85);
-      position:relative;
-      overflow:hidden;
-    }
-
-    .login-card::before{
-      content:"";
-      position:absolute;
-      inset:0 0 auto 0;
-      height:7px;
-      background:linear-gradient(90deg,var(--primary) 0%, #d51b33 45%, #f4c1c8 100%);
-    }
-
-    .pill{
-      display:inline-block;
-      padding:8px 13px;
-      font-size:12px;
-      border-radius:999px;
-      background:rgba(190,0,26,.08);
-      color:var(--primary);
-      margin-bottom:18px;
-      font-weight:700;
-      letter-spacing:.02em;
-    }
-
-    .login-title{
-      margin:0 0 10px;
-      font-size:38px;
-      line-height:1;
-      color:var(--primary);
-      letter-spacing:-0.03em;
-    }
-
-    .login-sub{
-      margin:0 0 24px;
-      color:var(--muted);
-      font-size:15px;
-      line-height:1.5;
-      max-width:500px;
-    }
-
-    .grid{display:grid;gap:18px}
-    .grid-5{grid-template-columns:repeat(5,1fr)}
-    .grid-4{grid-template-columns:repeat(4,1fr)}
-    .grid-3{grid-template-columns:repeat(3,1fr)}
-    .grid-2{grid-template-columns:repeat(2,1fr)}
-
-    .row{display:flex;gap:14px;flex-wrap:wrap}
-    .row > *{flex:1;min-width:220px}
-
-    label{
-      display:block;
-      font-size:13px;
-      color:var(--muted);
-      margin:0 0 8px;
-      font-weight:700;
-    }
-
-    input, select, textarea{
-      width:100%;
-      border:1px solid #d7dee8;
-      background:#fff;
-      border-radius:14px;
-      padding:14px 15px;
-      font-size:15px;
-      outline:none;
-      transition:border-color .2s, box-shadow .2s, background .2s;
-    }
-
-    input:focus, select:focus, textarea:focus{
-      border-color:rgba(190,0,26,.45);
-      box-shadow:0 0 0 4px rgba(190,0,26,.08);
-      background:#fff;
-    }
-
-    textarea{min-height:110px;resize:vertical}
-
-    .btn{
-      border:none;
-      background:linear-gradient(180deg,var(--primary) 0%, var(--primary-dark) 100%);
-      color:#fff;
-      padding:14px 18px;
-      border-radius:16px;
-      cursor:pointer;
-      font-size:15px;
-      min-height:50px;
-      box-shadow:0 8px 18px rgba(190,0,26,.18);
-      font-weight:700;
-    }
-
-    .btn:hover{background:linear-gradient(180deg,#c6001b 0%, #930015 100%)}
-    .btn-outline{
-      background:#fff;
-      color:var(--text);
-      border:1px solid #d6d6d6;
-      box-shadow:none;
-    }
-    .btn-outline:hover{background:#fafafa;color:var(--primary)}
-
-    .btn-mini{
-      border:none;
-      background:var(--primary);
-      color:#fff;
-      padding:8px 12px;
-      border-radius:10px;
-      cursor:pointer;
-      font-size:12px;
-      font-weight:700;
-      white-space:nowrap;
-      margin-right:6px;
-      margin-bottom:6px;
-    }
-
-    .btn-mini:hover{background:var(--primary-dark)}
-    .btn-mini.secondary{background:#374151}
-    .btn-mini.secondary:hover{background:#1f2937}
-    .btn-mini.info{background:#0369a1}
-    .btn-mini.info:hover{background:#075985}
-    .btn-mini.green{background:#15803d}
-    .btn-mini.green:hover{background:#166534}
-    .btn-mini.danger{background:#b91c1c}
-    .btn-mini.danger:hover{background:#991b1b}
-
-    .link-btn{
-      background:none;
-      border:none;
-      padding:0;
-      color:var(--primary);
-      cursor:pointer;
-      font-weight:700;
-      font-size:14px;
-    }
-
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:18px;
-      flex-wrap:wrap;
-    }
-
-    .brand{display:flex;flex-direction:column;gap:10px}
-    .brand-line{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-
-    .brand-logo-wrap{
-      width:64px;
-      height:64px;
-      border-radius:18px;
-      background:#fff;
-      border:1px solid rgba(229,231,235,.95);
-      box-shadow:0 12px 24px rgba(190,0,26,.12);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      overflow:hidden;
-      flex-shrink:0;
-    }
-
-    .brand-logo{
-      width:100%;
-      height:100%;
-      object-fit:contain;
-      background:#fff;
-      display:none;
-      padding:6px;
-    }
-
-    .brand-badge{
-      width:58px;
-      height:58px;
-      border-radius:18px;
-      background:linear-gradient(180deg,var(--primary) 0%, var(--primary-dark) 100%);
-      color:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:800;
-      font-size:28px;
-      box-shadow:0 12px 24px rgba(190,0,26,.18);
-      flex-shrink:0;
-    }
-
-    .brand h1{
-      margin:0;
-      font-size:34px;
-      line-height:1.05;
-      color:var(--primary);
-      letter-spacing:-0.03em;
-    }
-
-    .brand p{
-      margin:0;
-      color:#4A4A4A;
-      font-size:13px;
-      font-weight:700;
-      letter-spacing:.08em;
-      text-transform:uppercase;
-      line-height:1.35;
-    }
-
-    .welcome-line{color:var(--muted);font-size:14px;margin-top:2px}
-    .small{font-size:13px;color:var(--muted);line-height:1.45}
-    .message-ok{color:#166534;font-size:14px;font-weight:600}
-    .message-err{color:#b91c1c;font-size:14px;font-weight:600}
-    .hidden{display:none}
-
-    .admin-shell{
-      display:grid;
-      grid-template-columns:280px 1fr;
-      gap:18px;
-      align-items:start;
-    }
-
-    .sidebar{
-      position:sticky;
-      top:16px;
-      background:linear-gradient(180deg,#ffffff 0%, #fcfcfc 100%);
-      border:1px solid rgba(229,231,235,.95);
-      border-radius:24px;
-      box-shadow:var(--shadow);
-      padding:20px;
-    }
-
-    .sidebar-title{
-      font-size:13px;
-      text-transform:uppercase;
-      letter-spacing:.08em;
-      color:var(--muted);
-      margin-bottom:14px;
-      font-weight:800;
-    }
-
-    .sidebar-menu{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-
-    .sidebar-btn{
-      width:100%;
-      text-align:left;
-      border:1px solid var(--line);
-      background:#fff;
-      color:var(--text);
-      padding:14px 16px;
-      border-radius:16px;
-      cursor:pointer;
-      font-weight:700;
-      font-size:14px;
-    }
-
-    .sidebar-btn:hover{
-      border-color:rgba(190,0,26,.25);
-      color:var(--primary);
-      background:#fffdfd;
-    }
-
-    .sidebar-btn.active{
-      background:linear-gradient(180deg,var(--primary) 0%, var(--primary-dark) 100%);
-      color:#fff;
-      border-color:var(--primary);
-    }
-
-    .unread-dot{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-width:20px;
-      height:20px;
-      border-radius:999px;
-      background:#ef4444;
-      color:#fff;
-      font-size:11px;
-      font-weight:700;
-      margin-left:8px;
-      padding:0 6px;
-    }
-
-    .kpi{
-      padding:22px;
-      border-radius:22px;
-      background:linear-gradient(180deg,#ffffff 0%, #fcfcfc 100%);
-      box-shadow:var(--shadow-soft);
-      border:1px solid rgba(229,231,235,.9);
-      position:relative;
-      overflow:hidden;
-    }
-
-    .kpi::before{
-      content:"";
-      position:absolute;
-      left:0;
-      top:0;
-      bottom:0;
-      width:5px;
-      background:linear-gradient(180deg,var(--primary) 0%, #e56474 100%);
-    }
-
-    .kpi-title{color:var(--muted);font-size:14px;margin-bottom:10px;font-weight:700}
-    .kpi-value{font-size:34px;font-weight:800;color:var(--primary);letter-spacing:-0.03em}
-
-    .tabs{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-bottom:18px;
-    }
-
-    .tab-btn{
-      background:#fff;
-      border:1px solid var(--line);
-      color:var(--text);
-      padding:12px 16px;
-      border-radius:14px;
-      cursor:pointer;
-      font-size:14px;
-      font-weight:700;
-    }
-
-    .tab-btn:hover{border-color:rgba(190,0,26,.25);color:var(--primary)}
-    .tab-btn.active{
-      background:linear-gradient(180deg,var(--primary) 0%, var(--primary-dark) 100%);
-      color:#fff;
-      border-color:var(--primary);
-    }
-
-    .tab-content.hidden{display:none}
-    .section-title{font-size:24px;font-weight:800;margin:0 0 10px;color:#232323;letter-spacing:-0.02em}
-    .section-sub{margin:0 0 18px;color:var(--muted);font-size:14px;line-height:1.5}
-
-    .panel-head{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:12px;
-      flex-wrap:wrap;
-      margin-bottom:14px;
-    }
-
-    .panel-actions{display:flex;gap:8px;flex-wrap:wrap}
-
-    table{
-      width:100%;
-      border-collapse:separate;
-      border-spacing:0;
-      overflow:hidden;
-    }
-
-    thead tr{background:#fafafa}
-
-    th,td{
-      text-align:left;
-      padding:16px 12px;
-      border-bottom:1px solid var(--line);
-      font-size:15px;
-      vertical-align:top;
-    }
-
-    th{
-      color:#374151;
-      font-size:12px;
-      font-weight:800;
-      text-transform:uppercase;
-      letter-spacing:.04em;
-    }
-
-    tbody tr:hover{background:#fcfcfc}
-
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 12px;
-      border-radius:999px;
-      font-size:13px;
-      white-space:nowrap;
-      font-weight:700;
-    }
-
-    .amber{background:var(--warn-bg);color:var(--warn-text)}
-    .green{background:var(--success-bg);color:var(--success-text)}
-    .blue{background:var(--info-bg);color:var(--info-text)}
-
-    .muted-box{
-      background:linear-gradient(180deg,#fafafa 0%, #f7f7f7 100%);
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:18px;
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.5;
-    }
-
-    .detail-grid{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:20px 26px;
-    }
-
-    .detail-item strong{
-      display:block;
-      margin-bottom:6px;
-      color:#1f2937;
-      font-size:14px;
-    }
-
-    .history-box{
-      background:#fafafa;
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:14px;
-      white-space:pre-wrap;
-      line-height:1.5;
-      font-size:14px;
-    }
-
-    .doc-list{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:10px;
-    }
-
-    .doc-chip{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 10px;
-      border-radius:999px;
-      background:#f3f4f6;
-      border:1px solid #e5e7eb;
-      font-size:12px;
-    }
-
-    .toolbar{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:end;
-      margin-bottom:16px;
-    }
-
-    .toolbar .field{
-      min-width:180px;
-      flex:1;
-    }
-
-    .table-scroll{overflow:auto}
-    .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-
-    .client-card{
-      padding:18px;
-      border:1px solid var(--line);
-      border-radius:20px;
-      background:linear-gradient(180deg,#fff 0%, #fcfcfc 100%);
-      box-shadow:var(--shadow-soft);
-    }
-
-    .client-name{
-      font-size:18px;
-      font-weight:800;
-      margin:0 0 8px;
-      color:#111827;
-    }
-
-    .client-meta{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:10px 16px;
-      margin-top:12px;
-    }
-
-    .client-meta div{font-size:14px;color:#374151}
-    .client-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-
-    .modal-backdrop{
-      position:fixed;
-      inset:0;
-      background:rgba(15,23,42,.45);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
-      z-index:1000;
-    }
-
-    .modal{
-      width:100%;
-      max-width:760px;
-      background:#fff;
-      border-radius:24px;
-      box-shadow:0 24px 60px rgba(15,23,42,.18);
-      border:1px solid rgba(229,231,235,.95);
-      padding:24px;
-      max-height:90vh;
-      overflow:auto;
-    }
-
-    .modal-head{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      margin-bottom:16px;
-    }
-
-    .chat-grid{
-      display:grid;
-      grid-template-columns:330px 1fr;
-      gap:18px;
-    }
-
-    .chat-sidebar{
-      border:1px solid var(--line);
-      border-radius:18px;
-      background:#fff;
-      max-height:540px;
-      overflow:auto;
-    }
-
-    .chat-thread-item{
-      padding:14px;
-      border-bottom:1px solid var(--line);
-      cursor:pointer;
-    }
-
-    .chat-thread-item:hover{background:#fafafa}
-    .chat-thread-item.active{background:#fff3f5}
-    .chat-thread-name{font-weight:700;color:#111827;margin-bottom:4px}
-    .chat-thread-meta{font-size:12px;color:var(--muted)}
-    .chat-window{
-      border:1px solid var(--line);
-      border-radius:18px;
-      background:#fff;
-      display:flex;
-      flex-direction:column;
-      min-height:540px;
-    }
-
-    .chat-messages{
-      flex:1;
-      padding:16px;
-      overflow:auto;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      background:#fafafa;
-      border-bottom:1px solid var(--line);
-    }
-
-    .chat-bubble{
-      max-width:78%;
-      padding:12px 14px;
-      border-radius:16px;
-      font-size:14px;
-      line-height:1.45;
-      white-space:pre-wrap;
-      box-shadow:var(--shadow-soft);
-    }
-
-    .chat-bubble.mine{
-      align-self:flex-end;
-      background:#fee2e2;
-      border:1px solid #fecaca;
-    }
-
-    .chat-bubble.other{
-      align-self:flex-start;
-      background:#fff;
-      border:1px solid #e5e7eb;
-    }
-
-    .chat-meta{
-      font-size:11px;
-      color:var(--muted);
-      margin-top:6px;
-    }
-
-    .chat-compose{
-      padding:16px;
-      background:#fff;
-    }
-
-    .contact-grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:18px;
-    }
-
-    .contact-card{
-      border:1px solid var(--line);
-      border-radius:20px;
-      padding:18px;
-      background:linear-gradient(180deg,#fff 0%, #fcfcfc 100%);
-      box-shadow:var(--shadow-soft);
-    }
-
-    .map-frame{
-      width:100%;
-      min-height:320px;
-      border:0;
-      border-radius:18px;
-      background:#f3f4f6;
-    }
-
-    .dash-grid{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:18px;
-    }
-
-    .empty-chat{
-      padding:24px;
-      text-align:center;
-      color:var(--muted);
-    }
-
-    hr{border:none;border-top:1px solid var(--line)}
-
-    @media (max-width:1180px){
-      .admin-shell{grid-template-columns:1fr}
-      .sidebar{position:static}
-      .chat-grid,.contact-grid{grid-template-columns:1fr}
-    }
-
-    @media (max-width:1100px){
-      .grid-5{grid-template-columns:repeat(2,1fr)}
-      .grid-4{grid-template-columns:repeat(2,1fr)}
-      .grid-3,.detail-grid,.grid-2,.stat-row,.client-meta,.dash-grid{grid-template-columns:1fr}
-    }
-
-    @media (max-width:640px){
-      .wrap{padding:14px}
-      .card,.kpi,.sidebar,.client-card,.contact-card{padding:18px}
-      .login-card{padding:24px}
-      .login-title{font-size:32px}
-      .grid-5,.grid-4{grid-template-columns:1fr}
-      .brand h1{font-size:28px}
-      .brand-badge,.brand-logo-wrap{width:48px;height:48px;font-size:22px}
-      th,td{padding:14px 8px;font-size:14px}
-      .chat-bubble{max-width:92%}
-    }
-  </style>
-</head>
-<body>
-
-  <div id="loginView" class="login-shell">
-    <div class="login-card">
-
-      <div id="loginMode">
-        <div class="pill">EF Cargo Clear</div>
-        <h1 class="login-title">Entrar no sistema</h1>
-        <p class="login-sub">Painel interno e portal do cliente para acompanhamento de despachos e pedidos de cotação.</p>
-
-        <div class="grid">
-          <div>
-            <label>Email</label>
-            <input id="email" placeholder="Digite o email" />
-          </div>
-          <div>
-            <label>Password</label>
-            <input id="password" type="password" placeholder="Digite a password" />
-          </div>
-          <button class="btn" onclick="login()">Entrar</button>
-        </div>
-
-        <p style="margin-top:14px;display:flex;gap:14px;flex-wrap:wrap;">
-          <button class="link-btn" onclick="showRegister()">Criar conta</button>
-          <button class="link-btn" onclick="showForgot()">Esqueci a password</button>
-        </p>
-
-        <p id="loginMsg" class="small" style="margin-top:14px;"></p>
-      </div>
-
-      <div id="registerMode" class="hidden">
-        <div class="pill">Novo cliente</div>
-        <h1 class="login-title">Criar conta</h1>
-        <p class="login-sub">Registe a sua empresa para entrar no portal e solicitar cotações diretamente no sistema.</p>
-
-        <div class="grid">
-          <div>
-            <label>Nome da empresa</label>
-            <input id="reg_nome" placeholder="Nome da empresa" />
-          </div>
-          <div>
-            <label>NUIT</label>
-            <input id="reg_nuit" placeholder="NUIT" />
-          </div>
-          <div>
-            <label>Contacto</label>
-            <input id="reg_contacto" placeholder="Telefone" />
-          </div>
-          <div>
-            <label>Email</label>
-            <input id="reg_email" placeholder="Email" />
-          </div>
-          <div>
-            <label>Password</label>
-            <input id="reg_password" type="password" placeholder="Password" />
-          </div>
-          <div>
-            <label>Confirmar password</label>
-            <input id="reg_password2" type="password" placeholder="Confirmar password" />
-          </div>
-          <button class="btn" onclick="registerClient()">Criar conta</button>
-        </div>
-
-        <p style="margin-top:16px;">
-          <button class="link-btn" onclick="showLogin()">Voltar ao login</button>
-        </p>
-
-        <p id="registerMsg" class="small" style="margin-top:14px;"></p>
-      </div>
-
-      <div id="forgotMode" class="hidden">
-        <div class="pill">Recuperação</div>
-        <h1 class="login-title">Recuperar password</h1>
-        <p class="login-sub">Digite o email da conta. Será enviado um link para redefinir a password.</p>
-
-        <div class="grid">
-          <div>
-            <label>Email</label>
-            <input id="forgot_email" placeholder="Digite o email" />
-          </div>
-          <button class="btn" onclick="sendPasswordReset()">Enviar link</button>
-        </div>
-
-        <p style="margin-top:16px;">
-          <button class="link-btn" onclick="showLogin()">Voltar ao login</button>
-        </p>
-
-        <p id="forgotMsg" class="small" style="margin-top:14px;"></p>
-      </div>
-
-      <div id="resetMode" class="hidden">
-        <div class="pill">Nova password</div>
-        <h1 class="login-title">Definir nova password</h1>
-        <p class="login-sub">Introduza a nova password da conta.</p>
-
-        <div class="grid">
-          <div>
-            <label>Nova password</label>
-            <input id="reset_password_1" type="password" placeholder="Nova password" />
-          </div>
-          <div>
-            <label>Confirmar password</label>
-            <input id="reset_password_2" type="password" placeholder="Confirmar password" />
-          </div>
-          <button class="btn" onclick="updateRecoveredPassword()">Guardar nova password</button>
-        </div>
-
-        <p id="resetMsg" class="small" style="margin-top:14px;"></p>
-      </div>
-
-    </div>
-  </div>
-
-  <div id="appView" class="hidden">
-    <div class="wrap">
-      <div class="card hero-card">
-        <div class="topbar">
-          <div class="brand">
-            <div class="brand-line">
-              <div class="brand-logo-wrap">
-                <img id="companyLogo" class="brand-logo" alt="Logo da empresa" />
-                <div id="companyLogoFallback" class="brand-badge">F</div>
-              </div>
-              <div>
-                <h1>EF Cargo Clear</h1>
-                <p>EF & Associados • Despachantes Aduaneiros</p>
-              </div>
-            </div>
-            <div id="welcome" class="welcome-line">A carregar...</div>
-          </div>
-          <button class="btn btn-outline no-print" style="min-width:180px" onclick="logout()">Sair</button>
-        </div>
-      </div>
-
-      <div id="internalView" class="hidden">
-        <div class="admin-shell">
-          <aside class="sidebar no-print">
-            <div class="sidebar-title">Painel Interno</div>
-            <div class="sidebar-menu">
-              <button class="sidebar-btn active" id="side-processos" onclick="showInternalTab('processos')">Processos</button>
-              <button class="sidebar-btn" id="side-cotacoes" onclick="showInternalTab('cotacoes')">Pedidos de cotação</button>
-              <button class="sidebar-btn" id="side-financeiro" onclick="showInternalTab('financeiro')">Financeiro</button>
-              <button class="sidebar-btn" id="side-clientes" onclick="showInternalTab('clientes')">Clientes</button>
-              <button class="sidebar-btn" id="side-equipa" onclick="showInternalTab('equipa')">Funcionários</button>
-              <button class="sidebar-btn" id="side-mensagens" onclick="showInternalTab('mensagens')">
-                Mensagens <span id="internalUnreadBadge" class="unread-dot hidden">0</span>
-              </button>
-            </div>
-          </aside>
-
-          <div>
-            <div class="grid grid-5">
-              <div class="kpi"><div class="kpi-title">Clientes</div><div class="kpi-value" id="clientesCount">0</div></div>
-              <div class="kpi"><div class="kpi-title">Processos</div><div class="kpi-value" id="processosCount">0</div></div>
-              <div class="kpi"><div class="kpi-title">Liberados</div><div class="kpi-value" id="liberadosCount">0</div></div>
-              <div class="kpi"><div class="kpi-title">Pendências</div><div class="kpi-value" id="pendenciasCount">0</div></div>
-              <div class="kpi"><div class="kpi-title">Pedidos de cotação</div><div class="kpi-value" id="cotacoesCount">0</div></div>
-            </div>
-
-            <div class="stat-row" style="margin-top:18px;">
-              <div class="kpi"><div class="kpi-title">Valor cobrado</div><div class="kpi-value" id="valorCobradoTotal">0</div></div>
-              <div class="kpi"><div class="kpi-title">Custos do processo</div><div class="kpi-value" id="custosTotal">0</div></div>
-              <div class="kpi"><div class="kpi-title">Margem total</div><div class="kpi-value" id="margemTotal">0</div></div>
-            </div>
-
-            <div id="internal-processos" class="tab-content" style="margin-top:18px;">
-              <div class="card">
-                <div class="panel-head">
-                  <div>
-                    <h2 class="section-title">Gestão de Processos</h2>
-                    <div class="section-sub">Atualize estado, documentos em falta, financeiro e documentos do processo.</div>
-                  </div>
-                  <div class="panel-actions no-print">
-                    <button class="btn-mini green" onclick="exportProcessosCSV()">Excel/CSV</button>
-                    <button class="btn-mini secondary" onclick="printSection('internal-processos','Relatório de Processos')">PDF</button>
-                  </div>
-                </div>
-
-                <div class="toolbar no-print">
-                  <div class="field">
-                    <label>Pesquisa global</label>
-                    <input id="globalSearch" placeholder="Pesquisar tudo..." oninput="applyFilters()" />
-                  </div>
-                  <div class="field">
-                    <label>Cliente</label>
-                    <input id="filterCliente" placeholder="Nome do cliente" oninput="applyFilters()" />
-                  </div>
-                  <div class="field">
-                    <label>Factura</label>
-                    <input id="filterFactura" placeholder="Número da factura" oninput="applyFilters()" />
-                  </div>
-                  <div class="field">
-                    <label>Estado</label>
-                    <select id="filterEstado" onchange="applyFilters()">
-                      <option value="">Todos</option>
-                      <option>Recebido</option>
-                      <option>Em análise</option>
-                      <option>Documentos em falta</option>
-                      <option>Submetido</option>
-                      <option>Em desembaraço</option>
-                      <option>Liberado</option>
-                      <option>Entregue</option>
-                    </select>
-                  </div>
-                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <button class="btn-mini info" onclick="clearFilters()">Limpar</button>
-                  </div>
-                </div>
-
-                <div class="table-scroll">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Processo</th>
-                        <th>Factura</th>
-                        <th>Cliente</th>
-                        <th>Regime</th>
-                        <th>Estado</th>
-                        <th>Docs em falta</th>
-                        <th>Financeiro</th>
-                        <th>Documentos</th>
-                        <th>Histórico</th>
-                      </tr>
-                    </thead>
-                    <tbody id="processosTable"></tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            <div id="internal-cotacoes" class="tab-content hidden" style="margin-top:18px;">
-              <div class="card">
-                <div class="panel-head">
-                  <div>
-                    <h2 class="section-title">Pedidos de Cotação</h2>
-                    <div class="section-sub">Solicitações submetidas pelos clientes para análise comercial e operacional.</div>
-                  </div>
-                  <div class="panel-actions no-print">
-                    <button class="btn-mini green" onclick="exportCotacoesCSV()">Excel/CSV</button>
-                    <button class="btn-mini secondary" onclick="printSection('internal-cotacoes','Pedidos de Cotação')">PDF</button>
-                  </div>
-                </div>
-
-                <div class="table-scroll">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Cliente</th>
-                        <th>Tipo</th>
-                        <th>Factura</th>
-                        <th>Documento</th>
-                        <th>Ações</th>
-                        <th>Origem</th>
-                        <th>Destino</th>
-                        <th>Estado</th>
-                      </tr>
-                    </thead>
-                    <tbody id="cotacoesTable"></tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            <div id="internal-financeiro" class="tab-content hidden" style="margin-top:18px;">
-              <div class="card">
-                <div class="panel-head">
-                  <div>
-                    <h2 class="section-title">Painel Financeiro</h2>
-                    <div class="section-sub">Resumo básico por processo com valor cobrado, custos e margem.</div>
-                  </div>
-                  <div class="panel-actions no-print">
-                    <button class="btn-mini green" onclick="exportFinanceiroCSV()">Excel/CSV</button>
-                    <button class="btn-mini secondary" onclick="printSection('internal-financeiro','Painel Financeiro')">PDF</button>
-                  </div>
-                </div>
-
-                <div class="table-scroll">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Processo</th>
-                        <th>Cliente</th>
-                        <th>Factura</th>
-                        <th>Valor cobrado</th>
-                        <th>Custos</th>
-                        <th>Margem</th>
-                      </tr>
-                    </thead>
-                    <tbody id="financeiroTable"></tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            <div id="internal-clientes" class="tab-content hidden" style="margin-top:18px;">
-              <div class="card">
-                <div class="panel-head">
-                  <div>
-                    <h2 class="section-title">Gestão de Clientes</h2>
-                    <div class="section-sub">Criar, pesquisar, editar e eliminar clientes do sistema.</div>
-                  </div>
-                </div>
-
-                <div class="card" style="background:#fafafa;border-radius:20px;">
-                  <h3 style="margin-top:0;">Novo cliente</h3>
-                  <div class="grid grid-2">
-                    <div>
-                      <label>Nome</label>
-                      <input id="cli_nome" />
-                    </div>
-                    <div>
-                      <label>Email</label>
-                      <input id="cli_email" />
-                    </div>
-                    <div>
-                      <label>NUIT</label>
-                      <input id="cli_nuit" />
-                    </div>
-                    <div>
-                      <label>Contacto</label>
-                      <input id="cli_contacto" />
-                    </div>
-                  </div>
-                  <button class="btn" style="margin-top:14px;" onclick="criarCliente()">Criar cliente</button>
-                </div>
-
-                <div class="toolbar no-print" style="margin-top:18px;">
-                  <div class="field">
-                    <label>Pesquisar cliente</label>
-                    <input id="clientSearch" placeholder="Nome, email, contacto ou NUIT" oninput="renderClientesGrid()" />
-                  </div>
-                </div>
-
-                <div id="clientesGrid" class="grid grid-2"></div>
-              </div>
-            </div>
-
-            <div id="internal-equipa" class="tab-content hidden" style="margin-top:18px;">
-              <div class="card">
-                <div class="panel-head">
-                  <div>
-                    <h2 class="section-title">Funcionários EF</h2>
-                    <div class="section-sub">Crie acessos internos com permissões limitadas para gestão de processos e cotações.</div>
-                  </div>
-                </div>
-
-                <div class="card" style="background:#fafafa;border-radius:20px;">
-                  <h3 style="margin-top:0;">Novo funcionário</h3>
-                  <div class="grid grid-2">
-                    <div>
-                      <label>Nome</label>
-                      <input id="eq_nome" />
-                    </div>
-                    <div>
-                      <label>Email</label>
-                      <input id="eq_email" />
-                    </div>
-                    <div>
-                      <label>Nível</label>
-                      <select id="eq_nivel">
-                        <option value="operador">Operador</option>
-                        <option value="supervisor">Supervisor</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label>Estado</label>
-                      <select id="eq_activo">
-                        <option value="true">Activo</option>
-                        <option value="false">Inactivo</option>
-                      </select>
-                    </div>
-                  </div>
-                  <button class="btn" style="margin-top:14px;" onclick="criarFuncionario()">Criar funcionário</button>
-                </div>
-
-                <div class="toolbar no-print" style="margin-top:18px;">
-                  <div class="field">
-                    <label>Pesquisar funcionário</label>
-                    <input id="teamSearch" placeholder="Nome ou email" oninput="renderEquipaGrid()" />
-                  </div>
-                </div>
-
-                <div id="equipaGrid" class="grid grid-2"></div>
-              </div>
-            </div>
-
-            <div id="internal-mensagens" class="tab-content hidden" style="margin-top:18px;">
-              <div class="card">
-                <div class="panel-head">
-                  <div>
-                    <h2 class="section-title">Mensagens</h2>
-                    <div class="section-sub">Converse com clientes dentro da plataforma, sem email.</div>
-                  </div>
-                </div>
-
-                <div class="chat-grid">
-                  <div class="chat-sidebar" id="adminThreadList"></div>
-
-                  <div class="chat-window">
-                    <div class="chat-messages" id="adminMessagesBox">
-                      <div class="empty-chat">Selecione uma conversa.</div>
-                    </div>
-                    <div class="chat-compose">
-                      <div class="grid">
-                        <div>
-                          <label>Mensagem</label>
-                          <textarea id="adminMessageText" placeholder="Digite a mensagem para o cliente"></textarea>
-                        </div>
-                        <button class="btn" onclick="sendAdminMessage()">Enviar mensagem</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-      <div id="clientView" class="hidden">
-        <div class="card hero-card">
-          <h2 class="section-title">Portal do Cliente</h2>
-          <div class="section-sub">Consulte o estado do seu processo, veja documentos do processo, envie pedidos de cotação, acompanhe o histórico e fale connosco.</div>
-        </div>
-
-        <div id="client-dashboard" class="card">
-          <div class="panel-head">
-            <div>
-              <h2 class="section-title">Dashboard</h2>
-              <div class="section-sub">Resumo rápido da sua atividade no sistema.</div>
-            </div>
-          </div>
-          <div class="dash-grid">
-            <div class="kpi"><div class="kpi-title">Minhas cotações</div><div class="kpi-value" id="clientDashCotacoes">0</div></div>
-            <div class="kpi"><div class="kpi-title">Mensagens não lidas</div><div class="kpi-value" id="clientDashUnread">0</div></div>
-            <div class="kpi"><div class="kpi-title">Docs visíveis</div><div class="kpi-value" id="clientDashDocs">0</div></div>
-            <div class="kpi"><div class="kpi-title">Último estado</div><div class="kpi-value" id="clientDashEstado" style="font-size:20px;">-</div></div>
-          </div>
-        </div>
-
-        <div class="tabs no-print">
-          <button class="tab-btn active" onclick="showClientTab('consulta', this)">Consultar processo</button>
-          <button class="tab-btn" onclick="showClientTab('cotacao', this)">Solicitar cotação</button>
-          <button class="tab-btn" onclick="showClientTab('historico', this)">Minhas cotações</button>
-          <button class="tab-btn" onclick="showClientTab('mensagens', this)">
-            Mensagens <span id="clientUnreadBadge" class="unread-dot hidden">0</span>
-          </button>
-          <button class="tab-btn" onclick="showClientTab('contactos', this)">Contactos</button>
-        </div>
-
-        <div id="client-consulta" class="tab-content">
-          <div class="card">
-            <h2 class="section-title">Consultar por número da factura</h2>
-            <div class="section-sub">Digite o número da factura para localizar o processo correspondente.</div>
-            <div class="row no-print">
-              <div>
-                <label>Número da factura</label>
-                <input id="facturaSearch" placeholder="Ex: 0101" />
-              </div>
-              <div style="max-width:240px;align-self:end;">
-                <button class="btn" onclick="buscarFactura()">Pesquisar</button>
-              </div>
-            </div>
-          </div>
-
-          <div id="processoCard" class="card hidden">
-            <h2 id="pcTitulo" style="margin:0 0 6px;"></h2>
-            <div id="pcSub" class="small" style="margin-bottom:14px;"></div>
-            <div id="pcEstado" style="margin-bottom:18px;"></div>
-
-            <div class="detail-grid">
-              <div class="detail-item"><strong>Regime</strong><div id="pcRegime"></div></div>
-              <div class="detail-item"><strong>Origem</strong><div id="pcOrigem"></div></div>
-              <div class="detail-item"><strong>Destino</strong><div id="pcDestino"></div></div>
-              <div class="detail-item"><strong>Porto / Fronteira</strong><div id="pcPorto"></div></div>
-              <div class="detail-item"><strong>BL / AWB</strong><div id="pcBl"></div></div>
-              <div class="detail-item"><strong>Prazo</strong><div id="pcPrazo"></div></div>
-              <div class="detail-item"><strong>Docs em falta</strong><div id="pcDocs"></div></div>
-            </div>
-
-            <hr style="margin:22px 0;" />
-            <strong>Histórico</strong>
-            <div id="pcHistorico" class="history-box" style="margin-top:10px"></div>
-
-            <hr style="margin:22px 0;" />
-            <strong>Documentos do processo</strong>
-            <div id="pcDocsList" class="doc-list" style="margin-top:10px"></div>
-          </div>
-        </div>
-
-        <div id="client-cotacao" class="tab-content hidden">
-          <div class="card">
-            <h2 class="section-title">Solicitar cotação</h2>
-            <div class="muted-box" style="margin-bottom:18px;">
-              Preencha os dados abaixo, anexe a factura e envie o pedido para a equipa analisar.
-            </div>
-
-            <div class="grid">
-              <div class="row">
-                <div>
-                  <label>Nome do cliente</label>
-                  <input id="cot_nome" placeholder="Nome da empresa" />
-                </div>
-                <div>
-                  <label>NUIT</label>
-                  <input id="cot_nuit" placeholder="NUIT" />
-                </div>
-              </div>
-
-              <div class="row">
-                <div>
-                  <label>Contacto</label>
-                  <input id="cot_contacto" placeholder="Telefone" />
-                </div>
-                <div>
-                  <label>Email</label>
-                  <input id="cot_email" placeholder="Email" />
-                </div>
-              </div>
-
-              <div class="row">
-                <div>
-                  <label>Tipo de operação</label>
-                  <select id="cot_tipo">
-                    <option value="">Selecione</option>
-                    <option>Importação</option>
-                    <option>Exportação</option>
-                    <option>Importação Temporária</option>
-                    <option>Exportação Temporária</option>
-                    <option>Cabotagem</option>
-                    <option>Re-importação</option>
-                    <option>Re-exportação</option>
-                    <option>Trânsito</option>
-                  </select>
-                </div>
-                <div>
-                  <label>Número da factura</label>
-                  <input id="cot_factura" placeholder="Número da factura" />
-                </div>
-              </div>
-
-              <div class="row">
-                <div>
-                  <label>Origem</label>
-                  <input id="cot_origem" placeholder="País / cidade de origem" />
-                </div>
-                <div>
-                  <label>Destino</label>
-                  <input id="cot_destino" placeholder="País / cidade de destino" />
-                </div>
-              </div>
-
-              <div>
-                <label>Descrição da mercadoria</label>
-                <textarea id="cot_mercadoria" placeholder="Descreva a mercadoria"></textarea>
-              </div>
-
-              <div>
-                <label>Observações</label>
-                <textarea id="cot_obs" placeholder="Informações adicionais"></textarea>
-              </div>
-
-              <div class="muted-box">
-                <label for="cot_factura_file">Anexar factura (PDF, JPG, PNG)</label>
-                <input id="cot_factura_file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" />
-                <div id="cot_factura_file_name" class="small" style="margin-top:8px;">Nenhum ficheiro selecionado.</div>
-              </div>
-
-              <div style="max-width:260px;">
-                <button class="btn" onclick="submeterCotacao()">Enviar pedido</button>
-              </div>
-
-              <p id="cotacaoMsg" class="small"></p>
-            </div>
-          </div>
-        </div>
-
-        <div id="client-historico" class="tab-content hidden">
-          <div class="card">
-            <div class="panel-head">
-              <div>
-                <h2 class="section-title">Minhas cotações</h2>
-                <div class="section-sub">Aqui pode acompanhar todos os pedidos de cotação já enviados pela sua empresa.</div>
-              </div>
-              <div class="panel-actions no-print">
-                <button class="btn-mini green" onclick="exportClientCotacoesCSV()">Excel/CSV</button>
-                <button class="btn-mini secondary" onclick="printSection('client-historico','Minhas Cotações')">PDF</button>
-              </div>
-            </div>
-
-            <div class="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Data</th>
-                    <th>Factura</th>
-                    <th>Tipo</th>
-                    <th>Origem</th>
-                    <th>Destino</th>
-                    <th>Documento</th>
-                    <th>Estado</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="clientCotacoesTable"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <div id="client-mensagens" class="tab-content hidden">
-          <div class="card">
-            <div class="panel-head">
-              <div>
-                <h2 class="section-title">Mensagens</h2>
-                <div class="section-sub">Fale connosco diretamente dentro da plataforma.</div>
-              </div>
-            </div>
-
-            <div class="chat-window">
-              <div class="chat-messages" id="clientMessagesBox">
-                <div class="empty-chat">Sem mensagens ainda.</div>
-              </div>
-              <div class="chat-compose">
-                <div class="grid">
-                  <div>
-                    <label>Sua mensagem</label>
-                    <textarea id="clientMessageText" placeholder="Escreva aqui a sua mensagem"></textarea>
-                  </div>
-                  <button class="btn" onclick="sendClientMessage()">Enviar mensagem</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="client-contactos" class="tab-content hidden">
-          <div class="card">
-            <div class="panel-head">
-              <div>
-                <h2 class="section-title">Contactos e localização</h2>
-                <div class="section-sub">Informações úteis da empresa.</div>
-              </div>
-            </div>
-
-            <div class="contact-grid">
-              <div class="contact-card">
-                <div class="detail-grid" style="grid-template-columns:1fr;">
-                  <div class="detail-item"><strong>Empresa</strong><div id="cfgEmpresa">EF Cargo Clear</div></div>
-                  <div class="detail-item"><strong>Telefone</strong><div id="cfgTelefone">-</div></div>
-                  <div class="detail-item"><strong>Email</strong><div id="cfgEmail">-</div></div>
-                  <div class="detail-item"><strong>WhatsApp</strong><div id="cfgWhatsapp">-</div></div>
-                  <div class="detail-item"><strong>Endereço</strong><div id="cfgEndereco">-</div></div>
-                  <div class="detail-item"><strong>Horário</strong><div id="cfgHorario">-</div></div>
-                </div>
-              </div>
-
-              <div class="contact-card">
-                <iframe id="cfgMapa" class="map-frame" src="" loading="lazy"></iframe>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-  </div>
-
-  <div id="clienteModalBackdrop" class="modal-backdrop">
-    <div class="modal">
-      <div class="modal-head">
-        <div>
-          <h2 class="section-title" style="margin-bottom:4px;">Editar cliente</h2>
-          <div class="small">Atualize os dados do cliente registado.</div>
-        </div>
-        <button class="btn-mini secondary" onclick="closeClienteModal()">Fechar</button>
-      </div>
-
-      <input type="hidden" id="edit_cliente_id" />
-
-      <div class="grid grid-2">
-        <div>
-          <label>Nome</label>
-          <input id="edit_cliente_nome" />
-        </div>
-        <div>
-          <label>Email</label>
-          <input id="edit_cliente_email" />
-        </div>
-        <div>
-          <label>Contacto</label>
-          <input id="edit_cliente_contacto" />
-        </div>
-        <div>
-          <label>NUIT</label>
-          <input id="edit_cliente_nuit" />
-        </div>
-      </div>
-
-      <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn" onclick="saveClienteEdit()">Guardar alterações</button>
-        <button class="btn btn-outline" onclick="closeClienteModal()">Cancelar</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="equipaModalBackdrop" class="modal-backdrop">
-    <div class="modal">
-      <div class="modal-head">
-        <div>
-          <h2 class="section-title" style="margin-bottom:4px;">Editar funcionário</h2>
-          <div class="small">Atualize os dados do funcionário interno.</div>
-        </div>
-        <button class="btn-mini secondary" onclick="closeEquipaModal()">Fechar</button>
-      </div>
-
-      <input type="hidden" id="edit_eq_id" />
-
-      <div class="grid grid-2">
-        <div>
-          <label>Nome</label>
-          <input id="edit_eq_nome" />
-        </div>
-        <div>
-          <label>Email</label>
-          <input id="edit_eq_email" />
-        </div>
-        <div>
-          <label>Nível</label>
-          <select id="edit_eq_nivel">
-            <option value="operador">Operador</option>
-            <option value="supervisor">Supervisor</option>
-          </select>
-        </div>
-        <div>
-          <label>Estado</label>
-          <select id="edit_eq_activo">
-            <option value="true">Activo</option>
-            <option value="false">Inactivo</option>
-          </select>
-        </div>
-      </div>
-
-      <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn" onclick="saveEquipaEdit()">Guardar alterações</button>
-        <button class="btn btn-outline" onclick="closeEquipaModal()">Cancelar</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const SUPABASE_URL = "https://fefkyzutcouoklbiwybs.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_uOowmqEhVdq8h0uzagYPEA_DXXpGOgA";
-    const ADMIN_EMAIL = "ef.edmilsonfumo@gmail.com";
-    const COMPANY_LOGO_URL = "COLE_AQUI_O_LINK_DO_LOGO";
-
-    const tabSessionKey = (() => {
-      const keyName = "ef-cargo-clear-tab-id";
-      let id = window.sessionStorage.getItem(keyName);
-      if (!id) {
-        id = "tab-" + Date.now() + "-" + Math.random().toString(36).slice(2);
-        window.sessionStorage.setItem(keyName, id);
-      }
-      return id;
-    })();
-
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        storage: window.sessionStorage,
-        storageKey: "ef-cargo-clear-session-" + tabSessionKey
-      }
-    });
-
-    let processosCache = [];
-    let cotacoesCache = [];
-    let docsCache = [];
-    let clientCotacoesCache = [];
-    let clientesCache = [];
-    let equipaCache = [];
-    let mensagensCache = [];
-    let currentUserRole = "client";
-    let currentUserEmail = "";
-    let currentUserName = "";
-    let currentSelectedThread = "";
-    let companyConfig = null;
-
-    document.addEventListener("DOMContentLoaded", () => {
-      const facturaInput = document.getElementById("cot_factura_file");
-      if (facturaInput) {
-        facturaInput.addEventListener("change", () => {
-          const file = facturaInput.files?.[0];
-          document.getElementById("cot_factura_file_name").textContent =
-            file ? file.name : "Nenhum ficheiro selecionado.";
-        });
-      }
-      setupCompanyLogo();
-      detectRecoveryMode();
-    });
-
-    function setupCompanyLogo() {
-      const img = document.getElementById("companyLogo");
-      const fallback = document.getElementById("companyLogoFallback");
-      if (!img || !fallback) return;
-
-      if (!COMPANY_LOGO_URL || COMPANY_LOGO_URL === "COLE_AQUI_O_LINK_DO_LOGO") {
-        img.style.display = "none";
-        fallback.style.display = "flex";
-        return;
-      }
-
-      img.onload = () => {
-        img.style.display = "block";
-        fallback.style.display = "none";
-      };
-
-      img.onerror = () => {
-        img.style.display = "none";
-        fallback.style.display = "flex";
-      };
-
-      img.src = COMPANY_LOGO_URL;
-    }
-
-    function hideAuthModes() {
-      document.getElementById("loginMode").classList.add("hidden");
-      document.getElementById("registerMode").classList.add("hidden");
-      document.getElementById("forgotMode").classList.add("hidden");
-      document.getElementById("resetMode").classList.add("hidden");
-    }
-
-    function showLogin() {
-      hideAuthModes();
-      document.getElementById("loginMode").classList.remove("hidden");
-    }
-
-    function showRegister() {
-      hideAuthModes();
-      document.getElementById("registerMode").classList.remove("hidden");
-    }
-
-    function showForgot() {
-      hideAuthModes();
-      document.getElementById("forgotMode").classList.remove("hidden");
-    }
-
-    function showReset() {
-      hideAuthModes();
-      document.getElementById("resetMode").classList.remove("hidden");
-    }
-
-    function detectRecoveryMode() {
-      const hash = window.location.hash || "";
-      if (hash.includes("type=recovery")) {
-        showReset();
-      }
-    }
-
-    function withTimeout(promise, ms = 8000) {
-      return Promise.race([
-        promise,
-        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout ao carregar dados.")), ms))
-      ]);
-    }
-
-    async function sendPasswordReset() {
-      const email = document.getElementById("forgot_email").value.trim();
-      const msg = document.getElementById("forgotMsg");
-
-      if (!email) {
-        msg.textContent = "Digite o email.";
-        msg.className = "message-err";
-        return;
-      }
-
-      msg.textContent = "A enviar link...";
-      msg.className = "small";
-
-      try {
-        const { error } = await withTimeout(
-          supabaseClient.auth.resetPasswordForEmail(email, {
-            redirectTo: window.location.origin + window.location.pathname
-          }),
-          10000
-        );
-
-        if (error) {
-          msg.textContent = error.message;
-          msg.className = "message-err";
-          return;
-        }
-
-        msg.textContent = "Link enviado com sucesso. Verifique o email.";
-        msg.className = "message-ok";
-      } catch (e) {
-        msg.textContent = e.message || "Erro ao enviar link.";
-        msg.className = "message-err";
-      }
-    }
-
-    async function updateRecoveredPassword() {
-      const p1 = document.getElementById("reset_password_1").value;
-      const p2 = document.getElementById("reset_password_2").value;
-      const msg = document.getElementById("resetMsg");
-
-      if (!p1 || !p2) {
-        msg.textContent = "Preencha os dois campos.";
-        msg.className = "message-err";
-        return;
-      }
-
-      if (p1.length < 6) {
-        msg.textContent = "A password deve ter pelo menos 6 caracteres.";
-        msg.className = "message-err";
-        return;
-      }
-
-      if (p1 !== p2) {
-        msg.textContent = "As passwords não coincidem.";
-        msg.className = "message-err";
-        return;
-      }
-
-      msg.textContent = "A guardar nova password...";
-      msg.className = "small";
-
-      try {
-        const { error } = await withTimeout(
-          supabaseClient.auth.updateUser({ password: p1 }),
-          10000
-        );
-
-        if (error) {
-          msg.textContent = error.message;
-          msg.className = "message-err";
-          return;
-        }
-
-        msg.textContent = "Password actualizada com sucesso. Já pode entrar.";
-        msg.className = "message-ok";
-        window.history.replaceState({}, document.title, window.location.pathname);
-        setTimeout(() => {
-          showLogin();
-        }, 1200);
-      } catch (e) {
-        msg.textContent = e.message || "Erro ao actualizar password.";
-        msg.className = "message-err";
-      }
-    }
-
-    async function sendEmail(to, subject, html) {
-      try {
-        const res = await fetch('/api/send-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ to, subject, html })
-        });
-        const data = await res.json();
-        console.log("EMAIL RESULT:", data);
-      } catch (e) {
-        console.log("Erro ao enviar email:", e);
-      }
-    }
-
-    function badgeEstado(estado) {
-      const e = (estado || "").toLowerCase();
-      if (e.includes("liberado") || e.includes("entregue")) return `<span class="badge green">${estado}</span>`;
-      if (e.includes("análise") || e.includes("submetido") || e.includes("desembaraço")) return `<span class="badge blue">${estado}</span>`;
-      return `<span class="badge amber">${estado || "Sem estado"}</span>`;
-    }
-
-    function formatDate(dateString) {
-      if (!dateString) return "";
-      const d = new Date(dateString);
-      if (isNaN(d.getTime())) return dateString;
-      return d.toLocaleDateString("pt-PT", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit"
-      }) + " " + d.toLocaleTimeString("pt-PT", {
-        hour: "2-digit",
-        minute: "2-digit"
+<script>
+  const SUPABASE_URL = "https://fefkyzutcouoklbiwybs.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_uOowmqEhVdq8h0uzagYPEA_DXXpGOgA";
+  const ADMIN_EMAIL = "ef.edmilsonfumo@gmail.com";
+  const COMPANY_LOGO_URL = "COLE_AQUI_O_LINK_DO_LOGO";
+
+  const tabSessionKey = (() => {
+    const keyName = "ef-cargo-clear-tab-id";
+    let id = window.sessionStorage.getItem(keyName);
+    if (!id) {
+      id = "tab-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+      window.sessionStorage.setItem(keyName, id);
+    }
+    return id;
+  })();
+
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storage: window.sessionStorage,
+      storageKey: "ef-cargo-clear-session-" + tabSessionKey
+    }
+  });
+
+  let processosCache = [];
+  let cotacoesCache = [];
+  let docsCache = [];
+  let clientCotacoesCache = [];
+  let clientesCache = [];
+  let equipaCache = [];
+  let mensagensCache = [];
+  let currentUserRole = "client";
+  let currentUserEmail = "";
+  let currentUserName = "";
+  let currentSelectedThread = "";
+  let companyConfig = null;
+  let mensagensRealtimeChannel = null;
+  let realtimeStarted = false;
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const facturaInput = document.getElementById("cot_factura_file");
+    if (facturaInput) {
+      facturaInput.addEventListener("change", () => {
+        const file = facturaInput.files?.[0];
+        document.getElementById("cot_factura_file_name").textContent =
+          file ? file.name : "Nenhum ficheiro selecionado.";
       });
     }
+    setupCompanyLogo();
+    detectRecoveryMode();
+  });
 
-    function formatMoney(value) {
-      const n = Number(value || 0);
-      return n.toLocaleString("pt-PT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  function setupCompanyLogo() {
+    const img = document.getElementById("companyLogo");
+    const fallback = document.getElementById("companyLogoFallback");
+    if (!img || !fallback) return;
+
+    if (!COMPANY_LOGO_URL || COMPANY_LOGO_URL === "COLE_AQUI_O_LINK_DO_LOGO") {
+      img.style.display = "none";
+      fallback.style.display = "flex";
+      return;
     }
 
-    function csvEscape(v) {
-      const value = v == null ? "" : String(v);
-      return `"${value.replace(/"/g, '""')}"`;
+    img.onload = () => {
+      img.style.display = "block";
+      fallback.style.display = "none";
+    };
+
+    img.onerror = () => {
+      img.style.display = "none";
+      fallback.style.display = "flex";
+    };
+
+    img.src = COMPANY_LOGO_URL;
+  }
+
+  function hideAuthModes() {
+    document.getElementById("loginMode").classList.add("hidden");
+    document.getElementById("registerMode").classList.add("hidden");
+    document.getElementById("forgotMode").classList.add("hidden");
+    document.getElementById("resetMode").classList.add("hidden");
+  }
+
+  function showLogin() {
+    hideAuthModes();
+    document.getElementById("loginMode").classList.remove("hidden");
+  }
+
+  function showRegister() {
+    hideAuthModes();
+    document.getElementById("registerMode").classList.remove("hidden");
+  }
+
+  function showForgot() {
+    hideAuthModes();
+    document.getElementById("forgotMode").classList.remove("hidden");
+  }
+
+  function showReset() {
+    hideAuthModes();
+    document.getElementById("resetMode").classList.remove("hidden");
+  }
+
+  function detectRecoveryMode() {
+    const hash = window.location.hash || "";
+    if (hash.includes("type=recovery")) {
+      showReset();
+    }
+  }
+
+  function withTimeout(promise, ms = 8000) {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout ao carregar dados.")), ms))
+    ]);
+  }
+
+  function cleanupRealtime() {
+    if (mensagensRealtimeChannel) {
+      supabaseClient.removeChannel(mensagensRealtimeChannel);
+      mensagensRealtimeChannel = null;
+    }
+    realtimeStarted = false;
+  }
+
+  async function refreshMessagesUI() {
+    if (currentUserRole === "admin" || currentUserRole === "employee") {
+      await loadInternalMessages();
+    } else {
+      await loadClientMessages();
+      await refreshClientDashboard();
+    }
+  }
+
+  function initMensagensRealtime() {
+    if (realtimeStarted) return;
+
+    mensagensRealtimeChannel = supabaseClient
+      .channel("mensagens-live")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "mensagens"
+        },
+        async (payload) => {
+          const row = payload.new || payload.old || {};
+          const rowEmail = String(row.cliente_email || "").toLowerCase();
+
+          const isInternal = currentUserRole === "admin" || currentUserRole === "employee";
+          const isClientRow = rowEmail && rowEmail === currentUserEmail.toLowerCase();
+
+          if (isInternal || isClientRow) {
+            await refreshMessagesUI();
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log("Realtime mensagens:", status);
+      });
+
+    realtimeStarted = true;
+  }
+
+  async function sendPasswordReset() {
+    const email = document.getElementById("forgot_email").value.trim();
+    const msg = document.getElementById("forgotMsg");
+
+    if (!email) {
+      msg.textContent = "Digite o email.";
+      msg.className = "message-err";
+      return;
     }
 
-    function downloadCSV(filename, headers, rows) {
-      const csv = [
-        headers.map(csvEscape).join(";"),
-        ...rows.map(row => row.map(csvEscape).join(";"))
-      ].join("\n");
+    msg.textContent = "A enviar link...";
+    msg.className = "small";
 
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
+    try {
+      const { error } = await withTimeout(
+        supabaseClient.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + window.location.pathname
+        }),
+        10000
+      );
 
-    function printSection(sectionId, title) {
-      const section = document.getElementById(sectionId);
-      if (!section) return;
-
-      const win = window.open("", "_blank");
-      const html = `
-        <html>
-          <head>
-            <title>${title}</title>
-            <style>
-              body { font-family: Arial, sans-serif; padding: 20px; color: #111; }
-              h1 { margin-bottom: 16px; }
-              table { width: 100%; border-collapse: collapse; }
-              th, td { border: 1px solid #ddd; padding: 10px; text-align: left; vertical-align: top; }
-              th { background: #f4f4f4; }
-            </style>
-          </head>
-          <body>
-            <h1>${title}</h1>
-            ${section.innerHTML}
-            <script>window.onload = () => window.print();<\/script>
-          </body>
-        </html>
-      `;
-      win.document.open();
-      win.document.write(html);
-      win.document.close();
-    }
-
-    function showInternalTab(tab) {
-      document.querySelectorAll(".sidebar-btn").forEach(b => b.classList.remove("active"));
-      if (tab === "processos") document.getElementById("side-processos")?.classList.add("active");
-      if (tab === "cotacoes") document.getElementById("side-cotacoes")?.classList.add("active");
-      if (tab === "financeiro") document.getElementById("side-financeiro")?.classList.add("active");
-      if (tab === "clientes") document.getElementById("side-clientes")?.classList.add("active");
-      if (tab === "equipa") document.getElementById("side-equipa")?.classList.add("active");
-      if (tab === "mensagens") document.getElementById("side-mensagens")?.classList.add("active");
-
-      document.getElementById("internal-processos").classList.toggle("hidden", tab !== "processos");
-      document.getElementById("internal-cotacoes").classList.toggle("hidden", tab !== "cotacoes");
-      document.getElementById("internal-financeiro").classList.toggle("hidden", tab !== "financeiro");
-      document.getElementById("internal-clientes").classList.toggle("hidden", tab !== "clientes");
-      document.getElementById("internal-equipa").classList.toggle("hidden", tab !== "equipa");
-      document.getElementById("internal-mensagens").classList.toggle("hidden", tab !== "mensagens");
-
-      if (tab === "mensagens") {
-        loadInternalMessages();
-      }
-    }
-
-    function showClientTab(tab, btn) {
-      document.querySelectorAll("#clientView .tab-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-
-      document.getElementById("client-consulta").classList.toggle("hidden", tab !== "consulta");
-      document.getElementById("client-cotacao").classList.toggle("hidden", tab !== "cotacao");
-      document.getElementById("client-historico").classList.toggle("hidden", tab !== "historico");
-      document.getElementById("client-mensagens").classList.toggle("hidden", tab !== "mensagens");
-      document.getElementById("client-contactos").classList.toggle("hidden", tab !== "contactos");
-
-      if (tab === "historico") loadClientCotacoes();
-      if (tab === "mensagens") {
-        loadClientMessages();
-        markClientMessagesRead();
-      }
-      if (tab === "contactos") loadCompanyConfig();
-    }
-
-    function applyInternalPermissions() {
-      const isAdmin = currentUserRole === "admin";
-      const isEmployee = currentUserRole === "employee";
-
-      document.getElementById("side-financeiro").style.display = isAdmin ? "block" : "none";
-      document.getElementById("side-clientes").style.display = isAdmin ? "block" : "none";
-      document.getElementById("side-equipa").style.display = isAdmin ? "block" : "none";
-
-      if (isEmployee) {
-        document.getElementById("internal-financeiro").classList.add("hidden");
-        document.getElementById("internal-clientes").classList.add("hidden");
-        document.getElementById("internal-equipa").classList.add("hidden");
-        showInternalTab("processos");
-      }
-    }
-
-    async function registerClient() {
-      const msg = document.getElementById("registerMsg");
-
-      const nome = document.getElementById("reg_nome").value.trim();
-      const nuit = document.getElementById("reg_nuit").value.trim();
-      const contacto = document.getElementById("reg_contacto").value.trim();
-      const email = document.getElementById("reg_email").value.trim().toLowerCase();
-      const password = document.getElementById("reg_password").value;
-      const password2 = document.getElementById("reg_password2").value;
-
-      if (!nome || !email || !password) {
-        msg.textContent = "Preencha nome, email e password.";
+      if (error) {
+        msg.textContent = error.message;
         msg.className = "message-err";
         return;
       }
 
-      if (password.length < 6) {
-        msg.textContent = "A password deve ter pelo menos 6 caracteres.";
-        msg.className = "message-err";
-        return;
-      }
+      msg.textContent = "Link enviado com sucesso. Verifique o email.";
+      msg.className = "message-ok";
+    } catch (e) {
+      msg.textContent = e.message || "Erro ao enviar link.";
+      msg.className = "message-err";
+    }
+  }
 
-      if (password !== password2) {
-        msg.textContent = "As passwords não coincidem.";
-        msg.className = "message-err";
-        return;
-      }
+  async function updateRecoveredPassword() {
+    const p1 = document.getElementById("reset_password_1").value;
+    const p2 = document.getElementById("reset_password_2").value;
+    const msg = document.getElementById("resetMsg");
 
-      msg.textContent = "A criar conta...";
-      msg.className = "small";
-
-      try {
-        const { data, error } = await withTimeout(
-          supabaseClient.auth.signUp({ email, password }),
-          12000
-        );
-
-        if (error) {
-          msg.textContent = error.message;
-          msg.className = "message-err";
-          return;
-        }
-
-        const userId = data?.user?.id;
-        if (!userId) {
-          msg.textContent = "Conta criada, mas não foi possível obter o utilizador.";
-          msg.className = "message-err";
-          return;
-        }
-
-        const { error: clienteError } = await withTimeout(
-          supabaseClient.from("clientes").insert({
-            id: userId,
-            nome,
-            email,
-            nuit,
-            contacto
-          }),
-          10000
-        );
-
-        if (clienteError) {
-          msg.textContent = clienteError.message;
-          msg.className = "message-err";
-          return;
-        }
-
-        msg.textContent = "Conta criada com sucesso. Já pode entrar no sistema.";
-        msg.className = "message-ok";
-
-        document.getElementById("reg_nome").value = "";
-        document.getElementById("reg_nuit").value = "";
-        document.getElementById("reg_contacto").value = "";
-        document.getElementById("reg_email").value = "";
-        document.getElementById("reg_password").value = "";
-        document.getElementById("reg_password2").value = "";
-
-        setTimeout(() => {
-          showLogin();
-          document.getElementById("email").value = email;
-        }, 1200);
-      } catch (e) {
-        msg.textContent = e.message || "Erro ao criar conta.";
-        msg.className = "message-err";
-      }
+    if (!p1 || !p2) {
+      msg.textContent = "Preencha os dois campos.";
+      msg.className = "message-err";
+      return;
     }
 
-    async function login() {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
-      const loginMsg = document.getElementById("loginMsg");
+    if (p1.length < 6) {
+      msg.textContent = "A password deve ter pelo menos 6 caracteres.";
+      msg.className = "message-err";
+      return;
+    }
 
-      if (!email || !password) {
-        loginMsg.textContent = "Preencha email e password.";
+    if (p1 !== p2) {
+      msg.textContent = "As passwords não coincidem.";
+      msg.className = "message-err";
+      return;
+    }
+
+    msg.textContent = "A guardar nova password...";
+    msg.className = "small";
+
+    try {
+      const { error } = await withTimeout(
+        supabaseClient.auth.updateUser({ password: p1 }),
+        10000
+      );
+
+      if (error) {
+        msg.textContent = error.message;
+        msg.className = "message-err";
+        return;
+      }
+
+      msg.textContent = "Password actualizada com sucesso. Já pode entrar.";
+      msg.className = "message-ok";
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setTimeout(() => {
+        showLogin();
+      }, 1200);
+    } catch (e) {
+      msg.textContent = e.message || "Erro ao actualizar password.";
+      msg.className = "message-err";
+    }
+  }
+
+  async function sendEmail(to, subject, html) {
+    try {
+      const res = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to, subject, html })
+      });
+      const data = await res.json();
+      console.log("EMAIL RESULT:", data);
+    } catch (e) {
+      console.log("Erro ao enviar email:", e);
+    }
+  }
+
+  function badgeEstado(estado) {
+    const e = (estado || "").toLowerCase();
+    if (e.includes("liberado") || e.includes("entregue")) return `<span class="badge green">${estado}</span>`;
+    if (e.includes("análise") || e.includes("submetido") || e.includes("desembaraço")) return `<span class="badge blue">${estado}</span>`;
+    return `<span class="badge amber">${estado || "Sem estado"}</span>`;
+  }
+
+  function formatDate(dateString) {
+    if (!dateString) return "";
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return dateString;
+    return d.toLocaleDateString("pt-PT", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }) + " " + d.toLocaleTimeString("pt-PT", {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  }
+
+  function formatMoney(value) {
+    const n = Number(value || 0);
+    return n.toLocaleString("pt-PT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function csvEscape(v) {
+    const value = v == null ? "" : String(v);
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+
+  function downloadCSV(filename, headers, rows) {
+    const csv = [
+      headers.map(csvEscape).join(";"),
+      ...rows.map(row => row.map(csvEscape).join(";"))
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function printSection(sectionId, title) {
+    const section = document.getElementById(sectionId);
+    if (!section) return;
+
+    const win = window.open("", "_blank");
+    const html = `
+      <html>
+        <head>
+          <title>${title}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; color: #111; }
+            h1 { margin-bottom: 16px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #ddd; padding: 10px; text-align: left; vertical-align: top; }
+            th { background: #f4f4f4; }
+          </style>
+        </head>
+        <body>
+          <h1>${title}</h1>
+          ${section.innerHTML}
+          <script>window.onload = () => window.print();<\/script>
+        </body>
+      </html>
+    `;
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+  }
+
+  function showInternalTab(tab) {
+    document.querySelectorAll(".sidebar-btn").forEach(b => b.classList.remove("active"));
+    if (tab === "processos") document.getElementById("side-processos")?.classList.add("active");
+    if (tab === "cotacoes") document.getElementById("side-cotacoes")?.classList.add("active");
+    if (tab === "financeiro") document.getElementById("side-financeiro")?.classList.add("active");
+    if (tab === "clientes") document.getElementById("side-clientes")?.classList.add("active");
+    if (tab === "equipa") document.getElementById("side-equipa")?.classList.add("active");
+    if (tab === "mensagens") document.getElementById("side-mensagens")?.classList.add("active");
+
+    document.getElementById("internal-processos").classList.toggle("hidden", tab !== "processos");
+    document.getElementById("internal-cotacoes").classList.toggle("hidden", tab !== "cotacoes");
+    document.getElementById("internal-financeiro").classList.toggle("hidden", tab !== "financeiro");
+    document.getElementById("internal-clientes").classList.toggle("hidden", tab !== "clientes");
+    document.getElementById("internal-equipa").classList.toggle("hidden", tab !== "equipa");
+    document.getElementById("internal-mensagens").classList.toggle("hidden", tab !== "mensagens");
+
+    if (tab === "mensagens") {
+      loadInternalMessages();
+    }
+  }
+
+  function showClientTab(tab, btn) {
+    document.querySelectorAll("#clientView .tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    document.getElementById("client-consulta").classList.toggle("hidden", tab !== "consulta");
+    document.getElementById("client-cotacao").classList.toggle("hidden", tab !== "cotacao");
+    document.getElementById("client-historico").classList.toggle("hidden", tab !== "historico");
+    document.getElementById("client-mensagens").classList.toggle("hidden", tab !== "mensagens");
+    document.getElementById("client-contactos").classList.toggle("hidden", tab !== "contactos");
+
+    if (tab === "historico") loadClientCotacoes();
+    if (tab === "mensagens") {
+      loadClientMessages();
+      markClientMessagesRead();
+    }
+    if (tab === "contactos") loadCompanyConfig();
+  }
+
+  function applyInternalPermissions() {
+    const isAdmin = currentUserRole === "admin";
+    const isEmployee = currentUserRole === "employee";
+
+    document.getElementById("side-financeiro").style.display = isAdmin ? "block" : "none";
+    document.getElementById("side-clientes").style.display = isAdmin ? "block" : "none";
+    document.getElementById("side-equipa").style.display = isAdmin ? "block" : "none";
+
+    if (isEmployee) {
+      document.getElementById("internal-financeiro").classList.add("hidden");
+      document.getElementById("internal-clientes").classList.add("hidden");
+      document.getElementById("internal-equipa").classList.add("hidden");
+      showInternalTab("processos");
+    }
+  }
+
+  async function registerClient() {
+    const msg = document.getElementById("registerMsg");
+
+    const nome = document.getElementById("reg_nome").value.trim();
+    const nuit = document.getElementById("reg_nuit").value.trim();
+    const contacto = document.getElementById("reg_contacto").value.trim();
+    const email = document.getElementById("reg_email").value.trim().toLowerCase();
+    const password = document.getElementById("reg_password").value;
+    const password2 = document.getElementById("reg_password2").value;
+
+    if (!nome || !email || !password) {
+      msg.textContent = "Preencha nome, email e password.";
+      msg.className = "message-err";
+      return;
+    }
+
+    if (password.length < 6) {
+      msg.textContent = "A password deve ter pelo menos 6 caracteres.";
+      msg.className = "message-err";
+      return;
+    }
+
+    if (password !== password2) {
+      msg.textContent = "As passwords não coincidem.";
+      msg.className = "message-err";
+      return;
+    }
+
+    msg.textContent = "A criar conta...";
+    msg.className = "small";
+
+    try {
+      const { data, error } = await withTimeout(
+        supabaseClient.auth.signUp({ email, password }),
+        12000
+      );
+
+      if (error) {
+        msg.textContent = error.message;
+        msg.className = "message-err";
+        return;
+      }
+
+      const userId = data?.user?.id;
+      if (!userId) {
+        msg.textContent = "Conta criada, mas não foi possível obter o utilizador.";
+        msg.className = "message-err";
+        return;
+      }
+
+      const { error: clienteError } = await withTimeout(
+        supabaseClient.from("clientes").insert({
+          id: userId,
+          nome,
+          email,
+          nuit,
+          contacto
+        }),
+        10000
+      );
+
+      if (clienteError) {
+        msg.textContent = clienteError.message;
+        msg.className = "message-err";
+        return;
+      }
+
+      msg.textContent = "Conta criada com sucesso. Já pode entrar no sistema.";
+      msg.className = "message-ok";
+
+      document.getElementById("reg_nome").value = "";
+      document.getElementById("reg_nuit").value = "";
+      document.getElementById("reg_contacto").value = "";
+      document.getElementById("reg_email").value = "";
+      document.getElementById("reg_password").value = "";
+      document.getElementById("reg_password2").value = "";
+
+      setTimeout(() => {
+        showLogin();
+        document.getElementById("email").value = email;
+      }, 1200);
+    } catch (e) {
+      msg.textContent = e.message || "Erro ao criar conta.";
+      msg.className = "message-err";
+    }
+  }
+
+  async function login() {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const loginMsg = document.getElementById("loginMsg");
+
+    if (!email || !password) {
+      loginMsg.textContent = "Preencha email e password.";
+      loginMsg.className = "message-err";
+      return;
+    }
+
+    loginMsg.textContent = "A entrar...";
+    loginMsg.className = "small";
+
+    try {
+      const { data, error } = await withTimeout(
+        supabaseClient.auth.signInWithPassword({ email, password }),
+        8000
+      );
+
+      if (error) {
+        loginMsg.textContent = error.message;
         loginMsg.className = "message-err";
         return;
       }
 
-      loginMsg.textContent = "A entrar...";
-      loginMsg.className = "small";
-
-      try {
-        const { data, error } = await withTimeout(
-          supabaseClient.auth.signInWithPassword({ email, password }),
-          8000
-        );
-
-        if (error) {
-          loginMsg.textContent = error.message;
-          loginMsg.className = "message-err";
-          return;
-        }
-
-        if (!data.user) {
-          loginMsg.textContent = "Login não concluído.";
-          loginMsg.className = "message-err";
-          return;
-        }
-
-        await loadApp(data.user);
-      } catch (e) {
-        loginMsg.textContent = e.message;
+      if (!data.user) {
+        loginMsg.textContent = "Login não concluído.";
         loginMsg.className = "message-err";
+        return;
       }
+
+      await loadApp(data.user);
+    } catch (e) {
+      loginMsg.textContent = e.message;
+      loginMsg.className = "message-err";
+    }
+  }
+
+  async function logout() {
+    cleanupRealtime();
+    await supabaseClient.auth.signOut();
+    location.reload();
+  }
+
+  async function loadApp(user) {
+    currentUserEmail = (user.email || "").toLowerCase();
+    cleanupRealtime();
+    initMensagensRealtime();
+
+    document.getElementById("loginView").classList.add("hidden");
+    document.getElementById("appView").classList.remove("hidden");
+
+    await loadCompanyConfig();
+
+    if (currentUserEmail === ADMIN_EMAIL.toLowerCase()) {
+      currentUserRole = "admin";
+      currentUserName = "Administrador";
+      document.getElementById("welcome").textContent = "Edmilson Fumo • administrador";
+      document.getElementById("internalView").classList.remove("hidden");
+      document.getElementById("clientView").classList.add("hidden");
+      applyInternalPermissions();
+      setTimeout(async () => {
+        await loadInternal();
+        await loadInternalMessages();
+      }, 100);
+      return;
     }
 
-    async function logout() {
-      await supabaseClient.auth.signOut();
-      location.reload();
-    }
+    try {
+      const { data: membro } = await withTimeout(
+        supabaseClient.from("equipa").select("*").eq("email", currentUserEmail).eq("activo", true).maybeSingle(),
+        8000
+      );
 
-    async function loadApp(user) {
-      currentUserEmail = (user.email || "").toLowerCase();
-
-      document.getElementById("loginView").classList.add("hidden");
-      document.getElementById("appView").classList.remove("hidden");
-
-      await loadCompanyConfig();
-
-      if (currentUserEmail === ADMIN_EMAIL.toLowerCase()) {
-        currentUserRole = "admin";
-        currentUserName = "Administrador";
-        document.getElementById("welcome").textContent = "Edmilson Fumo • administrador";
+      if (membro) {
+        currentUserRole = "employee";
+        currentUserName = membro.nome || "Funcionário";
+        document.getElementById("welcome").textContent = `${membro.nome || "Funcionário"} • ${membro.nivel || "operador"}`;
         document.getElementById("internalView").classList.remove("hidden");
         document.getElementById("clientView").classList.add("hidden");
         applyInternalPermissions();
@@ -1971,1028 +569,1379 @@
         }, 100);
         return;
       }
+    } catch (_) {}
 
-      try {
-        const { data: membro } = await withTimeout(
-          supabaseClient.from("equipa").select("*").eq("email", currentUserEmail).eq("activo", true).maybeSingle(),
-          8000
-        );
+    currentUserRole = "client";
+    document.getElementById("clientView").classList.remove("hidden");
+    document.getElementById("internalView").classList.add("hidden");
 
-        if (membro) {
-          currentUserRole = "employee";
-          currentUserName = membro.nome || "Funcionário";
-          document.getElementById("welcome").textContent = `${membro.nome || "Funcionário"} • ${membro.nivel || "operador"}`;
-          document.getElementById("internalView").classList.remove("hidden");
-          document.getElementById("clientView").classList.add("hidden");
-          applyInternalPermissions();
-          setTimeout(async () => {
-            await loadInternal();
-            await loadInternalMessages();
-          }, 100);
-          return;
-        }
-      } catch (_) {}
+    try {
+      const { data: cliente } = await withTimeout(
+        supabaseClient.from("clientes").select("*").eq("email", currentUserEmail).maybeSingle(),
+        8000
+      );
 
-      currentUserRole = "client";
-      document.getElementById("clientView").classList.remove("hidden");
-      document.getElementById("internalView").classList.add("hidden");
-
-      try {
-        const { data: cliente } = await withTimeout(
-          supabaseClient.from("clientes").select("*").eq("email", currentUserEmail).maybeSingle(),
-          8000
-        );
-
-        if (cliente) {
-          currentUserName = cliente.nome || "Cliente";
-          document.getElementById("welcome").textContent = `${cliente.nome} • cliente`;
-          document.getElementById("cot_nome").value = cliente.nome || "";
-          document.getElementById("cot_nuit").value = cliente.nuit || "";
-          document.getElementById("cot_contacto").value = cliente.contacto || "";
-          document.getElementById("cot_email").value = cliente.email || "";
-        } else {
-          currentUserName = "Cliente";
-          document.getElementById("welcome").textContent = "Cliente • portal";
-          document.getElementById("cot_email").value = currentUserEmail || "";
-        }
-
-        await loadClientCotacoes();
-        await loadClientMessages();
-        await refreshClientDashboard();
-      } catch (_) {
+      if (cliente) {
+        currentUserName = cliente.nome || "";
+        document.getElementById("welcome").textContent = `${cliente.nome} • cliente`;
+        document.getElementById("cot_nome").value = cliente.nome || "";
+        document.getElementById("cot_nuit").value = cliente.nuit || "";
+        document.getElementById("cot_contacto").value = cliente.contacto || "";
+        document.getElementById("cot_email").value = cliente.email || "";
+      } else {
         document.getElementById("welcome").textContent = "Cliente • portal";
+        document.getElementById("cot_email").value = currentUserEmail || "";
       }
+
+      await loadClientCotacoes();
+      await loadClientMessages();
+      await refreshClientDashboard();
+    } catch (_) {
+      document.getElementById("welcome").textContent = "Cliente • portal";
+    }
+  }
+
+  async function loadCompanyConfig() {
+    try {
+      const { data, error } = await withTimeout(
+        supabaseClient.from("config_empresa").select("*").limit(1).maybeSingle(),
+        8000
+      );
+
+      if (error) return;
+
+      companyConfig = data || null;
+
+      document.getElementById("cfgEmpresa").textContent = companyConfig?.empresa || "EF Cargo Clear";
+      document.getElementById("cfgTelefone").textContent = companyConfig?.telefone || "-";
+      document.getElementById("cfgEmail").textContent = companyConfig?.email || "-";
+      document.getElementById("cfgWhatsapp").textContent = companyConfig?.whatsapp || "-";
+      document.getElementById("cfgEndereco").textContent = companyConfig?.endereco || "-";
+      document.getElementById("cfgHorario").textContent = companyConfig?.horario || "-";
+      document.getElementById("cfgMapa").src = companyConfig?.mapa_url || "";
+    } catch (_) {}
+  }
+
+  async function openSignedFromBucket(bucket, path) {
+    if (!path) {
+      alert("Documento não encontrado.");
+      return;
     }
 
-    async function loadCompanyConfig() {
-      try {
-        const { data } = await withTimeout(
-          supabaseClient.from("config_empresa").select("*").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    try {
+      const { data, error } = await withTimeout(
+        supabaseClient.storage.from(bucket).createSignedUrl(path, 300),
+        10000
+      );
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      if (!data?.signedUrl) {
+        alert("Não foi possível gerar o link.");
+        return;
+      }
+
+      window.open(data.signedUrl, "_blank");
+    } catch (e) {
+      alert(e.message || "Erro ao abrir documento.");
+    }
+  }
+
+  async function openFactura(path) {
+    return openSignedFromBucket("cotacoes", path);
+  }
+
+  async function openProcessoDocumento(path) {
+    return openSignedFromBucket("processos", path);
+  }
+
+  function gerarNumeroProcesso() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const h = String(d.getHours()).padStart(2, "0");
+    const min = String(d.getMinutes()).padStart(2, "0");
+    return `EF-${y}${m}${day}-${h}${min}`;
+  }
+
+  async function atualizarEstado(processoId) {
+    const select = document.getElementById("estado_" + processoId);
+    const novoEstado = select.value;
+
+    try {
+      const { data: processo, error: processoReadError } = await withTimeout(
+        supabaseClient.from("processos").select("historico").eq("id", processoId).single(),
+        8000
+      );
+
+      if (processoReadError) {
+        alert(processoReadError.message);
+        return;
+      }
+
+      const historicoAtual = processo?.historico || "";
+      const agora = new Date().toLocaleString("pt-PT");
+      const novoHistorico = `${historicoAtual}\n• ${agora} - Estado alterado para: ${novoEstado}`.trim();
+
+      const { error } = await withTimeout(
+        supabaseClient
+          .from("processos")
+          .update({ estado: novoEstado, historico: novoHistorico })
+          .eq("id", processoId),
+        10000
+      );
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      alert("Estado atualizado com sucesso");
+      await loadInternal();
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+
+  async function salvarDocsEmFalta(processoId) {
+    const textarea = document.getElementById("docs_" + processoId);
+    const valor = textarea.value.trim();
+
+    try {
+      const { data: processo, error: readError } = await withTimeout(
+        supabaseClient.from("processos").select("historico").eq("id", processoId).single(),
+        8000
+      );
+
+      if (readError) {
+        alert(readError.message);
+        return;
+      }
+
+      const historicoAtual = processo?.historico || "";
+      const agora = new Date().toLocaleString("pt-PT");
+      const novoHistorico = `${historicoAtual}\n• ${agora} - Documentos em falta actualizados.`.trim();
+
+      const { error } = await withTimeout(
+        supabaseClient
+          .from("processos")
+          .update({
+            documentos_em_falta: valor,
+            historico: novoHistorico
+          })
+          .eq("id", processoId),
+        10000
+      );
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      alert("Documentos em falta actualizados");
+      await loadInternal();
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+
+  async function salvarFinanceiro(processoId) {
+    if (currentUserRole !== "admin") {
+      alert("Sem permissão.");
+      return;
+    }
+
+    const valorCobrado = Number(document.getElementById("cobrado_" + processoId).value || 0);
+    const custos = Number(document.getElementById("custos_" + processoId).value || 0);
+    const margem = valorCobrado - custos;
+
+    try {
+      const { data: processo, error: readError } = await withTimeout(
+        supabaseClient.from("processos").select("historico").eq("id", processoId).single(),
+        8000
+      );
+
+      if (readError) {
+        alert(readError.message);
+        return;
+      }
+
+      const historicoAtual = processo?.historico || "";
+      const agora = new Date().toLocaleString("pt-PT");
+      const novoHistorico = `${historicoAtual}\n• ${agora} - Financeiro atualizado. Cobrado: ${valorCobrado.toFixed(2)} | Custos: ${custos.toFixed(2)} | Margem: ${margem.toFixed(2)}`.trim();
+
+      const { error } = await withTimeout(
+        supabaseClient
+          .from("processos")
+          .update({
+            valor_cobrado: valorCobrado,
+            custos_processo: custos,
+            margem_lucro: margem,
+            historico: novoHistorico
+          })
+          .eq("id", processoId),
+        10000
+      );
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      alert("Financeiro actualizado");
+      await loadInternal();
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+
+  async function uploadProcessoDocumento(processoId) {
+    const input = document.getElementById("procfile_" + processoId);
+    const visibleInput = document.getElementById("procvis_" + processoId);
+    const file = input.files?.[0];
+
+    if (!file) {
+      alert("Escolha um ficheiro.");
+      return;
+    }
+
+    try {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `${processoId}/${Date.now()}_${safeName}`;
+
+      const { error: uploadError } = await withTimeout(
+        supabaseClient.storage
+          .from("processos")
+          .upload(path, file, {
+            cacheControl: "3600",
+            upsert: false,
+            contentType: file.type || "application/octet-stream"
+          }),
+        15000
+      );
+
+      if (uploadError) {
+        alert(uploadError.message);
+        return;
+      }
+
+      const { error: insertError } = await withTimeout(
+        supabaseClient.from("processos_documentos").insert({
+          processo_id: processoId,
+          nome_ficheiro: file.name,
+          ficheiro_path: path,
+          visivel_cliente: !!visibleInput?.checked,
+          uploaded_by: currentUserRole === "admin" ? "admin" : "funcionario"
+        }),
+        10000
+      );
+
+      if (insertError) {
+        alert(insertError.message);
+        return;
+      }
+
+      const { data: processo } = await withTimeout(
+        supabaseClient.from("processos").select("historico").eq("id", processoId).single(),
+        8000
+      );
+
+      const historicoAtual = processo?.historico || "";
+      const agora = new Date().toLocaleString("pt-PT");
+      await withTimeout(
+        supabaseClient.from("processos")
+          .update({ historico: `${historicoAtual}\n• ${agora} - Documento anexado: ${file.name}`.trim() })
+          .eq("id", processoId),
+        10000
+      );
+
+      alert("Documento anexado com sucesso");
+      input.value = "";
+      await loadInternal();
+    } catch (e) {
+      alert(e.message || "Erro ao anexar documento.");
+    }
+  }
+
+  async function converterCotacaoEmProcesso(cotacaoId) {
+    if (!confirm("Converter esta cotação em processo?")) return;
+
+    try {
+      const { data: cotacao, error: cotacaoError } = await withTimeout(
+        supabaseClient.from("pedidos_cotacao").select("*").eq("id", cotacaoId).single(),
+        10000
+      );
+
+      if (cotacaoError || !cotacao) {
+        alert(cotacaoError?.message || "Cotação não encontrada.");
+        return;
+      }
+
+      if (cotacao.convertido_em_processo) {
+        alert("Esta cotação já foi convertida.");
+        return;
+      }
+
+      let cliente_id = null;
+
+      if (cotacao.email) {
+        const { data: clienteByEmail } = await withTimeout(
+          supabaseClient.from("clientes").select("id").eq("email", cotacao.email).maybeSingle(),
           8000
         );
-        companyConfig = data || null;
-        renderCompanyConfig();
-      } catch (_) {}
-    }
 
-    function renderCompanyConfig() {
-      const cfg = companyConfig || {};
-      const setText = (id, value) => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = value || "-";
+        if (clienteByEmail?.id) cliente_id = clienteByEmail.id;
+      }
+
+      const numeroProcesso = gerarNumeroProcesso();
+
+      const payloadProcesso = {
+        cliente_id,
+        numero_processo: numeroProcesso,
+        numero_factura: cotacao.numero_factura || "",
+        importador_exportador: cotacao.nome_cliente || "",
+        regime: cotacao.tipo_operacao || "",
+        pais_origem: cotacao.origem || "",
+        pais_destino: cotacao.destino || "",
+        porto_fronteira: "",
+        bl_awb_manifesto: "",
+        prazo: null,
+        estado: "Recebido",
+        documentos_em_falta: cotacao.factura_path ? "" : "Factura em falta",
+        valor_cobrado: 0,
+        custos_processo: 0,
+        margem_lucro: 0,
+        historico: `• ${new Date().toLocaleString("pt-PT")} - Processo criado a partir da cotação ${cotacao.numero_factura || ""}. Mercadoria: ${cotacao.descricao_mercadoria || ""}`
       };
 
-      setText("cfgEmpresa", cfg.nome_empresa || "EF Cargo Clear");
-      setText("cfgTelefone", cfg.telefone || "-");
-      setText("cfgEmail", cfg.email || "-");
-      setText("cfgWhatsapp", cfg.whatsapp || "-");
-      setText("cfgEndereco", cfg.endereco || "-");
-      setText("cfgHorario", cfg.horario || "-");
+      const { data: novoProcesso, error: processoError } = await withTimeout(
+        supabaseClient.from("processos").insert(payloadProcesso).select("id, numero_processo").single(),
+        10000
+      );
 
-      const mapa = document.getElementById("cfgMapa");
-      if (mapa) {
-        mapa.src = cfg.google_maps_embed || "https://www.google.com/maps?q=Maputo&output=embed";
-      }
-    }
-
-    async function openSignedFromBucket(bucket, path) {
-      if (!path) {
-        alert("Documento não encontrado.");
+      if (processoError || !novoProcesso) {
+        alert(processoError?.message || "Erro ao criar processo.");
         return;
       }
 
-      try {
-        const { data, error } = await withTimeout(
-          supabaseClient.storage.from(bucket).createSignedUrl(path, 300),
-          10000
-        );
+      const { error: updateError } = await withTimeout(
+        supabaseClient
+          .from("pedidos_cotacao")
+          .update({
+            convertido_em_processo: true,
+            processo_id: novoProcesso.id,
+            estado: "convertido em processo"
+          })
+          .eq("id", cotacaoId),
+        10000
+      );
 
-        if (error) {
-          alert(error.message);
-          return;
-        }
-
-        if (!data?.signedUrl) {
-          alert("Não foi possível gerar o link.");
-          return;
-        }
-
-        window.open(data.signedUrl, "_blank");
-      } catch (e) {
-        alert(e.message || "Erro ao abrir documento.");
-      }
-    }
-
-    async function openFactura(path) {
-      return openSignedFromBucket("cotacoes", path);
-    }
-
-    async function openProcessoDocumento(path) {
-      return openSignedFromBucket("processos", path);
-    }
-
-    function gerarNumeroProcesso() {
-      const d = new Date();
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      const h = String(d.getHours()).padStart(2, "0");
-      const min = String(d.getMinutes()).padStart(2, "0");
-      return `EF-${y}${m}${day}-${h}${min}`;
-    }
-
-    async function atualizarEstado(processoId) {
-      const select = document.getElementById("estado_" + processoId);
-      const novoEstado = select.value;
-
-      try {
-        const { data: processo, error: processoReadError } = await withTimeout(
-          supabaseClient.from("processos").select("*").eq("id", processoId).single(),
-          8000
-        );
-
-        if (processoReadError) {
-          alert(processoReadError.message);
-          return;
-        }
-
-        const historicoAtual = processo?.historico || "";
-        const agora = new Date().toLocaleString("pt-PT");
-        const novoHistorico = `${historicoAtual}\n• ${agora} - Estado alterado para: ${novoEstado}`.trim();
-
-        const { error } = await withTimeout(
-          supabaseClient
-            .from("processos")
-            .update({ estado: novoEstado, historico: novoHistorico })
-            .eq("id", processoId),
-          10000
-        );
-
-        if (error) {
-          alert(error.message);
-          return;
-        }
-
-        if (processo?.cliente_id) {
-          const { data: cli } = await withTimeout(
-            supabaseClient.from("clientes").select("email").eq("id", processo.cliente_id).maybeSingle(),
-            8000
-          );
-          if (cli?.email) {
-            await supabaseClient.from("mensagens").insert({
-              cliente_email: cli.email,
-              remetente: currentUserRole === "admin" ? "admin" : "funcionario",
-              mensagem: `O estado do processo ${processo.numero_processo || ""} foi atualizado para: ${novoEstado}`,
-              processo_numero: processo.numero_processo || "",
-              lido_cliente: false,
-              lido_interno: true
-            });
-          }
-        }
-
-        alert("Estado atualizado com sucesso");
-        await loadInternal();
-      } catch (e) {
-        alert(e.message);
-      }
-    }
-
-    async function salvarDocsEmFalta(processoId) {
-      const textarea = document.getElementById("docs_" + processoId);
-      const valor = textarea.value.trim();
-
-      try {
-        const { data: processo, error: readError } = await withTimeout(
-          supabaseClient.from("processos").select("*").eq("id", processoId).single(),
-          8000
-        );
-
-        if (readError) {
-          alert(readError.message);
-          return;
-        }
-
-        const historicoAtual = processo?.historico || "";
-        const agora = new Date().toLocaleString("pt-PT");
-        const novoHistorico = `${historicoAtual}\n• ${agora} - Documentos em falta actualizados.`.trim();
-
-        const { error } = await withTimeout(
-          supabaseClient
-            .from("processos")
-            .update({
-              documentos_em_falta: valor,
-              historico: novoHistorico
-            })
-            .eq("id", processoId),
-          10000
-        );
-
-        if (error) {
-          alert(error.message);
-          return;
-        }
-
-        alert("Documentos em falta actualizados");
-        await loadInternal();
-      } catch (e) {
-        alert(e.message);
-      }
-    }
-
-    async function salvarFinanceiro(processoId) {
-      if (currentUserRole !== "admin") {
-        alert("Sem permissão.");
+      if (updateError) {
+        alert(updateError.message);
         return;
       }
 
-      const valorCobrado = Number(document.getElementById("cobrado_" + processoId).value || 0);
-      const custos = Number(document.getElementById("custos_" + processoId).value || 0);
-      const margem = valorCobrado - custos;
+      alert(`Cotação convertida com sucesso. Processo criado: ${novoProcesso.numero_processo}`);
+      await loadInternal();
+      showInternalTab("processos");
+    } catch (e) {
+      alert(e.message || "Erro ao converter cotação em processo.");
+    }
+  }
 
-      try {
-        const { data: processo, error: readError } = await withTimeout(
-          supabaseClient.from("processos").select("historico").eq("id", processoId).single(),
-          8000
-        );
+  async function deleteCotacao(cotacaoId, facturaPath = null, ownerEmail = "") {
+    const isAdminOrEmployee = currentUserRole === "admin" || currentUserRole === "employee";
+    const isOwner = currentUserRole === "client" && ownerEmail.toLowerCase() === currentUserEmail.toLowerCase();
 
-        if (readError) {
-          alert(readError.message);
-          return;
-        }
-
-        const historicoAtual = processo?.historico || "";
-        const agora = new Date().toLocaleString("pt-PT");
-        const novoHistorico = `${historicoAtual}\n• ${agora} - Financeiro atualizado. Cobrado: ${valorCobrado.toFixed(2)} | Custos: ${custos.toFixed(2)} | Margem: ${margem.toFixed(2)}`.trim();
-
-        const { error } = await withTimeout(
-          supabaseClient
-            .from("processos")
-            .update({
-              valor_cobrado: valorCobrado,
-              custos_processo: custos,
-              margem_lucro: margem,
-              historico: novoHistorico
-            })
-            .eq("id", processoId),
-          10000
-        );
-
-        if (error) {
-          alert(error.message);
-          return;
-        }
-
-        alert("Financeiro actualizado");
-        await loadInternal();
-      } catch (e) {
-        alert(e.message);
-      }
+    if (!isAdminOrEmployee && !isOwner) {
+      alert("Sem permissão para apagar esta cotação.");
+      return;
     }
 
-    async function uploadProcessoDocumento(processoId) {
-      const input = document.getElementById("procfile_" + processoId);
-      const visibleInput = document.getElementById("procvis_" + processoId);
-      const file = input.files?.[0];
+    if (!confirm("Apagar esta cotação?")) return;
 
-      if (!file) {
-        alert("Escolha um ficheiro.");
-        return;
-      }
-
-      try {
-        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-        const path = `${processoId}/${Date.now()}_${safeName}`;
-
-        const { error: uploadError } = await withTimeout(
-          supabaseClient.storage
-            .from("processos")
-            .upload(path, file, {
-              cacheControl: "3600",
-              upsert: false,
-              contentType: file.type || "application/octet-stream"
-            }),
-          15000
-        );
-
-        if (uploadError) {
-          alert(uploadError.message);
-          return;
-        }
-
-        const { error: insertError } = await withTimeout(
-          supabaseClient.from("processos_documentos").insert({
-            processo_id: processoId,
-            nome_ficheiro: file.name,
-            ficheiro_path: path,
-            visivel_cliente: !!visibleInput?.checked,
-            uploaded_by: currentUserRole === "admin" ? "admin" : "funcionario"
-          }),
-          10000
-        );
-
-        if (insertError) {
-          alert(insertError.message);
-          return;
-        }
-
-        const { data: processo } = await withTimeout(
-          supabaseClient.from("processos").select("historico").eq("id", processoId).single(),
-          8000
-        );
-
-        const historicoAtual = processo?.historico || "";
-        const agora = new Date().toLocaleString("pt-PT");
+    try {
+      if (facturaPath) {
         await withTimeout(
-          supabaseClient.from("processos")
-            .update({ historico: `${historicoAtual}\n• ${agora} - Documento anexado: ${file.name}`.trim() })
-            .eq("id", processoId),
+          supabaseClient.storage.from("cotacoes").remove([facturaPath]),
           10000
         );
+      }
 
-        alert("Documento anexado com sucesso");
-        input.value = "";
+      const { error } = await withTimeout(
+        supabaseClient.from("pedidos_cotacao").delete().eq("id", cotacaoId),
+        10000
+      );
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      alert("Cotação apagada com sucesso.");
+
+      if (currentUserRole === "client") {
+        await loadClientCotacoes();
+      } else {
         await loadInternal();
-        if (currentUserRole === "client") await refreshClientDashboard();
-      } catch (e) {
-        alert(e.message || "Erro ao anexar documento.");
       }
+    } catch (e) {
+      alert(e.message || "Erro ao apagar cotação.");
+    }
+  }
+
+  async function criarCliente() {
+    if (currentUserRole !== "admin") {
+      alert("Sem permissão.");
+      return;
     }
 
-    async function converterCotacaoEmProcesso(cotacaoId) {
-      if (!confirm("Converter esta cotação em processo?")) return;
+    const nome = document.getElementById("cli_nome").value.trim();
+    const email = document.getElementById("cli_email").value.trim();
+    const nuit = document.getElementById("cli_nuit").value.trim();
+    const contacto = document.getElementById("cli_contacto").value.trim();
 
-      try {
-        const { data: cotacao, error: cotacaoError } = await withTimeout(
-          supabaseClient.from("pedidos_cotacao").select("*").eq("id", cotacaoId).single(),
-          10000
-        );
-
-        if (cotacaoError || !cotacao) {
-          alert(cotacaoError?.message || "Cotação não encontrada.");
-          return;
-        }
-
-        if (cotacao.convertido_em_processo) {
-          alert("Esta cotação já foi convertida.");
-          return;
-        }
-
-        let cliente_id = null;
-
-        if (cotacao.email) {
-          const { data: clienteByEmail } = await withTimeout(
-            supabaseClient.from("clientes").select("id").eq("email", cotacao.email).maybeSingle(),
-            8000
-          );
-
-          if (clienteByEmail?.id) cliente_id = clienteByEmail.id;
-        }
-
-        const numeroProcesso = gerarNumeroProcesso();
-
-        const payloadProcesso = {
-          cliente_id,
-          numero_processo: numeroProcesso,
-          numero_factura: cotacao.numero_factura || "",
-          importador_exportador: cotacao.nome_cliente || "",
-          regime: cotacao.tipo_operacao || "",
-          pais_origem: cotacao.origem || "",
-          pais_destino: cotacao.destino || "",
-          porto_fronteira: "",
-          bl_awb_manifesto: "",
-          prazo: null,
-          estado: "Recebido",
-          documentos_em_falta: cotacao.factura_path ? "" : "Factura em falta",
-          valor_cobrado: 0,
-          custos_processo: 0,
-          margem_lucro: 0,
-          historico: `• ${new Date().toLocaleString("pt-PT")} - Processo criado a partir da cotação ${cotacao.numero_factura || ""}. Mercadoria: ${cotacao.descricao_mercadoria || ""}`
-        };
-
-        const { data: novoProcesso, error: processoError } = await withTimeout(
-          supabaseClient.from("processos").insert(payloadProcesso).select("id, numero_processo").single(),
-          10000
-        );
-
-        if (processoError || !novoProcesso) {
-          alert(processoError?.message || "Erro ao criar processo.");
-          return;
-        }
-
-        const { error: updateError } = await withTimeout(
-          supabaseClient
-            .from("pedidos_cotacao")
-            .update({
-              convertido_em_processo: true,
-              processo_id: novoProcesso.id,
-              estado: "convertido em processo"
-            })
-            .eq("id", cotacaoId),
-          10000
-        );
-
-        if (updateError) {
-          alert(updateError.message);
-          return;
-        }
-
-        if (cotacao.email) {
-          await supabaseClient.from("mensagens").insert({
-            cliente_email: cotacao.email,
-            remetente: currentUserRole === "admin" ? "admin" : "funcionario",
-            mensagem: `A sua cotação foi convertida em processo. Número do processo: ${novoProcesso.numero_processo}`,
-            processo_numero: novoProcesso.numero_processo,
-            lido_cliente: false,
-            lido_interno: true
-          });
-        }
-
-        alert(`Cotação convertida com sucesso. Processo criado: ${novoProcesso.numero_processo}`);
-        await loadInternal();
-        showInternalTab("processos");
-      } catch (e) {
-        alert(e.message || "Erro ao converter cotação em processo.");
-      }
+    if (!nome || !email) {
+      alert("Nome e email obrigatórios");
+      return;
     }
 
-    async function deleteCotacao(cotacaoId, facturaPath = null, ownerEmail = "") {
-      const isAdminOrEmployee = currentUserRole === "admin" || currentUserRole === "employee";
-      const isOwner = currentUserRole === "client" && ownerEmail.toLowerCase() === currentUserEmail.toLowerCase();
+    try {
+      const { error } = await withTimeout(
+        supabaseClient.from("clientes").insert({
+          nome,
+          email,
+          nuit,
+          contacto
+        }),
+        10000
+      );
 
-      if (!isAdminOrEmployee && !isOwner) {
-        alert("Sem permissão para apagar esta cotação.");
+      if (error) {
+        alert(error.message);
         return;
       }
 
-      if (!confirm("Apagar esta cotação?")) return;
+      alert("Cliente criado com sucesso");
+      document.getElementById("cli_nome").value = "";
+      document.getElementById("cli_email").value = "";
+      document.getElementById("cli_nuit").value = "";
+      document.getElementById("cli_contacto").value = "";
 
-      try {
-        if (facturaPath) {
-          await withTimeout(
-            supabaseClient.storage.from("cotacoes").remove([facturaPath]),
-            10000
-          );
-        }
+      await loadInternal();
+    } catch (e) {
+      alert(e.message);
+    }
+  }
 
-        const { error } = await withTimeout(
-          supabaseClient.from("pedidos_cotacao").delete().eq("id", cotacaoId),
-          10000
-        );
+  function openClienteModal(clienteId) {
+    const c = clientesCache.find(x => String(x.id) === String(clienteId));
+    if (!c) return;
 
-        if (error) {
-          alert(error.message);
-          return;
-        }
+    document.getElementById("edit_cliente_id").value = c.id || "";
+    document.getElementById("edit_cliente_nome").value = c.nome || "";
+    document.getElementById("edit_cliente_email").value = c.email || "";
+    document.getElementById("edit_cliente_contacto").value = c.contacto || "";
+    document.getElementById("edit_cliente_nuit").value = c.nuit || "";
 
-        alert("Cotação apagada com sucesso.");
+    document.getElementById("clienteModalBackdrop").style.display = "flex";
+  }
 
-        if (currentUserRole === "client") {
-          await loadClientCotacoes();
-        } else {
-          await loadInternal();
-        }
-      } catch (e) {
-        alert(e.message || "Erro ao apagar cotação.");
-      }
+  function closeClienteModal() {
+    document.getElementById("clienteModalBackdrop").style.display = "none";
+  }
+
+  async function saveClienteEdit() {
+    if (currentUserRole !== "admin") {
+      alert("Sem permissão.");
+      return;
     }
 
-    async function criarCliente() {
-      if (currentUserRole !== "admin") {
-        alert("Sem permissão.");
+    const id = document.getElementById("edit_cliente_id").value;
+    const nome = document.getElementById("edit_cliente_nome").value.trim();
+    const email = document.getElementById("edit_cliente_email").value.trim();
+    const contacto = document.getElementById("edit_cliente_contacto").value.trim();
+    const nuit = document.getElementById("edit_cliente_nuit").value.trim();
+
+    if (!id) return;
+
+    try {
+      const { error } = await withTimeout(
+        supabaseClient
+          .from("clientes")
+          .update({ nome, email, contacto, nuit })
+          .eq("id", id),
+        10000
+      );
+
+      if (error) {
+        alert(error.message);
         return;
       }
 
-      const nome = document.getElementById("cli_nome").value.trim();
-      const email = document.getElementById("cli_email").value.trim();
-      const nuit = document.getElementById("cli_nuit").value.trim();
-      const contacto = document.getElementById("cli_contacto").value.trim();
+      alert("Cliente atualizado com sucesso");
+      closeClienteModal();
+      await loadInternal();
+    } catch (e) {
+      alert(e.message);
+    }
+  }
 
-      if (!nome || !email) {
-        alert("Nome e email obrigatórios");
+  async function deleteCliente(clienteId) {
+    if (currentUserRole !== "admin") {
+      alert("Sem permissão.");
+      return;
+    }
+
+    const c = clientesCache.find(x => String(x.id) === String(clienteId));
+    if (!c) return;
+
+    const ok = confirm(`Eliminar o cliente "${c.nome || c.email || clienteId}"?`);
+    if (!ok) return;
+
+    try {
+      const { error } = await withTimeout(
+        supabaseClient.from("clientes").delete().eq("id", clienteId),
+        10000
+      );
+
+      if (error) {
+        alert(error.message);
         return;
       }
 
-      try {
-        const { error } = await withTimeout(
-          supabaseClient.from("clientes").insert({
-            nome,
-            email,
-            nuit,
-            contacto
-          }),
-          10000
-        );
+      alert("Cliente eliminado com sucesso");
+      await loadInternal();
+    } catch (e) {
+      alert(e.message);
+    }
+  }
 
-        if (error) {
-          alert(error.message);
-          return;
-        }
-
-        alert("Cliente criado com sucesso");
-        document.getElementById("cli_nome").value = "";
-        document.getElementById("cli_email").value = "";
-        document.getElementById("cli_nuit").value = "";
-        document.getElementById("cli_contacto").value = "";
-
-        await loadInternal();
-      } catch (e) {
-        alert(e.message);
-      }
+  async function criarFuncionario() {
+    if (currentUserRole !== "admin") {
+      alert("Sem permissão.");
+      return;
     }
 
-    function openClienteModal(clienteId) {
-      const c = clientesCache.find(x => String(x.id) === String(clienteId));
-      if (!c) return;
+    const nome = document.getElementById("eq_nome").value.trim();
+    const email = document.getElementById("eq_email").value.trim().toLowerCase();
+    const nivel = document.getElementById("eq_nivel").value;
+    const activo = document.getElementById("eq_activo").value === "true";
 
-      document.getElementById("edit_cliente_id").value = c.id || "";
-      document.getElementById("edit_cliente_nome").value = c.nome || "";
-      document.getElementById("edit_cliente_email").value = c.email || "";
-      document.getElementById("edit_cliente_contacto").value = c.contacto || "";
-      document.getElementById("edit_cliente_nuit").value = c.nuit || "";
-
-      document.getElementById("clienteModalBackdrop").style.display = "flex";
+    if (!nome || !email) {
+      alert("Nome e email obrigatórios.");
+      return;
     }
 
-    function closeClienteModal() {
-      document.getElementById("clienteModalBackdrop").style.display = "none";
-    }
+    try {
+      const { error } = await withTimeout(
+        supabaseClient.from("equipa").insert({
+          nome,
+          email,
+          nivel,
+          activo
+        }),
+        10000
+      );
 
-    async function saveClienteEdit() {
-      if (currentUserRole !== "admin") {
-        alert("Sem permissão.");
+      if (error) {
+        alert(error.message);
         return;
       }
 
-      const id = document.getElementById("edit_cliente_id").value;
-      const nome = document.getElementById("edit_cliente_nome").value.trim();
-      const email = document.getElementById("edit_cliente_email").value.trim();
-      const contacto = document.getElementById("edit_cliente_contacto").value.trim();
-      const nuit = document.getElementById("edit_cliente_nuit").value.trim();
+      alert("Funcionário criado com sucesso");
+      document.getElementById("eq_nome").value = "";
+      document.getElementById("eq_email").value = "";
+      document.getElementById("eq_nivel").value = "operador";
+      document.getElementById("eq_activo").value = "true";
 
-      if (!id) return;
+      await loadInternal();
+    } catch (e) {
+      alert(e.message);
+    }
+  }
 
-      try {
-        const { error } = await withTimeout(
-          supabaseClient
-            .from("clientes")
-            .update({ nome, email, contacto, nuit })
-            .eq("id", id),
-          10000
-        );
+  function openEquipaModal(id) {
+    const m = equipaCache.find(x => String(x.id) === String(id));
+    if (!m) return;
 
-        if (error) {
-          alert(error.message);
-          return;
-        }
+    document.getElementById("edit_eq_id").value = m.id || "";
+    document.getElementById("edit_eq_nome").value = m.nome || "";
+    document.getElementById("edit_eq_email").value = m.email || "";
+    document.getElementById("edit_eq_nivel").value = m.nivel || "operador";
+    document.getElementById("edit_eq_activo").value = String(!!m.activo);
 
-        alert("Cliente atualizado com sucesso");
-        closeClienteModal();
-        await loadInternal();
-      } catch (e) {
-        alert(e.message);
-      }
+    document.getElementById("equipaModalBackdrop").style.display = "flex";
+  }
+
+  function closeEquipaModal() {
+    document.getElementById("equipaModalBackdrop").style.display = "none";
+  }
+
+  async function saveEquipaEdit() {
+    if (currentUserRole !== "admin") {
+      alert("Sem permissão.");
+      return;
     }
 
-    async function deleteCliente(clienteId) {
-      if (currentUserRole !== "admin") {
-        alert("Sem permissão.");
+    const id = document.getElementById("edit_eq_id").value;
+    const nome = document.getElementById("edit_eq_nome").value.trim();
+    const email = document.getElementById("edit_eq_email").value.trim().toLowerCase();
+    const nivel = document.getElementById("edit_eq_nivel").value;
+    const activo = document.getElementById("edit_eq_activo").value === "true";
+
+    if (!id) return;
+
+    try {
+      const { error } = await withTimeout(
+        supabaseClient
+          .from("equipa")
+          .update({ nome, email, nivel, activo })
+          .eq("id", id),
+        10000
+      );
+
+      if (error) {
+        alert(error.message);
         return;
       }
 
-      const c = clientesCache.find(x => String(x.id) === String(clienteId));
-      if (!c) return;
+      alert("Funcionário atualizado com sucesso");
+      closeEquipaModal();
+      await loadInternal();
+    } catch (e) {
+      alert(e.message);
+    }
+  }
 
-      const ok = confirm(`Eliminar o cliente "${c.nome || c.email || clienteId}"?`);
-      if (!ok) return;
-
-      try {
-        const { error } = await withTimeout(
-          supabaseClient.from("clientes").delete().eq("id", clienteId),
-          10000
-        );
-
-        if (error) {
-          alert(error.message);
-          return;
-        }
-
-        alert("Cliente eliminado com sucesso");
-        await loadInternal();
-      } catch (e) {
-        alert(e.message);
-      }
+  async function deleteFuncionario(id) {
+    if (currentUserRole !== "admin") {
+      alert("Sem permissão.");
+      return;
     }
 
-    async function criarFuncionario() {
-      if (currentUserRole !== "admin") {
-        alert("Sem permissão.");
+    const m = equipaCache.find(x => String(x.id) === String(id));
+    if (!m) return;
+
+    if (!confirm(`Eliminar o funcionário "${m.nome || m.email}"?`)) return;
+
+    try {
+      const { error } = await withTimeout(
+        supabaseClient.from("equipa").delete().eq("id", id),
+        10000
+      );
+
+      if (error) {
+        alert(error.message);
         return;
       }
 
-      const nome = document.getElementById("eq_nome").value.trim();
-      const email = document.getElementById("eq_email").value.trim().toLowerCase();
-      const nivel = document.getElementById("eq_nivel").value;
-      const activo = document.getElementById("eq_activo").value === "true";
+      alert("Funcionário eliminado com sucesso");
+      await loadInternal();
+    } catch (e) {
+      alert(e.message);
+    }
+  }
 
-      if (!nome || !email) {
-        alert("Nome e email obrigatórios.");
-        return;
-      }
+  function applyFilters() {
+    renderProcessosTable();
+    renderFinanceiroTable();
+  }
 
-      try {
-        const { error } = await withTimeout(
-          supabaseClient.from("equipa").insert({
-            nome,
-            email,
-            nivel,
-            activo
-          }),
-          10000
-        );
+  function clearFilters() {
+    document.getElementById("globalSearch").value = "";
+    document.getElementById("filterCliente").value = "";
+    document.getElementById("filterFactura").value = "";
+    document.getElementById("filterEstado").value = "";
+    applyFilters();
+  }
 
-        if (error) {
-          alert(error.message);
-          return;
-        }
+  function getFilteredProcessos() {
+    const g = (document.getElementById("globalSearch")?.value || "").trim().toLowerCase();
+    const cliente = (document.getElementById("filterCliente")?.value || "").trim().toLowerCase();
+    const factura = (document.getElementById("filterFactura")?.value || "").trim().toLowerCase();
+    const estado = (document.getElementById("filterEstado")?.value || "").trim().toLowerCase();
 
-        alert("Funcionário criado com sucesso");
-        document.getElementById("eq_nome").value = "";
-        document.getElementById("eq_email").value = "";
-        document.getElementById("eq_nivel").value = "operador";
-        document.getElementById("eq_activo").value = "true";
+    return processosCache.filter(p => {
+      const blob = [
+        p.numero_processo,
+        p.numero_factura,
+        p.importador_exportador,
+        p.regime,
+        p.estado,
+        p.pais_origem,
+        p.pais_destino,
+        p.documentos_em_falta,
+        p.historico
+      ].join(" ").toLowerCase();
 
-        await loadInternal();
-      } catch (e) {
-        alert(e.message);
-      }
+      const okGlobal = !g || blob.includes(g);
+      const okCliente = !cliente || String(p.importador_exportador || "").toLowerCase().includes(cliente);
+      const okFactura = !factura || String(p.numero_factura || "").toLowerCase().includes(factura);
+      const okEstado = !estado || String(p.estado || "").toLowerCase() === estado;
+
+      return okGlobal && okCliente && okFactura && okEstado;
+    });
+  }
+
+  function renderProcessosTable() {
+    const procList = getFilteredProcessos();
+    const docsByProcess = {};
+
+    docsCache.forEach(d => {
+      if (!docsByProcess[d.processo_id]) docsByProcess[d.processo_id] = [];
+      docsByProcess[d.processo_id].push(d);
+    });
+
+    const tbody = document.getElementById("processosTable");
+    tbody.innerHTML = "";
+
+    procList.forEach(p => {
+      const procDocs = docsByProcess[p.id] || [];
+      const historicoHtml = (p.historico || "Sem histórico").replace(/\n/g, "<br>");
+
+      const financeiroCell = currentUserRole === "admin"
+        ? `
+          <label style="margin-top:0;">Valor cobrado</label>
+          <input id="cobrado_${p.id}" type="number" step="0.01" value="${Number(p.valor_cobrado || 0)}" />
+          <label style="margin-top:8px;">Custos</label>
+          <input id="custos_${p.id}" type="number" step="0.01" value="${Number(p.custos_processo || 0)}" />
+          <div class="small" style="margin-top:8px;">Margem atual: ${formatMoney(p.margem_lucro || 0)}</div>
+          <div style="margin-top:8px;">
+            <button class="btn-mini info" onclick="salvarFinanceiro('${p.id}')">Guardar financeiro</button>
+          </div>
+        `
+        : `<span class="small">Sem permissão</span>`;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><strong>${p.numero_processo || ""}</strong></td>
+        <td>${p.numero_factura || ""}</td>
+        <td><strong>${p.importador_exportador || ""}</strong></td>
+        <td>${p.regime || ""}</td>
+        <td>
+          <div style="display:flex;flex-direction:column;gap:8px;min-width:180px;">
+            <div>${badgeEstado(p.estado || "Recebido")}</div>
+            <select id="estado_${p.id}">
+              <option ${p.estado === "Recebido" ? "selected" : ""}>Recebido</option>
+              <option ${p.estado === "Em análise" ? "selected" : ""}>Em análise</option>
+              <option ${p.estado === "Documentos em falta" ? "selected" : ""}>Documentos em falta</option>
+              <option ${p.estado === "Submetido" ? "selected" : ""}>Submetido</option>
+              <option ${p.estado === "Em desembaraço" ? "selected" : ""}>Em desembaraço</option>
+              <option ${p.estado === "Liberado" ? "selected" : ""}>Liberado</option>
+              <option ${p.estado === "Entregue" ? "selected" : ""}>Entregue</option>
+            </select>
+            <button class="btn-mini" onclick="atualizarEstado('${p.id}')">Atualizar</button>
+          </div>
+        </td>
+        <td style="min-width:220px;">
+          <textarea id="docs_${p.id}" style="min-height:90px;">${p.documentos_em_falta || ""}</textarea>
+          <div style="margin-top:8px;">
+            <button class="btn-mini info" onclick="salvarDocsEmFalta('${p.id}')">Guardar docs</button>
+          </div>
+        </td>
+        <td style="min-width:220px;">${financeiroCell}</td>
+        <td style="min-width:240px;">
+          <input id="procfile_${p.id}" type="file" />
+          <label style="margin-top:8px;display:flex;gap:8px;align-items:center;">
+            <input id="procvis_${p.id}" type="checkbox" checked style="width:auto;" />
+            <span class="small">Visível ao cliente</span>
+          </label>
+          <div style="margin-top:8px;">
+            <button class="btn-mini secondary" onclick="uploadProcessoDocumento('${p.id}')">Anexar</button>
+          </div>
+          <div class="doc-list">
+            ${procDocs.length
+              ? procDocs.map(d => `
+                <span class="doc-chip">
+                  <span>${d.nome_ficheiro || "Documento"}</span>
+                  <button class="btn-mini secondary" style="margin:0;padding:4px 8px;" onclick="openProcessoDocumento('${String(d.ficheiro_path).replace(/'/g, "\\'")}')">Abrir</button>
+                </span>
+              `).join("")
+              : '<span class="small">Sem documentos</span>'}
+          </div>
+        </td>
+        <td style="min-width:260px;">
+          <div class="history-box">${historicoHtml}</div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderCotacoesTable() {
+    const ctbody = document.getElementById("cotacoesTable");
+    ctbody.innerHTML = "";
+
+    cotacoesCache.forEach(c => {
+      const convertido = c.convertido_em_processo === true;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><strong>${c.nome_cliente || ""}</strong></td>
+        <td>${c.tipo_operacao || ""}</td>
+        <td>${c.numero_factura || ""}</td>
+        <td>
+          ${c.factura_path
+            ? `<button class="btn-mini secondary" onclick="openFactura('${String(c.factura_path).replace(/'/g, "\\'")}')">Ver factura</button>`
+            : '-'}
+        </td>
+        <td>
+          ${convertido
+            ? `<span class="badge green">Convertido</span>`
+            : `<button class="btn-mini" onclick="converterCotacaoEmProcesso('${String(c.id).replace(/'/g, "\\'")}')">Converter</button>`}
+          <button class="btn-mini danger" onclick="deleteCotacao('${String(c.id).replace(/'/g, "\\'")}', '${String(c.factura_path || "").replace(/'/g, "\\'")}', '${String(c.email || "").replace(/'/g, "\\'")}')">Apagar</button>
+        </td>
+        <td>${c.origem || ""}</td>
+        <td>${c.destino || ""}</td>
+        <td>${badgeEstado(c.estado || "recebido")}</td>
+      `;
+      ctbody.appendChild(tr);
+    });
+  }
+
+  function renderFinanceiroTable() {
+    const ftbody = document.getElementById("financeiroTable");
+    ftbody.innerHTML = "";
+
+    getFilteredProcessos().forEach(p => {
+      const margem = Number(p.margem_lucro || 0);
+      const margemBadge = margem > 0
+        ? `<span class="badge green">${formatMoney(margem)}</span>`
+        : `<span class="badge amber">${formatMoney(margem)}</span>`;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><strong>${p.numero_processo || ""}</strong></td>
+        <td>${p.importador_exportador || ""}</td>
+        <td>${p.numero_factura || ""}</td>
+        <td>${formatMoney(p.valor_cobrado || 0)}</td>
+        <td>${formatMoney(p.custos_processo || 0)}</td>
+        <td>${margemBadge}</td>
+      `;
+      ftbody.appendChild(tr);
+    });
+  }
+
+  function renderClientesGrid() {
+    const grid = document.getElementById("clientesGrid");
+    if (!grid) return;
+
+    const q = (document.getElementById("clientSearch")?.value || "").trim().toLowerCase();
+
+    const filtered = clientesCache.filter(c => {
+      const blob = [
+        c.nome,
+        c.email,
+        c.contacto,
+        c.nuit
+      ].join(" ").toLowerCase();
+      return !q || blob.includes(q);
+    });
+
+    grid.innerHTML = "";
+
+    if (!filtered.length) {
+      grid.innerHTML = `<div class="muted-box">Nenhum cliente encontrado.</div>`;
+      return;
     }
 
-    function openEquipaModal(id) {
-      const m = equipaCache.find(x => String(x.id) === String(id));
-      if (!m) return;
+    filtered.forEach(c => {
+      const processosDoCliente = processosCache.filter(p => {
+        const procCliente = (p.importador_exportador || "").trim().toLowerCase();
+        const nomeCliente = (c.nome || "").trim().toLowerCase();
+        return procCliente === nomeCliente;
+      }).length;
 
-      document.getElementById("edit_eq_id").value = m.id || "";
-      document.getElementById("edit_eq_nome").value = m.nome || "";
-      document.getElementById("edit_eq_email").value = m.email || "";
-      document.getElementById("edit_eq_nivel").value = m.nivel || "operador";
-      document.getElementById("edit_eq_activo").value = String(!!m.activo);
+      const cotacoesDoCliente = cotacoesCache.filter(x => {
+        return String(x.email || "").trim().toLowerCase() === String(c.email || "").trim().toLowerCase();
+      }).length;
 
-      document.getElementById("equipaModalBackdrop").style.display = "flex";
+      const card = document.createElement("div");
+      card.className = "client-card";
+      card.innerHTML = `
+        <div class="client-name">${c.nome || "Sem nome"}</div>
+        <div class="small">${c.email || "Sem email"}</div>
+
+        <div class="client-meta">
+          <div><strong>NUIT:</strong> ${c.nuit || "-"}</div>
+          <div><strong>Contacto:</strong> ${c.contacto || "-"}</div>
+          <div><strong>Processos:</strong> ${processosDoCliente}</div>
+          <div><strong>Cotações:</strong> ${cotacoesDoCliente}</div>
+        </div>
+
+        <div class="client-actions">
+          <button class="btn-mini" onclick="openClienteModal('${String(c.id).replace(/'/g, "\\'")}')">Editar</button>
+          <button class="btn-mini danger" onclick="deleteCliente('${String(c.id).replace(/'/g, "\\'")}')">Eliminar</button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  function renderEquipaGrid() {
+    const grid = document.getElementById("equipaGrid");
+    if (!grid) return;
+
+    const q = (document.getElementById("teamSearch")?.value || "").trim().toLowerCase();
+
+    const filtered = equipaCache.filter(e => {
+      const blob = [e.nome, e.email, e.nivel].join(" ").toLowerCase();
+      return !q || blob.includes(q);
+    });
+
+    grid.innerHTML = "";
+
+    if (!filtered.length) {
+      grid.innerHTML = `<div class="muted-box">Nenhum funcionário encontrado.</div>`;
+      return;
     }
 
-    function closeEquipaModal() {
-      document.getElementById("equipaModalBackdrop").style.display = "none";
-    }
+    filtered.forEach(e => {
+      const card = document.createElement("div");
+      card.className = "client-card";
+      card.innerHTML = `
+        <div class="client-name">${e.nome || "Sem nome"}</div>
+        <div class="small">${e.email || "Sem email"}</div>
 
-    async function saveEquipaEdit() {
-      if (currentUserRole !== "admin") {
-        alert("Sem permissão.");
-        return;
-      }
+        <div class="client-meta">
+          <div><strong>Nível:</strong> ${e.nivel || "-"}</div>
+          <div><strong>Estado:</strong> ${e.activo ? "Activo" : "Inactivo"}</div>
+          <div><strong>Criado:</strong> ${formatDate(e.created_at) || "-"}</div>
+          <div><strong>Portal:</strong> Interno EF</div>
+        </div>
 
-      const id = document.getElementById("edit_eq_id").value;
-      const nome = document.getElementById("edit_eq_nome").value.trim();
-      const email = document.getElementById("edit_eq_email").value.trim().toLowerCase();
-      const nivel = document.getElementById("edit_eq_nivel").value;
-      const activo = document.getElementById("edit_eq_activo").value === "true";
+        <div class="client-actions">
+          <button class="btn-mini" onclick="openEquipaModal('${String(e.id).replace(/'/g, "\\'")}')">Editar</button>
+          <button class="btn-mini danger" onclick="deleteFuncionario('${String(e.id).replace(/'/g, "\\'")}')">Eliminar</button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
 
-      if (!id) return;
+  function exportProcessosCSV() {
+    const rows = getFilteredProcessos().map(p => [
+      p.numero_processo || "",
+      p.numero_factura || "",
+      p.importador_exportador || "",
+      p.regime || "",
+      p.estado || "",
+      p.documentos_em_falta || "",
+      p.valor_cobrado || 0,
+      p.custos_processo || 0,
+      p.margem_lucro || 0
+    ]);
+    downloadCSV("processos.csv",
+      ["Processo","Factura","Cliente","Regime","Estado","Docs em falta","Valor cobrado","Custos","Margem"],
+      rows
+    );
+  }
 
-      try {
-        const { error } = await withTimeout(
-          supabaseClient
-            .from("equipa")
-            .update({ nome, email, nivel, activo })
-            .eq("id", id),
-          10000
-        );
+  function exportFinanceiroCSV() {
+    const rows = getFilteredProcessos().map(p => [
+      p.numero_processo || "",
+      p.importador_exportador || "",
+      p.numero_factura || "",
+      p.valor_cobrado || 0,
+      p.custos_processo || 0,
+      p.margem_lucro || 0
+    ]);
+    downloadCSV("financeiro.csv",
+      ["Processo","Cliente","Factura","Valor cobrado","Custos","Margem"],
+      rows
+    );
+  }
 
-        if (error) {
-          alert(error.message);
-          return;
-        }
+  function exportCotacoesCSV() {
+    const rows = cotacoesCache.map(c => [
+      c.nome_cliente || "",
+      c.tipo_operacao || "",
+      c.numero_factura || "",
+      c.origem || "",
+      c.destino || "",
+      c.estado || ""
+    ]);
+    downloadCSV("cotacoes.csv",
+      ["Cliente","Tipo","Factura","Origem","Destino","Estado"],
+      rows
+    );
+  }
 
-        alert("Funcionário atualizado com sucesso");
-        closeEquipaModal();
-        await loadInternal();
-      } catch (e) {
-        alert(e.message);
-      }
-    }
+  function exportClientCotacoesCSV() {
+    const rows = clientCotacoesCache.map(c => [
+      formatDate(c.created_at),
+      c.numero_factura || "",
+      c.tipo_operacao || "",
+      c.origem || "",
+      c.destino || "",
+      c.estado || ""
+    ]);
+    downloadCSV("minhas_cotacoes.csv",
+      ["Data","Factura","Tipo","Origem","Destino","Estado"],
+      rows
+    );
+  }
 
-    async function deleteFuncionario(id) {
-      if (currentUserRole !== "admin") {
-        alert("Sem permissão.");
-        return;
-      }
+  async function loadInternal() {
+    try {
+      const [{ data: clientes }, { data: processos }, { data: cotacoes }, { data: docs }, { data: equipa }] = await Promise.all([
+        withTimeout(supabaseClient.from("clientes").select("*").order("created_at", { ascending: false }), 8000),
+        withTimeout(supabaseClient.from("processos").select("*").order("created_at", { ascending: false }), 8000),
+        withTimeout(supabaseClient.from("pedidos_cotacao").select("*").order("created_at", { ascending: false }), 8000),
+        withTimeout(supabaseClient.from("processos_documentos").select("*").order("created_at", { ascending: false }), 8000),
+        withTimeout(supabaseClient.from("equipa").select("*").order("created_at", { ascending: false }), 8000)
+      ]);
 
-      const m = equipaCache.find(x => String(x.id) === String(id));
-      if (!m) return;
+      clientesCache = clientes || [];
+      processosCache = processos || [];
+      cotacoesCache = cotacoes || [];
+      docsCache = docs || [];
+      equipaCache = equipa || [];
 
-      if (!confirm(`Eliminar o funcionário "${m.nome || m.email}"?`)) return;
+      const totalCobrado = processosCache.reduce((s, p) => s + Number(p.valor_cobrado || 0), 0);
+      const totalCustos = processosCache.reduce((s, p) => s + Number(p.custos_processo || 0), 0);
+      const totalMargem = processosCache.reduce((s, p) => s + Number(p.margem_lucro || 0), 0);
+      const liberados = processosCache.filter(p => ["Liberado", "Entregue"].includes(p.estado)).length;
 
-      try {
-        const { error } = await withTimeout(
-          supabaseClient.from("equipa").delete().eq("id", id),
-          10000
-        );
+      document.getElementById("clientesCount").textContent = clientesCache.length;
+      document.getElementById("processosCount").textContent = processosCache.length;
+      document.getElementById("liberadosCount").textContent = liberados;
+      document.getElementById("pendenciasCount").textContent =
+        processosCache.filter(p => p.documentos_em_falta && p.documentos_em_falta.trim() !== "").length;
+      document.getElementById("cotacoesCount").textContent = cotacoesCache.length;
 
-        if (error) {
-          alert(error.message);
-          return;
-        }
+      document.getElementById("valorCobradoTotal").textContent = formatMoney(totalCobrado);
+      document.getElementById("custosTotal").textContent = formatMoney(totalCustos);
+      document.getElementById("margemTotal").textContent = formatMoney(totalMargem);
 
-        alert("Funcionário eliminado com sucesso");
-        await loadInternal();
-      } catch (e) {
-        alert(e.message);
-      }
-    }
-
-    function applyFilters() {
       renderProcessosTable();
+      renderCotacoesTable();
       renderFinanceiroTable();
+      renderClientesGrid();
+      renderEquipaGrid();
+    } catch (e) {
+      document.getElementById("welcome").textContent = "Painel interno • " + e.message;
     }
+  }
 
-    function clearFilters() {
-      document.getElementById("globalSearch").value = "";
-      document.getElementById("filterCliente").value = "";
-      document.getElementById("filterFactura").value = "";
-      document.getElementById("filterEstado").value = "";
-      applyFilters();
-    }
+  async function loadClientCotacoes() {
+    const tbody = document.getElementById("clientCotacoesTable");
+    if (!tbody) return;
 
-    function getFilteredProcessos() {
-      const g = (document.getElementById("globalSearch")?.value || "").trim().toLowerCase();
-      const cliente = (document.getElementById("filterCliente")?.value || "").trim().toLowerCase();
-      const factura = (document.getElementById("filterFactura")?.value || "").trim().toLowerCase();
-      const estado = (document.getElementById("filterEstado")?.value || "").trim().toLowerCase();
+    tbody.innerHTML = `<tr><td colspan="8">A carregar...</td></tr>`;
 
-      return processosCache.filter(p => {
-        const blob = [
-          p.numero_processo,
-          p.numero_factura,
-          p.importador_exportador,
-          p.regime,
-          p.estado,
-          p.pais_origem,
-          p.pais_destino,
-          p.documentos_em_falta,
-          p.historico
-        ].join(" ").toLowerCase();
+    try {
+      const { data: userData } = await withTimeout(supabaseClient.auth.getUser(), 8000);
+      const user = userData?.user;
+      if (!user?.email) {
+        tbody.innerHTML = `<tr><td colspan="8">Não foi possível identificar o utilizador.</td></tr>`;
+        return;
+      }
 
-        const okGlobal = !g || blob.includes(g);
-        const okCliente = !cliente || String(p.importador_exportador || "").toLowerCase().includes(cliente);
-        const okFactura = !factura || String(p.numero_factura || "").toLowerCase().includes(factura);
-        const okEstado = !estado || String(p.estado || "").toLowerCase() === estado;
+      const { data: cotacoes, error } = await withTimeout(
+        supabaseClient.from("pedidos_cotacao").select("*").eq("email", user.email).order("created_at", { ascending: false }),
+        10000
+      );
 
-        return okGlobal && okCliente && okFactura && okEstado;
-      });
-    }
+      if (error) {
+        tbody.innerHTML = `<tr><td colspan="8">${error.message}</td></tr>`;
+        return;
+      }
 
-    function renderProcessosTable() {
-      const procList = getFilteredProcessos();
-      const docsByProcess = {};
+      clientCotacoesCache = cotacoes || [];
 
-      docsCache.forEach(d => {
-        if (!docsByProcess[d.processo_id]) docsByProcess[d.processo_id] = [];
-        docsByProcess[d.processo_id].push(d);
-      });
+      if (!clientCotacoesCache.length) {
+        tbody.innerHTML = `<tr><td colspan="8">Ainda não enviou nenhuma cotação.</td></tr>`;
+        await refreshClientDashboard();
+        return;
+      }
 
-      const tbody = document.getElementById("processosTable");
       tbody.innerHTML = "";
-
-      procList.forEach(p => {
-        const procDocs = docsByProcess[p.id] || [];
-        const historicoHtml = (p.historico || "Sem histórico").replace(/\n/g, "<br>");
-
-        const financeiroCell = currentUserRole === "admin"
-          ? `
-            <label style="margin-top:0;">Valor cobrado</label>
-            <input id="cobrado_${p.id}" type="number" step="0.01" value="${Number(p.valor_cobrado || 0)}" />
-            <label style="margin-top:8px;">Custos</label>
-            <input id="custos_${p.id}" type="number" step="0.01" value="${Number(p.custos_processo || 0)}" />
-            <div class="small" style="margin-top:8px;">Margem atual: ${formatMoney(p.margem_lucro || 0)}</div>
-            <div style="margin-top:8px;">
-              <button class="btn-mini info" onclick="salvarFinanceiro('${p.id}')">Guardar financeiro</button>
-            </div>
-          `
-          : `<span class="small">Sem permissão</span>`;
-
+      clientCotacoesCache.forEach(c => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td><strong>${p.numero_processo || ""}</strong></td>
-          <td>${p.numero_factura || ""}</td>
-          <td><strong>${p.importador_exportador || ""}</strong></td>
-          <td>${p.regime || ""}</td>
-          <td>
-            <div style="display:flex;flex-direction:column;gap:8px;min-width:180px;">
-              <div>${badgeEstado(p.estado || "Recebido")}</div>
-              <select id="estado_${p.id}">
-                <option ${p.estado === "Recebido" ? "selected" : ""}>Recebido</option>
-                <option ${p.estado === "Em análise" ? "selected" : ""}>Em análise</option>
-                <option ${p.estado === "Documentos em falta" ? "selected" : ""}>Documentos em falta</option>
-                <option ${p.estado === "Submetido" ? "selected" : ""}>Submetido</option>
-                <option ${p.estado === "Em desembaraço" ? "selected" : ""}>Em desembaraço</option>
-                <option ${p.estado === "Liberado" ? "selected" : ""}>Liberado</option>
-                <option ${p.estado === "Entregue" ? "selected" : ""}>Entregue</option>
-              </select>
-              <button class="btn-mini" onclick="atualizarEstado('${p.id}')">Atualizar</button>
-            </div>
-          </td>
-          <td style="min-width:220px;">
-            <textarea id="docs_${p.id}" style="min-height:90px;">${p.documentos_em_falta || ""}</textarea>
-            <div style="margin-top:8px;">
-              <button class="btn-mini info" onclick="salvarDocsEmFalta('${p.id}')">Guardar docs</button>
-            </div>
-          </td>
-          <td style="min-width:220px;">${financeiroCell}</td>
-          <td style="min-width:240px;">
-            <input id="procfile_${p.id}" type="file" />
-            <label style="margin-top:8px;display:flex;gap:8px;align-items:center;">
-              <input id="procvis_${p.id}" type="checkbox" checked style="width:auto;" />
-              <span class="small">Visível ao cliente</span>
-            </label>
-            <div style="margin-top:8px;">
-              <button class="btn-mini secondary" onclick="uploadProcessoDocumento('${p.id}')">Anexar</button>
-            </div>
-            <div class="doc-list">
-              ${procDocs.length
-                ? procDocs.map(d => `
-                  <span class="doc-chip">
-                    <span>${d.nome_ficheiro || "Documento"}</span>
-                    <button class="btn-mini secondary" style="margin:0;padding:4px 8px;" onclick="openProcessoDocumento('${String(d.ficheiro_path).replace(/'/g, "\\'")}')">Abrir</button>
-                  </span>
-                `).join("")
-                : '<span class="small">Sem documentos</span>'}
-            </div>
-          </td>
-          <td style="min-width:260px;">
-            <div class="history-box">${historicoHtml}</div>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function renderCotacoesTable() {
-      const ctbody = document.getElementById("cotacoesTable");
-      ctbody.innerHTML = "";
-
-      cotacoesCache.forEach(c => {
-        const convertido = c.convertido_em_processo === true;
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td><strong>${c.nome_cliente || ""}</strong></td>
-          <td>${c.tipo_operacao || ""}</td>
+          <td>${formatDate(c.created_at)}</td>
           <td>${c.numero_factura || ""}</td>
+          <td>${c.tipo_operacao || ""}</td>
+          <td>${c.origem || ""}</td>
+          <td>${c.destino || ""}</td>
           <td>
             ${c.factura_path
               ? `<button class="btn-mini secondary" onclick="openFactura('${String(c.factura_path).replace(/'/g, "\\'")}')">Ver factura</button>`
               : '-'}
           </td>
+          <td>${badgeEstado(c.estado || "recebido")}</td>
           <td>
-            ${convertido
-              ? `<span class="badge green">Convertido</span>`
-              : `<button class="btn-mini" onclick="converterCotacaoEmProcesso('${String(c.id).replace(/'/g, "\\'")}')">Converter</button>`}
             <button class="btn-mini danger" onclick="deleteCotacao('${String(c.id).replace(/'/g, "\\'")}', '${String(c.factura_path || "").replace(/'/g, "\\'")}', '${String(c.email || "").replace(/'/g, "\\'")}')">Apagar</button>
           </td>
-          <td>${c.origem || ""}</td>
-          <td>${c.destino || ""}</td>
-          <td>${badgeEstado(c.estado || "recebido")}</td>
         `;
-        ctbody.appendChild(tr);
+        tbody.appendChild(tr);
       });
+
+      await refreshClientDashboard();
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="8">${e.message}</td></tr>`;
     }
+  }
 
-    function renderFinanceiroTable() {
-      const ftbody = document.getElementById("financeiroTable");
-      ftbody.innerHTML = "";
+  async function buscarFactura() {
+    const termo = document.getElementById("facturaSearch").value.trim();
+    if (!termo) return;
 
-      getFilteredProcessos().forEach(p => {
-        const margem = Number(p.margem_lucro || 0);
-        const margemBadge = margem > 0
-          ? `<span class="badge green">${formatMoney(margem)}</span>`
-          : `<span class="badge amber">${formatMoney(margem)}</span>`;
+    try {
+      const { data: processos } = await withTimeout(
+        supabaseClient.from("processos").select("*").ilike("numero_factura", `%${termo}%`).limit(1),
+        8000
+      );
 
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td><strong>${p.numero_processo || ""}</strong></td>
-          <td>${p.importador_exportador || ""}</td>
-          <td>${p.numero_factura || ""}</td>
-          <td>${formatMoney(p.valor_cobrado || 0)}</td>
-          <td>${formatMoney(p.custos_processo || 0)}</td>
-          <td>${margemBadge}</td>
-        `;
-        ftbody.appendChild(tr);
-      });
-    }
-
-    function renderClientesGrid() {
-      const grid = document.getElementById("clientesGrid");
-      if (!grid) return;
-
-      const q = (document.getElementById("clientSearch")?.value || "").trim().toLowerCase();
-
-      const filtered = clientesCache.filter(c => {
-        const blob = [
-          c.nome,
-          c.email,
-          c.contacto,
-          c.nuit
-        ].join(" ").toLowerCase();
-        return !q || blob.includes(q);
-      });
-
-      grid.innerHTML = "";
-
-      if (!filtered.length) {
-        grid.innerHTML = `<div class="muted-box">Nenhum cliente encontrado.</div>`;
+      const p = processos && processos.length ? processos[0] : null;
+      if (!p) {
+        alert("Processo não encontrado.");
         return;
       }
 
-      filtered.forEach(c => {
-        const processosDoCliente = processosCache.filter(p => {
-          const procCliente = (p.importador_exportador || "").trim().toLowerCase();
-          const nomeCliente = (c.nome || "").trim().toLowerCase();
-          return procCliente === nomeCliente;
-        }).length;
+      const { data: docs } = await withTimeout(
+        supabaseClient
+          .from("processos_documentos")
+          .select("*")
+          .eq("processo_id", p.id)
+          .eq("visivel_cliente", true)
+          .order("created_at", { ascending: false }),
+        10000
+      );
 
-        const cotacoesDoCliente = cotacoesCache.filter(x => {
-          return String(x.email || "").trim().toLowerCase() === String(c.email || "").trim().toLowerCase();
-        }).length;
+      document.getElementById("processoCard").classList.remove("hidden");
+      document.getElementById("pcTitulo").textContent = "Factura " + (p.numero_factura || "");
+      document.getElementById("pcSub").textContent = (p.numero_processo || "") + " • " + (p.importador_exportador || "");
+      document.getElementById("pcEstado").innerHTML = badgeEstado(p.estado || "");
+      document.getElementById("pcRegime").textContent = p.regime || "";
+      document.getElementById("pcOrigem").textContent = p.pais_origem || "";
+      document.getElementById("pcDestino").textContent = p.pais_destino || "";
+      document.getElementById("pcPorto").textContent = p.porto_fronteira || "";
+      document.getElementById("pcBl").textContent = p.bl_awb_manifesto || "";
+      document.getElementById("pcPrazo").textContent = p.prazo || "";
+      document.getElementById("pcDocs").textContent = p.documentos_em_falta || "Sem pendências";
+      document.getElementById("pcHistorico").textContent = p.historico || "Sem histórico";
 
-        const card = document.createElement("div");
-        card.className = "client-card";
-        card.innerHTML = `
-          <div class="client-name">${c.nome || "Sem nome"}</div>
-          <div class="small">${c.email || "Sem email"}</div>
+      const list = document.getElementById("pcDocsList");
+      list.innerHTML = "";
+      if (docs && docs.length) {
+        docs.forEach(d => {
+          const chip = document.createElement("span");
+          chip.className = "doc-chip";
+          chip.innerHTML = `
+            <span>${d.nome_ficheiro || "Documento"}</span>
+            <button class="btn-mini secondary" style="margin:0;padding:4px 8px;" onclick="openProcessoDocumento('${String(d.ficheiro_path).replace(/'/g, "\\'")}')">Abrir</button>
+          `;
+          list.appendChild(chip);
+        });
+      } else {
+        list.innerHTML = `<span class="small">Sem documentos visíveis para o cliente.</span>`;
+      }
+    } catch (e) {
+      alert(e.message);
+    }
+  }
 
-          <div class="client-meta">
-            <div><strong>NUIT:</strong> ${c.nuit || "-"}</div>
-            <div><strong>Contacto:</strong> ${c.contacto || "-"}</div>
-            <div><strong>Processos:</strong> ${processosDoCliente}</div>
-            <div><strong>Cotações:</strong> ${cotacoesDoCliente}</div>
-          </div>
+  async function uploadFactura(file) {
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `cotacoes/${Date.now()}_${safeName}`;
 
-          <div class="client-actions">
-            <button class="btn-mini" onclick="openClienteModal('${String(c.id).replace(/'/g, "\\'")}')">Editar</button>
-            <button class="btn-mini danger" onclick="deleteCliente('${String(c.id).replace(/'/g, "\\'")}')">Eliminar</button>
-          </div>
-        `;
-        grid.appendChild(card);
-      });
+    const { error } = await withTimeout(
+      supabaseClient.storage
+        .from("cotacoes")
+        .upload(path, file, {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: file.type || "application/octet-stream"
+        }),
+      15000
+    );
+
+    if (error) throw error;
+    return { path, filename: file.name };
+  }
+
+  async function submeterCotacao() {
+    const msg = document.getElementById("cotacaoMsg");
+
+    const nome_cliente = document.getElementById("cot_nome").value.trim();
+    const nuit = document.getElementById("cot_nuit").value.trim();
+    const contacto = document.getElementById("cot_contacto").value.trim();
+    const email = document.getElementById("cot_email").value.trim();
+    const tipo_operacao = document.getElementById("cot_tipo").value.trim();
+    const origem = document.getElementById("cot_origem").value.trim();
+    const destino = document.getElementById("cot_destino").value.trim();
+    const descricao_mercadoria = document.getElementById("cot_mercadoria").value.trim();
+    const numero_factura = document.getElementById("cot_factura").value.trim();
+    const observacoes = document.getElementById("cot_obs").value.trim();
+    const facturaFile = document.getElementById("cot_factura_file").files?.[0] || null;
+
+    if (!nome_cliente || !tipo_operacao || !origem || !destino || !descricao_mercadoria) {
+      msg.textContent = "Preencha os campos obrigatórios.";
+      msg.className = "message-err";
+      return;
     }
 
-    function renderEquipaGrid() {
-      const grid = document.getElementById("equipaGrid");
-      if (!grid) return;
+    msg.textContent = "A enviar pedido...";
+    msg.className = "small";
 
-      const q = (document.getElementById("teamSearch")?.value || "").trim().toLowerCase();
+    try {
+      let factura_path = null;
+      let factura_filename = null;
 
-      const filtered = equipaCache.filter(e => {
-        const blob = [e.nome, e.email, e.nivel].join(" ").toLowerCase();
-        return !q || blob.includes(q);
-      });
+      if (facturaFile) {
+        const uploaded = await uploadFactura(facturaFile);
+        factura_path = uploaded.path;
+        factura_filename = uploaded.filename;
+      }
 
-      grid.innerHTML = "";
+      const { error } = await withTimeout(
+        supabaseClient.from("pedidos_cotacao").insert({
+          nome_cliente,
+          nuit,
+          contacto,
+          email,
+          tipo_operacao,
+          origem,
+          destino,
+          descricao_mercadoria,
+          numero_factura,
+          observacoes,
+          factura_path,
+          factura_filename,
+          estado: "recebido"
+        }),
+        8000
+      );
 
-      if (!filtered.length) {
-        grid.innerHTML = `<div class="muted-box">Nenhum funcionário encontrado.</div>`;
+      if (error) {
+        msg.textContent = error.message;
+        msg.className = "message-err";
         return;
       }
 
-      filtered.forEach(e => {
-        const card = document.createElement("div");
-        card.className = "client-card";
-        card.innerHTML = `
-          <div class="client-name">${e.nome || "Sem nome"}</div>
-          <div class="small">${e.email || "Sem email"}</div>
+      msg.textContent = "Pedido enviado com sucesso.";
+      msg.className = "message-ok";
 
-          <div class="client-meta">
-            <div><strong>Nível:</strong> ${e.nivel || "-"}</div>
-            <div><strong>Estado:</strong> ${e.activo ? "Activo" : "Inactivo"}</div>
-            <div><strong>Criado:</strong> ${formatDate(e.created_at) || "-"}</div>
-            <div><strong>Portal:</strong> Interno EF</div>
-          </div>
+      await sendEmail(
+        ADMIN_EMAIL,
+        "Nova cotação recebida",
+        `<div style="font-family:Arial,sans-serif">
+          <h2>Nova cotação recebida</h2>
+          <p><b>Cliente:</b> ${nome_cliente}</p>
+          <p><b>Email:</b> ${email || "-"}</p>
+          <p><b>Contacto:</b> ${contacto || "-"}</p>
+          <p><b>Factura:</b> ${numero_factura || "-"}</p>
+          <p><b>Tipo:</b> ${tipo_operacao}</p>
+          <p><b>Origem:</b> ${origem}</p>
+          <p><b>Destino:</b> ${destino}</p>
+          <p><b>Mercadoria:</b> ${descricao_mercadoria}</p>
+          <p><b>Observações:</b> ${observacoes || "-"}</p>
+        </div>`
+      );
 
-          <div class="client-actions">
-            <button class="btn-mini" onclick="openEquipaModal('${String(e.id).replace(/'/g, "\\'")}')">Editar</button>
-            <button class="btn-mini danger" onclick="deleteFuncionario('${String(e.id).replace(/'/g, "\\'")}')">Eliminar</button>
-          </div>
-        `;
-        grid.appendChild(card);
-      });
+      if (email) {
+        await sendEmail(
+          email,
+          "Recebemos o seu pedido de cotação",
+          `<div style="font-family:Arial,sans-serif">
+            <h2>Pedido recebido com sucesso</h2>
+            <p>Olá <b>${nome_cliente}</b>,</p>
+            <p>Recebemos o seu pedido de cotação.</p>
+            <p><b>Factura:</b> ${numero_factura || "-"}</p>
+            <p><b>Tipo:</b> ${tipo_operacao}</p>
+            <p><b>Origem:</b> ${origem}</p>
+            <p><b>Destino:</b> ${destino}</p>
+            <p>Vamos analisar e entrar em contacto em breve.</p>
+            <br>
+            <p>EF Cargo Clear</p>
+          </div>`
+        );
+
+        await supabaseClient.from("mensagens").insert({
+          cliente_email: email,
+          remetente: "admin",
+          mensagem: "Recebemos o seu pedido de cotação. A equipa vai responder em breve.",
+          processo_numero: numero_factura || "",
+          lido_cliente: false,
+          lido_interno: true
+        });
+      }
+
+      document.getElementById("cot_tipo").value = "";
+      document.getElementById("cot_origem").value = "";
+      document.getElementById("cot_destino").value = "";
+      document.getElementById("cot_mercadoria").value = "";
+      document.getElementById("cot_factura").value = "";
+      document.getElementById("cot_obs").value = "";
+      document.getElementById("cot_factura_file").value = "";
+      document.getElementById("cot_factura_file_name").textContent = "Nenhum ficheiro selecionado.";
+
+      await loadClientCotacoes();
+      await loadClientMessages();
+      await refreshClientDashboard();
+    } catch (e) {
+      msg.textContent = e.message || "Erro ao enviar pedido.";
+      msg.className = "message-err";
     }
+  }
 
-    async function loadInternalMessages() {
+  async function refreshClientDashboard() {
+    try {
+      const docsVisible = docsCache.filter(d => d.visivel_cliente === true).length;
+      const lastProcess = processosCache[0] || null;
+      const unread = mensagensCache.filter(m =>
+        String(m.cliente_email || "").toLowerCase() === currentUserEmail.toLowerCase() &&
+        m.remetente !== "cliente" &&
+        !m.lido_cliente
+      ).length;
+
+      document.getElementById("clientDashCotacoes").textContent = clientCotacoesCache.length;
+      document.getElementById("clientDashUnread").textContent = unread;
+      document.getElementById("clientDashDocs").textContent = docsVisible;
+      document.getElementById("clientDashEstado").textContent = lastProcess?.estado || "-";
+    } catch (_) {}
+  }
+
+  async function loadProcessosForClientDashboard() {
+    try {
+      const { data } = await withTimeout(
+        supabaseClient.from("processos").select("*").order("created_at", { ascending: false }),
+        8000
+      );
+      processosCache = data || [];
+    } catch (_) {}
+  }
+
+  async function loadDocsForClientDashboard() {
+    try {
+      const { data } = await withTimeout(
+        supabaseClient.from("processos_documentos").select("*").eq("visivel_cliente", true).order("created_at", { ascending: false }),
+        8000
+      );
+      docsCache = data || [];
+    } catch (_) {}
+  }
+
+  async function loadInternalMessages() {
+    const threadBox = document.getElementById("adminThreadList");
+    const msgBox = document.getElementById("adminMessagesBox");
+    if (!threadBox || !msgBox) return;
+
+    try {
       const { data, error } = await withTimeout(
         supabaseClient.from("mensagens").select("*").order("created_at", { ascending: true }),
         10000
       );
 
       if (error) {
-        document.getElementById("adminThreadList").innerHTML = `<div class="empty-chat">${error.message}</div>`;
+        threadBox.innerHTML = `<div class="empty-chat">${error.message}</div>`;
+        msgBox.innerHTML = `<div class="empty-chat">${error.message}</div>`;
         return;
       }
 
@@ -3003,65 +1952,166 @@
       const unread = mensagensCache.filter(m => m.remetente === "cliente" && !m.lido_interno);
       if (unread.length) {
         const ids = unread.map(x => x.id);
-        await supabaseClient.from("mensagens").update({ lido_interno: true }).in("id", ids);
+
+        const { error: updErr } = await supabaseClient
+          .from("mensagens")
+          .update({ lido_interno: true })
+          .in("id", ids);
+
+        if (!updErr) {
+          mensagensCache = mensagensCache.map(m =>
+            ids.includes(m.id) ? { ...m, lido_interno: true } : m
+          );
+          renderInternalThreadList();
+          updateUnreadBadges();
+        }
       }
+    } catch (e) {
+      threadBox.innerHTML = `<div class="empty-chat">${e.message}</div>`;
+      msgBox.innerHTML = `<div class="empty-chat">${e.message}</div>`;
+    }
+  }
+
+  function renderInternalThreadList() {
+    const threadBox = document.getElementById("adminThreadList");
+    const msgBox = document.getElementById("adminMessagesBox");
+    if (!threadBox || !msgBox) return;
+
+    if (!mensagensCache.length) {
+      threadBox.innerHTML = `<div class="empty-chat">Sem conversas.</div>`;
+      msgBox.innerHTML = `<div class="empty-chat">Selecione uma conversa.</div>`;
+      currentSelectedThread = "";
+      return;
     }
 
-    function renderInternalThreadList() {
-      const el = document.getElementById("adminThreadList");
-      if (!el) return;
+    const grouped = {};
+    mensagensCache.forEach(m => {
+      const key = String(m.cliente_email || "").toLowerCase();
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(m);
+    });
 
-      const grouped = {};
-      mensagensCache.forEach(m => {
-        if (!grouped[m.cliente_email]) grouped[m.cliente_email] = [];
-        grouped[m.cliente_email].push(m);
-      });
+    const threads = Object.entries(grouped)
+      .map(([email, rows]) => {
+        const last = rows[rows.length - 1];
+        const unread = rows.filter(r => r.remetente === "cliente" && !r.lido_interno).length;
+        return { email, rows, last, unread };
+      })
+      .sort((a, b) => new Date(b.last.created_at) - new Date(a.last.created_at));
 
-      const emails = Object.keys(grouped);
-      if (!emails.length) {
-        el.innerHTML = `<div class="empty-chat">Sem mensagens ainda.</div>`;
-        document.getElementById("adminMessagesBox").innerHTML = `<div class="empty-chat">Selecione uma conversa.</div>`;
-        currentSelectedThread = "";
+    if (!currentSelectedThread && threads.length) {
+      currentSelectedThread = threads[0].email;
+    }
+
+    threadBox.innerHTML = threads.map(t => `
+      <div class="chat-thread-item ${currentSelectedThread === t.email ? "active" : ""}" onclick="selectInternalThread('${t.email}')">
+        <div class="chat-thread-name">
+          ${escapeHtml(t.email)}
+          ${t.unread ? `<span class="unread-dot">${t.unread}</span>` : ""}
+        </div>
+        <div class="chat-thread-meta">
+          ${escapeHtml(t.last?.mensagem || "")}
+        </div>
+        <div class="chat-thread-meta" style="margin-top:6px;">
+          ${formatDate(t.last?.created_at)}
+        </div>
+      </div>
+    `).join("");
+
+    renderInternalMessages();
+  }
+
+  function selectInternalThread(email) {
+    currentSelectedThread = String(email || "").toLowerCase();
+    renderInternalThreadList();
+  }
+
+  function renderInternalMessages() {
+    const msgBox = document.getElementById("adminMessagesBox");
+    if (!msgBox) return;
+
+    const rows = mensagensCache.filter(m => String(m.cliente_email || "").toLowerCase() === currentSelectedThread);
+
+    if (!rows.length) {
+      msgBox.innerHTML = `<div class="empty-chat">Selecione uma conversa.</div>`;
+      return;
+    }
+
+    msgBox.innerHTML = rows.map(m => `
+      <div class="chat-bubble ${m.remetente === "admin" ? "mine" : "other"}">
+        <div>${escapeHtml(m.mensagem || "")}</div>
+        <div class="chat-meta">
+          ${m.processo_numero || "-"} • ${m.remetente} • ${formatDate(m.created_at)}
+        </div>
+      </div>
+    `).join("");
+
+    msgBox.scrollTop = msgBox.scrollHeight;
+  }
+
+  async function sendAdminMessage() {
+    const text = document.getElementById("adminMessageText").value.trim();
+
+    if (!currentSelectedThread) {
+      alert("Selecione uma conversa.");
+      return;
+    }
+
+    if (!text) {
+      alert("Digite a mensagem.");
+      return;
+    }
+
+    try {
+      const { error } = await withTimeout(
+        supabaseClient.from("mensagens").insert({
+          cliente_email: currentSelectedThread,
+          remetente: "admin",
+          mensagem: text,
+          processo_numero: "",
+          lido_cliente: false,
+          lido_interno: true
+        }),
+        10000
+      );
+
+      if (error) {
+        alert(error.message);
         return;
       }
 
-      if (!currentSelectedThread || !grouped[currentSelectedThread]) {
-        currentSelectedThread = emails[0];
-      }
-
-      el.innerHTML = emails.map(email => {
-        const arr = grouped[email];
-        const last = arr[arr.length - 1];
-        const unread = arr.filter(x => x.remetente === "cliente" && !x.lido_interno).length;
-        return `
-          <div class="chat-thread-item ${currentSelectedThread === email ? "active" : ""}" onclick="selectInternalThread('${String(email).replace(/'/g, "\\'")}')">
-            <div class="chat-thread-name">${email}</div>
-            <div class="chat-thread-meta">${last?.processo_numero || "-"} • ${formatDate(last?.created_at || "")}</div>
-            ${unread ? `<div class="chat-thread-meta" style="margin-top:6px;color:#b91c1c;font-weight:700;">${unread} nova(s)</div>` : ""}
-          </div>
-        `;
-      }).join("");
-
-      renderInternalMessages();
+      document.getElementById("adminMessageText").value = "";
+      await loadInternalMessages();
+    } catch (e) {
+      alert(e.message || "Erro ao enviar mensagem.");
     }
+  }
 
-    function selectInternalThread(email) {
-      currentSelectedThread = email;
-      renderInternalThreadList();
-    }
+  async function loadClientMessages() {
+    const box = document.getElementById("clientMessagesBox");
+    if (!box) return;
 
-    function renderInternalMessages() {
-      const box = document.getElementById("adminMessagesBox");
-      if (!box) return;
+    try {
+      const { data, error } = await withTimeout(
+        supabaseClient.from("mensagens").select("*").eq("cliente_email", currentUserEmail).order("created_at", { ascending: true }),
+        10000
+      );
 
-      if (!currentSelectedThread) {
-        box.innerHTML = `<div class="empty-chat">Selecione uma conversa.</div>`;
+      if (error) {
+        box.innerHTML = `<div class="empty-chat">${error.message}</div>`;
         return;
       }
 
-      const rows = mensagensCache.filter(m => m.cliente_email === currentSelectedThread);
-      box.innerHTML = rows.map(m => `
-        <div class="chat-bubble ${m.remetente === "cliente" ? "other" : "mine"}">
+      mensagensCache = data || [];
+
+      if (!mensagensCache.length) {
+        box.innerHTML = `<div class="empty-chat">Sem mensagens ainda.</div>`;
+        updateUnreadBadges();
+        return;
+      }
+
+      box.innerHTML = mensagensCache.map(m => `
+        <div class="chat-bubble ${m.remetente === "cliente" ? "mine" : "other"}">
           <div>${escapeHtml(m.mensagem || "")}</div>
           <div class="chat-meta">
             ${m.processo_numero || "-"} • ${m.remetente} • ${formatDate(m.created_at)}
@@ -3070,582 +2120,123 @@
       `).join("");
 
       box.scrollTop = box.scrollHeight;
+      updateUnreadBadges();
+    } catch (e) {
+      box.innerHTML = `<div class="empty-chat">${e.message}</div>`;
     }
+  }
 
-    async function sendAdminMessage() {
-      const text = document.getElementById("adminMessageText").value.trim();
+  async function markClientMessagesRead() {
+    try {
+      const { data } = await withTimeout(
+        supabaseClient
+          .from("mensagens")
+          .select("id")
+          .eq("cliente_email", currentUserEmail)
+          .eq("lido_cliente", false)
+          .neq("remetente", "cliente"),
+        10000
+      );
 
-      if (!currentSelectedThread) {
-        alert("Selecione uma conversa.");
-        return;
-      }
+      if (data?.length) {
+        const ids = data.map(x => x.id);
 
-      if (!text) {
-        alert("Digite a mensagem.");
-        return;
-      }
+        const { error } = await supabaseClient
+          .from("mensagens")
+          .update({ lido_cliente: true })
+          .in("id", ids);
 
-      try {
-        const { error } = await withTimeout(
-          supabaseClient.from("mensagens").insert({
-            cliente_email: currentSelectedThread,
-            remetente: currentUserRole === "admin" ? "admin" : "funcionario",
-            mensagem: text,
-            processo_numero: "",
-            lido_cliente: false,
-            lido_interno: true
-          }),
-          10000
-        );
-
-        if (error) {
-          alert(error.message);
-          return;
-        }
-
-        document.getElementById("adminMessageText").value = "";
-        await loadInternalMessages();
-      } catch (e) {
-        alert(e.message || "Erro ao enviar mensagem.");
-      }
-    }
-
-    async function loadClientMessages() {
-      const box = document.getElementById("clientMessagesBox");
-      if (!box) return;
-
-      try {
-        const { data, error } = await withTimeout(
-          supabaseClient.from("mensagens").select("*").eq("cliente_email", currentUserEmail).order("created_at", { ascending: true }),
-          10000
-        );
-
-        if (error) {
-          box.innerHTML = `<div class="empty-chat">${error.message}</div>`;
-          return;
-        }
-
-        mensagensCache = data || [];
-
-        if (!mensagensCache.length) {
-          box.innerHTML = `<div class="empty-chat">Sem mensagens ainda.</div>`;
-          updateUnreadBadges();
-          return;
-        }
-
-        box.innerHTML = mensagensCache.map(m => `
-          <div class="chat-bubble ${m.remetente === "cliente" ? "mine" : "other"}">
-            <div>${escapeHtml(m.mensagem || "")}</div>
-            <div class="chat-meta">
-              ${m.processo_numero || "-"} • ${m.remetente} • ${formatDate(m.created_at)}
-            </div>
-          </div>
-        `).join("");
-
-        box.scrollTop = box.scrollHeight;
-        updateUnreadBadges();
-      } catch (e) {
-        box.innerHTML = `<div class="empty-chat">${e.message}</div>`;
-      }
-    }
-
-    async function markClientMessagesRead() {
-      try {
-        const { data } = await withTimeout(
-          supabaseClient.from("mensagens").select("id").eq("cliente_email", currentUserEmail).eq("lido_cliente", false).neq("remetente", "cliente"),
-          10000
-        );
-        if (data?.length) {
-          const ids = data.map(x => x.id);
-          await supabaseClient.from("mensagens").update({ lido_cliente: true }).in("id", ids);
+        if (!error) {
           await loadClientMessages();
           await refreshClientDashboard();
         }
-      } catch (_) {}
-    }
-
-    async function sendClientMessage() {
-      const text = document.getElementById("clientMessageText").value.trim();
-      if (!text) {
-        alert("Digite a mensagem.");
-        return;
       }
+    } catch (_) {}
+  }
 
-      try {
-        const { error } = await withTimeout(
-          supabaseClient.from("mensagens").insert({
-            cliente_email: currentUserEmail,
-            remetente: "cliente",
-            mensagem: text,
-            processo_numero: "",
-            lido_cliente: true,
-            lido_interno: false
-          }),
-          10000
-        );
-
-        if (error) {
-          alert(error.message);
-          return;
-        }
-
-        document.getElementById("clientMessageText").value = "";
-        await loadClientMessages();
-      } catch (e) {
-        alert(e.message || "Erro ao enviar mensagem.");
-      }
+  async function sendClientMessage() {
+    const text = document.getElementById("clientMessageText").value.trim();
+    if (!text) {
+      alert("Digite a mensagem.");
+      return;
     }
 
-    function updateUnreadBadges() {
-      const clientUnread = mensagensCache.filter(m =>
-        m.cliente_email === currentUserEmail &&
-        m.remetente !== "cliente" &&
-        !m.lido_cliente
-      ).length;
-
-      const internalUnread = mensagensCache.filter(m =>
-        m.remetente === "cliente" &&
-        !m.lido_interno
-      ).length;
-
-      const clientEl = document.getElementById("clientUnreadBadge");
-      const internalEl = document.getElementById("internalUnreadBadge");
-
-      if (clientEl) {
-        clientEl.textContent = clientUnread;
-        clientEl.classList.toggle("hidden", clientUnread === 0);
-      }
-
-      if (internalEl) {
-        internalEl.textContent = internalUnread;
-        internalEl.classList.toggle("hidden", internalUnread === 0);
-      }
-
-      const dashUnread = document.getElementById("clientDashUnread");
-      if (dashUnread) dashUnread.textContent = clientUnread;
-    }
-
-    async function refreshClientDashboard() {
-      if (currentUserRole !== "client") return;
-
-      let docsVisible = 0;
-      let lastEstado = "-";
-
-      try {
-        const { data: userData } = await withTimeout(supabaseClient.auth.getUser(), 8000);
-        const user = userData?.user;
-        if (!user?.email) return;
-
-        const { data: cliente } = await withTimeout(
-          supabaseClient.from("clientes").select("*").eq("email", user.email).maybeSingle(),
-          8000
-        );
-
-        if (cliente?.nome) {
-          const { data: processos } = await withTimeout(
-            supabaseClient.from("processos").select("*").eq("importador_exportador", cliente.nome).order("created_at", { ascending: false }),
-            10000
-          );
-
-          if (processos?.length) {
-            lastEstado = processos[0].estado || "-";
-            const ids = processos.map(p => p.id);
-            const { data: docs } = await withTimeout(
-              supabaseClient.from("processos_documentos").select("*").in("processo_id", ids).eq("visivel_cliente", true),
-              10000
-            );
-            docsVisible = docs?.length || 0;
-          }
-        }
-
-        document.getElementById("clientDashCotacoes").textContent = clientCotacoesCache.length;
-        document.getElementById("clientDashDocs").textContent = docsVisible;
-        document.getElementById("clientDashEstado").textContent = lastEstado;
-      } catch (_) {}
-    }
-
-    function escapeHtml(text) {
-      return String(text || "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;");
-    }
-
-    function exportProcessosCSV() {
-      const rows = getFilteredProcessos().map(p => [
-        p.numero_processo || "",
-        p.numero_factura || "",
-        p.importador_exportador || "",
-        p.regime || "",
-        p.estado || "",
-        p.documentos_em_falta || "",
-        p.valor_cobrado || 0,
-        p.custos_processo || 0,
-        p.margem_lucro || 0
-      ]);
-      downloadCSV("processos.csv",
-        ["Processo","Factura","Cliente","Regime","Estado","Docs em falta","Valor cobrado","Custos","Margem"],
-        rows
-      );
-    }
-
-    function exportFinanceiroCSV() {
-      const rows = getFilteredProcessos().map(p => [
-        p.numero_processo || "",
-        p.importador_exportador || "",
-        p.numero_factura || "",
-        p.valor_cobrado || 0,
-        p.custos_processo || 0,
-        p.margem_lucro || 0
-      ]);
-      downloadCSV("financeiro.csv",
-        ["Processo","Cliente","Factura","Valor cobrado","Custos","Margem"],
-        rows
-      );
-    }
-
-    function exportCotacoesCSV() {
-      const rows = cotacoesCache.map(c => [
-        c.nome_cliente || "",
-        c.tipo_operacao || "",
-        c.numero_factura || "",
-        c.origem || "",
-        c.destino || "",
-        c.estado || ""
-      ]);
-      downloadCSV("cotacoes.csv",
-        ["Cliente","Tipo","Factura","Origem","Destino","Estado"],
-        rows
-      );
-    }
-
-    function exportClientCotacoesCSV() {
-      const rows = clientCotacoesCache.map(c => [
-        formatDate(c.created_at),
-        c.numero_factura || "",
-        c.tipo_operacao || "",
-        c.origem || "",
-        c.destino || "",
-        c.estado || ""
-      ]);
-      downloadCSV("minhas_cotacoes.csv",
-        ["Data","Factura","Tipo","Origem","Destino","Estado"],
-        rows
-      );
-    }
-
-    async function loadInternal() {
-      try {
-        const [{ data: clientes }, { data: processos }, { data: cotacoes }, { data: docs }, { data: equipa }] = await Promise.all([
-          withTimeout(supabaseClient.from("clientes").select("*").order("created_at", { ascending: false }), 8000),
-          withTimeout(supabaseClient.from("processos").select("*").order("created_at", { ascending: false }), 8000),
-          withTimeout(supabaseClient.from("pedidos_cotacao").select("*").order("created_at", { ascending: false }), 8000),
-          withTimeout(supabaseClient.from("processos_documentos").select("*").order("created_at", { ascending: false }), 8000),
-          withTimeout(supabaseClient.from("equipa").select("*").order("created_at", { ascending: false }), 8000)
-        ]);
-
-        clientesCache = clientes || [];
-        processosCache = processos || [];
-        cotacoesCache = cotacoes || [];
-        docsCache = docs || [];
-        equipaCache = equipa || [];
-
-        const totalCobrado = processosCache.reduce((s, p) => s + Number(p.valor_cobrado || 0), 0);
-        const totalCustos = processosCache.reduce((s, p) => s + Number(p.custos_processo || 0), 0);
-        const totalMargem = processosCache.reduce((s, p) => s + Number(p.margem_lucro || 0), 0);
-        const liberados = processosCache.filter(p => ["Liberado", "Entregue"].includes(p.estado)).length;
-
-        document.getElementById("clientesCount").textContent = clientesCache.length;
-        document.getElementById("processosCount").textContent = processosCache.length;
-        document.getElementById("liberadosCount").textContent = liberados;
-        document.getElementById("pendenciasCount").textContent =
-          processosCache.filter(p => p.documentos_em_falta && p.documentos_em_falta.trim() !== "").length;
-        document.getElementById("cotacoesCount").textContent = cotacoesCache.length;
-
-        document.getElementById("valorCobradoTotal").textContent = formatMoney(totalCobrado);
-        document.getElementById("custosTotal").textContent = formatMoney(totalCustos);
-        document.getElementById("margemTotal").textContent = formatMoney(totalMargem);
-
-        renderProcessosTable();
-        renderCotacoesTable();
-        renderFinanceiroTable();
-        renderClientesGrid();
-        renderEquipaGrid();
-      } catch (e) {
-        document.getElementById("welcome").textContent = "Painel interno • " + e.message;
-      }
-    }
-
-    async function loadClientCotacoes() {
-      const tbody = document.getElementById("clientCotacoesTable");
-      if (!tbody) return;
-
-      tbody.innerHTML = `<tr><td colspan="8">A carregar...</td></tr>`;
-
-      try {
-        const { data: userData } = await withTimeout(supabaseClient.auth.getUser(), 8000);
-        const user = userData?.user;
-        if (!user?.email) {
-          tbody.innerHTML = `<tr><td colspan="8">Não foi possível identificar o utilizador.</td></tr>`;
-          return;
-        }
-
-        const { data: cotacoes, error } = await withTimeout(
-          supabaseClient.from("pedidos_cotacao").select("*").eq("email", user.email).order("created_at", { ascending: false }),
-          10000
-        );
-
-        if (error) {
-          tbody.innerHTML = `<tr><td colspan="8">${error.message}</td></tr>`;
-          return;
-        }
-
-        clientCotacoesCache = cotacoes || [];
-
-        if (!clientCotacoesCache.length) {
-          tbody.innerHTML = `<tr><td colspan="8">Ainda não enviou nenhuma cotação.</td></tr>`;
-          await refreshClientDashboard();
-          return;
-        }
-
-        tbody.innerHTML = "";
-        clientCotacoesCache.forEach(c => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${formatDate(c.created_at)}</td>
-            <td>${c.numero_factura || ""}</td>
-            <td>${c.tipo_operacao || ""}</td>
-            <td>${c.origem || ""}</td>
-            <td>${c.destino || ""}</td>
-            <td>
-              ${c.factura_path
-                ? `<button class="btn-mini secondary" onclick="openFactura('${String(c.factura_path).replace(/'/g, "\\'")}')">Ver factura</button>`
-                : '-'}
-            </td>
-            <td>${badgeEstado(c.estado || "recebido")}</td>
-            <td>
-              <button class="btn-mini danger" onclick="deleteCotacao('${String(c.id).replace(/'/g, "\\'")}', '${String(c.factura_path || "").replace(/'/g, "\\'")}', '${String(c.email || "").replace(/'/g, "\\'")}')">Apagar</button>
-            </td>
-          `;
-          tbody.appendChild(tr);
-        });
-
-        await refreshClientDashboard();
-      } catch (e) {
-        tbody.innerHTML = `<tr><td colspan="8">${e.message}</td></tr>`;
-      }
-    }
-
-    async function buscarFactura() {
-      const termo = document.getElementById("facturaSearch").value.trim();
-      if (!termo) return;
-
-      try {
-        const { data: processos } = await withTimeout(
-          supabaseClient.from("processos").select("*").ilike("numero_factura", `%${termo}%`).limit(1),
-          8000
-        );
-
-        const p = processos && processos.length ? processos[0] : null;
-        if (!p) {
-          alert("Processo não encontrado.");
-          return;
-        }
-
-        const { data: docs } = await withTimeout(
-          supabaseClient
-            .from("processos_documentos")
-            .select("*")
-            .eq("processo_id", p.id)
-            .eq("visivel_cliente", true)
-            .order("created_at", { ascending: false }),
-          10000
-        );
-
-        document.getElementById("processoCard").classList.remove("hidden");
-        document.getElementById("pcTitulo").textContent = "Factura " + (p.numero_factura || "");
-        document.getElementById("pcSub").textContent = (p.numero_processo || "") + " • " + (p.importador_exportador || "");
-        document.getElementById("pcEstado").innerHTML = badgeEstado(p.estado || "");
-        document.getElementById("pcRegime").textContent = p.regime || "";
-        document.getElementById("pcOrigem").textContent = p.pais_origem || "";
-        document.getElementById("pcDestino").textContent = p.pais_destino || "";
-        document.getElementById("pcPorto").textContent = p.porto_fronteira || "";
-        document.getElementById("pcBl").textContent = p.bl_awb_manifesto || "";
-        document.getElementById("pcPrazo").textContent = p.prazo || "";
-        document.getElementById("pcDocs").textContent = p.documentos_em_falta || "Sem pendências";
-        document.getElementById("pcHistorico").textContent = p.historico || "Sem histórico";
-
-        const list = document.getElementById("pcDocsList");
-        list.innerHTML = "";
-        if (docs && docs.length) {
-          docs.forEach(d => {
-            const chip = document.createElement("span");
-            chip.className = "doc-chip";
-            chip.innerHTML = `
-              <span>${d.nome_ficheiro || "Documento"}</span>
-              <button class="btn-mini secondary" style="margin:0;padding:4px 8px;" onclick="openProcessoDocumento('${String(d.ficheiro_path).replace(/'/g, "\\'")}')">Abrir</button>
-            `;
-            list.appendChild(chip);
-          });
-        } else {
-          list.innerHTML = `<span class="small">Sem documentos visíveis para o cliente.</span>`;
-        }
-      } catch (e) {
-        alert(e.message);
-      }
-    }
-
-    async function uploadFactura(file) {
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const path = `cotacoes/${Date.now()}_${safeName}`;
-
+    try {
       const { error } = await withTimeout(
-        supabaseClient.storage
-          .from("cotacoes")
-          .upload(path, file, {
-            cacheControl: "3600",
-            upsert: false,
-            contentType: file.type || "application/octet-stream"
-          }),
-        15000
+        supabaseClient.from("mensagens").insert({
+          cliente_email: currentUserEmail,
+          remetente: "cliente",
+          mensagem: text,
+          processo_numero: "",
+          lido_cliente: true,
+          lido_interno: false
+        }),
+        10000
       );
 
-      if (error) throw error;
-      return { path, filename: file.name };
-    }
-
-    async function submeterCotacao() {
-      const msg = document.getElementById("cotacaoMsg");
-
-      const nome_cliente = document.getElementById("cot_nome").value.trim();
-      const nuit = document.getElementById("cot_nuit").value.trim();
-      const contacto = document.getElementById("cot_contacto").value.trim();
-      const email = document.getElementById("cot_email").value.trim();
-      const tipo_operacao = document.getElementById("cot_tipo").value.trim();
-      const origem = document.getElementById("cot_origem").value.trim();
-      const destino = document.getElementById("cot_destino").value.trim();
-      const descricao_mercadoria = document.getElementById("cot_mercadoria").value.trim();
-      const numero_factura = document.getElementById("cot_factura").value.trim();
-      const observacoes = document.getElementById("cot_obs").value.trim();
-      const facturaFile = document.getElementById("cot_factura_file").files?.[0] || null;
-
-      if (!nome_cliente || !tipo_operacao || !origem || !destino || !descricao_mercadoria) {
-        msg.textContent = "Preencha os campos obrigatórios.";
-        msg.className = "message-err";
+      if (error) {
+        alert(error.message);
         return;
       }
 
-      msg.textContent = "A enviar pedido...";
-      msg.className = "small";
+      document.getElementById("clientMessageText").value = "";
+      await loadClientMessages();
+    } catch (e) {
+      alert(e.message || "Erro ao enviar mensagem.");
+    }
+  }
 
-      try {
-        let factura_path = null;
-        let factura_filename = null;
+  function updateUnreadBadges() {
+    const allRows = Array.isArray(mensagensCache) ? mensagensCache : [];
 
-        if (facturaFile) {
-          const uploaded = await uploadFactura(facturaFile);
-          factura_path = uploaded.path;
-          factura_filename = uploaded.filename;
-        }
+    const clientUnread = allRows.filter(m =>
+      String(m.cliente_email || "").toLowerCase() === currentUserEmail.toLowerCase() &&
+      m.remetente !== "cliente" &&
+      !m.lido_cliente
+    ).length;
 
-        const { error } = await withTimeout(
-          supabaseClient.from("pedidos_cotacao").insert({
-            nome_cliente,
-            nuit,
-            contacto,
-            email,
-            tipo_operacao,
-            origem,
-            destino,
-            descricao_mercadoria,
-            numero_factura,
-            observacoes,
-            factura_path,
-            factura_filename,
-            estado: "recebido"
-          }),
-          8000
-        );
+    const internalUnread = allRows.filter(m =>
+      m.remetente === "cliente" &&
+      !m.lido_interno
+    ).length;
 
-        if (error) {
-          msg.textContent = error.message;
-          msg.className = "message-err";
-          return;
-        }
+    const clientEl = document.getElementById("clientUnreadBadge");
+    const internalEl = document.getElementById("internalUnreadBadge");
+    const dashUnread = document.getElementById("clientDashUnread");
 
-        msg.textContent = "Pedido enviado com sucesso.";
-        msg.className = "message-ok";
-
-        await sendEmail(
-          ADMIN_EMAIL,
-          "Nova cotação recebida",
-          `<div style="font-family:Arial,sans-serif">
-            <h2>Nova cotação recebida</h2>
-            <p><b>Cliente:</b> ${nome_cliente}</p>
-            <p><b>Email:</b> ${email || "-"}</p>
-            <p><b>Contacto:</b> ${contacto || "-"}</p>
-            <p><b>Factura:</b> ${numero_factura || "-"}</p>
-            <p><b>Tipo:</b> ${tipo_operacao}</p>
-            <p><b>Origem:</b> ${origem}</p>
-            <p><b>Destino:</b> ${destino}</p>
-            <p><b>Mercadoria:</b> ${descricao_mercadoria}</p>
-            <p><b>Observações:</b> ${observacoes || "-"}</p>
-          </div>`
-        );
-
-        if (email) {
-          await sendEmail(
-            email,
-            "Recebemos o seu pedido de cotação",
-            `<div style="font-family:Arial,sans-serif">
-              <h2>Pedido recebido com sucesso</h2>
-              <p>Olá <b>${nome_cliente}</b>,</p>
-              <p>Recebemos o seu pedido de cotação.</p>
-              <p><b>Factura:</b> ${numero_factura || "-"}</p>
-              <p><b>Tipo:</b> ${tipo_operacao}</p>
-              <p><b>Origem:</b> ${origem}</p>
-              <p><b>Destino:</b> ${destino}</p>
-              <p>Vamos analisar e entrar em contacto em breve.</p>
-              <br>
-              <p>EF Cargo Clear</p>
-            </div>`
-          );
-
-          await supabaseClient.from("mensagens").insert({
-            cliente_email: email,
-            remetente: "admin",
-            mensagem: "Recebemos o seu pedido de cotação. A equipa vai responder em breve.",
-            processo_numero: numero_factura || "",
-            lido_cliente: false,
-            lido_interno: true
-          });
-        }
-
-        document.getElementById("cot_tipo").value = "";
-        document.getElementById("cot_origem").value = "";
-        document.getElementById("cot_destino").value = "";
-        document.getElementById("cot_mercadoria").value = "";
-        document.getElementById("cot_factura").value = "";
-        document.getElementById("cot_obs").value = "";
-        document.getElementById("cot_factura_file").value = "";
-        document.getElementById("cot_factura_file_name").textContent = "Nenhum ficheiro selecionado.";
-
-        await loadClientCotacoes();
-        await loadClientMessages();
-      } catch (e) {
-        msg.textContent = e.message || "Erro ao enviar pedido.";
-        msg.className = "message-err";
-      }
+    if (clientEl) {
+      clientEl.textContent = clientUnread;
+      clientEl.classList.toggle("hidden", clientUnread === 0);
     }
 
-    window.addEventListener("load", async () => {
-      try {
-        const { data } = await withTimeout(supabaseClient.auth.getSession(), 8000);
-        if (data.session?.user) {
-          await loadApp(data.session.user);
-        }
-      } catch (_) {}
-    });
-  </script>
-</body>
-</html>
+    if (internalEl) {
+      internalEl.textContent = internalUnread;
+      internalEl.classList.toggle("hidden", internalUnread === 0);
+    }
+
+    if (dashUnread) {
+      dashUnread.textContent = clientUnread;
+    }
+  }
+
+  function escapeHtml(text) {
+    return String(text || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  window.addEventListener("load", async () => {
+    try {
+      const { data } = await withTimeout(supabaseClient.auth.getSession(), 8000);
+      if (data.session?.user) {
+        await loadApp(data.session.user);
+        await loadProcessosForClientDashboard();
+        await loadDocsForClientDashboard();
+        await refreshClientDashboard();
+      }
+    } catch (_) {}
+  });
+</script>
