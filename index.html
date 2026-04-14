@@ -9,14 +9,11 @@
     :root{
       --bg:#f4f6f8;
       --card:#ffffff;
-      --card-2:#fbfbfc;
       --text:#1f2937;
       --muted:#6b7280;
       --line:#e5e7eb;
       --primary:#BE001A;
       --primary-dark:#980015;
-      --primary-soft:#fff1f3;
-      --soft:#f8f8f9;
       --success-bg:#dcfce7;
       --success-text:#166534;
       --warn-bg:#fff3cd;
@@ -30,7 +27,6 @@
     }
 
     *{box-sizing:border-box}
-
     body{
       margin:0;
       font-family:Arial,sans-serif;
@@ -41,12 +37,7 @@
       color:var(--text);
     }
 
-    .wrap{
-      max-width:1440px;
-      margin:0 auto;
-      padding:22px;
-    }
-
+    .wrap{max-width:1460px;margin:0 auto;padding:22px}
     .card{
       background:var(--card);
       border-radius:var(--radius);
@@ -56,11 +47,7 @@
       border:1px solid rgba(229,231,235,.95);
     }
 
-    .hero-card{
-      position:relative;
-      overflow:hidden;
-    }
-
+    .hero-card{position:relative;overflow:hidden}
     .hero-card::before{
       content:"";
       position:absolute;
@@ -83,7 +70,7 @@
 
     .login-card{
       width:100%;
-      max-width:620px;
+      max-width:640px;
       background:#fff;
       border-radius:28px;
       box-shadow:var(--shadow);
@@ -115,7 +102,7 @@
 
     .login-title{
       margin:0 0 10px;
-      font-size:40px;
+      font-size:38px;
       line-height:1;
       color:var(--primary);
       letter-spacing:-0.03em;
@@ -135,16 +122,8 @@
     .grid-3{grid-template-columns:repeat(3,1fr)}
     .grid-2{grid-template-columns:repeat(2,1fr)}
 
-    .row{
-      display:flex;
-      gap:14px;
-      flex-wrap:wrap;
-    }
-
-    .row > *{
-      flex:1;
-      min-width:220px;
-    }
+    .row{display:flex;gap:14px;flex-wrap:wrap}
+    .row > *{flex:1;min-width:220px}
 
     label{
       display:block;
@@ -171,10 +150,7 @@
       background:#fff;
     }
 
-    textarea{
-      min-height:110px;
-      resize:vertical;
-    }
+    textarea{min-height:110px;resize:vertical}
 
     .btn{
       border:none;
@@ -185,33 +161,18 @@
       cursor:pointer;
       font-size:15px;
       min-height:50px;
-      transition:background .2s ease, transform .1s ease, box-shadow .2s ease;
       box-shadow:0 8px 18px rgba(190,0,26,.18);
       font-weight:700;
     }
 
-    .btn:hover{
-      background:linear-gradient(180deg,#c6001b 0%, #930015 100%);
-      box-shadow:0 12px 20px rgba(190,0,26,.22);
-    }
-
-    .btn:active{
-      transform:translateY(1px);
-    }
-
+    .btn:hover{background:linear-gradient(180deg,#c6001b 0%, #930015 100%)}
     .btn-outline{
       background:#fff;
       color:var(--text);
       border:1px solid #d6d6d6;
       box-shadow:none;
     }
-
-    .btn-outline:hover{
-      background:#fafafa;
-      color:var(--primary);
-      border-color:rgba(190,0,26,.35);
-      box-shadow:none;
-    }
+    .btn-outline:hover{background:#fafafa;color:var(--primary)}
 
     .btn-mini{
       border:none;
@@ -255,18 +216,8 @@
       flex-wrap:wrap;
     }
 
-    .brand{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-
-    .brand-line{
-      display:flex;
-      align-items:center;
-      gap:14px;
-      flex-wrap:wrap;
-    }
+    .brand{display:flex;flex-direction:column;gap:10px}
+    .brand-line{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 
     .brand-logo-wrap{
       width:64px;
@@ -324,12 +275,7 @@
       line-height:1.35;
     }
 
-    .welcome-line{
-      color:var(--muted);
-      font-size:14px;
-      margin-top:2px;
-    }
-
+    .welcome-line{color:var(--muted);font-size:14px;margin-top:2px}
     .small{font-size:13px;color:var(--muted);line-height:1.45}
     .message-ok{color:#166534;font-size:14px;font-weight:600}
     .message-err{color:#b91c1c;font-size:14px;font-weight:600}
@@ -378,7 +324,6 @@
       cursor:pointer;
       font-weight:700;
       font-size:14px;
-      transition:.2s;
     }
 
     .sidebar-btn:hover{
@@ -391,7 +336,6 @@
       background:linear-gradient(180deg,var(--primary) 0%, var(--primary-dark) 100%);
       color:#fff;
       border-color:var(--primary);
-      box-shadow:0 10px 18px rgba(190,0,26,.14);
     }
 
     .kpi{
@@ -414,19 +358,8 @@
       background:linear-gradient(180deg,var(--primary) 0%, #e56474 100%);
     }
 
-    .kpi-title{
-      color:var(--muted);
-      font-size:14px;
-      margin-bottom:10px;
-      font-weight:700;
-    }
-
-    .kpi-value{
-      font-size:34px;
-      font-weight:800;
-      color:var(--primary);
-      letter-spacing:-0.03em;
-    }
+    .kpi-title{color:var(--muted);font-size:14px;margin-bottom:10px;font-weight:700}
+    .kpi-value{font-size:34px;font-weight:800;color:var(--primary);letter-spacing:-0.03em}
 
     .tabs{
       display:flex;
@@ -443,39 +376,19 @@
       border-radius:14px;
       cursor:pointer;
       font-size:14px;
-      transition:.2s;
       font-weight:700;
     }
 
-    .tab-btn:hover{
-      border-color:rgba(190,0,26,.25);
-      color:var(--primary);
-      background:#fffdfd;
-    }
-
+    .tab-btn:hover{border-color:rgba(190,0,26,.25);color:var(--primary)}
     .tab-btn.active{
       background:linear-gradient(180deg,var(--primary) 0%, var(--primary-dark) 100%);
       color:#fff;
       border-color:var(--primary);
-      box-shadow:0 8px 16px rgba(190,0,26,.14);
     }
 
     .tab-content.hidden{display:none}
-
-    .section-title{
-      font-size:24px;
-      font-weight:800;
-      margin:0 0 10px;
-      color:#232323;
-      letter-spacing:-0.02em;
-    }
-
-    .section-sub{
-      margin:0 0 18px;
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.5;
-    }
+    .section-title{font-size:24px;font-weight:800;margin:0 0 10px;color:#232323;letter-spacing:-0.02em}
+    .section-sub{margin:0 0 18px;color:var(--muted);font-size:14px;line-height:1.5}
 
     .panel-head{
       display:flex;
@@ -486,11 +399,7 @@
       margin-bottom:14px;
     }
 
-    .panel-actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-    }
+    .panel-actions{display:flex;gap:8px;flex-wrap:wrap}
 
     table{
       width:100%;
@@ -517,9 +426,7 @@
       letter-spacing:.04em;
     }
 
-    tbody tr:hover{
-      background:#fcfcfc;
-    }
+    tbody tr:hover{background:#fcfcfc}
 
     .badge{
       display:inline-flex;
@@ -601,12 +508,7 @@
     }
 
     .table-scroll{overflow:auto}
-
-    .stat-row{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:18px;
-    }
+    .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 
     .client-card{
       padding:18px;
@@ -630,17 +532,8 @@
       margin-top:12px;
     }
 
-    .client-meta div{
-      font-size:14px;
-      color:#374151;
-    }
-
-    .client-actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-top:14px;
-    }
+    .client-meta div{font-size:14px;color:#374151}
+    .client-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 
     .modal-backdrop{
       position:fixed;
@@ -675,20 +568,9 @@
 
     hr{border:none;border-top:1px solid var(--line)}
 
-    @media print {
-      body { background:#fff; }
-      .no-print { display:none !important; }
-      .card, .sidebar { box-shadow:none; border:1px solid #ddd; }
-      .wrap { max-width:none; padding:0; }
-    }
-
     @media (max-width:1180px){
-      .admin-shell{
-        grid-template-columns:1fr;
-      }
-      .sidebar{
-        position:static;
-      }
+      .admin-shell{grid-template-columns:1fr}
+      .sidebar{position:static}
     }
 
     @media (max-width:1100px){
@@ -713,6 +595,7 @@
 
   <div id="loginView" class="login-shell">
     <div class="login-card">
+
       <div id="loginMode">
         <div class="pill">EF Cargo Clear</div>
         <h1 class="login-title">Entrar no sistema</h1>
@@ -730,8 +613,9 @@
           <button class="btn" onclick="login()">Entrar</button>
         </div>
 
-        <p style="margin-top:16px;">
+        <p style="margin-top:14px;display:flex;gap:14px;flex-wrap:wrap;">
           <button class="link-btn" onclick="showRegister()">Criar conta</button>
+          <button class="link-btn" onclick="showForgot()">Esqueci a password</button>
         </p>
 
         <p id="loginMsg" class="small" style="margin-top:14px;"></p>
@@ -776,6 +660,47 @@
 
         <p id="registerMsg" class="small" style="margin-top:14px;"></p>
       </div>
+
+      <div id="forgotMode" class="hidden">
+        <div class="pill">Recuperação</div>
+        <h1 class="login-title">Recuperar password</h1>
+        <p class="login-sub">Digite o email da conta. Será enviado um link para redefinir a password.</p>
+
+        <div class="grid">
+          <div>
+            <label>Email</label>
+            <input id="forgot_email" placeholder="Digite o email" />
+          </div>
+          <button class="btn" onclick="sendPasswordReset()">Enviar link</button>
+        </div>
+
+        <p style="margin-top:16px;">
+          <button class="link-btn" onclick="showLogin()">Voltar ao login</button>
+        </p>
+
+        <p id="forgotMsg" class="small" style="margin-top:14px;"></p>
+      </div>
+
+      <div id="resetMode" class="hidden">
+        <div class="pill">Nova password</div>
+        <h1 class="login-title">Definir nova password</h1>
+        <p class="login-sub">Introduza a nova password da conta.</p>
+
+        <div class="grid">
+          <div>
+            <label>Nova password</label>
+            <input id="reset_password_1" type="password" placeholder="Nova password" />
+          </div>
+          <div>
+            <label>Confirmar password</label>
+            <input id="reset_password_2" type="password" placeholder="Confirmar password" />
+          </div>
+          <button class="btn" onclick="updateRecoveredPassword()">Guardar nova password</button>
+        </div>
+
+        <p id="resetMsg" class="small" style="margin-top:14px;"></p>
+      </div>
+
     </div>
   </div>
 
@@ -803,12 +728,13 @@
       <div id="internalView" class="hidden">
         <div class="admin-shell">
           <aside class="sidebar no-print">
-            <div class="sidebar-title">Painel Admin</div>
+            <div class="sidebar-title">Painel Interno</div>
             <div class="sidebar-menu">
               <button class="sidebar-btn active" id="side-processos" onclick="showInternalTab('processos')">Processos</button>
               <button class="sidebar-btn" id="side-cotacoes" onclick="showInternalTab('cotacoes')">Pedidos de cotação</button>
               <button class="sidebar-btn" id="side-financeiro" onclick="showInternalTab('financeiro')">Financeiro</button>
               <button class="sidebar-btn" id="side-clientes" onclick="showInternalTab('clientes')">Clientes</button>
+              <button class="sidebar-btn" id="side-equipa" onclick="showInternalTab('equipa')">Funcionários</button>
             </div>
           </aside>
 
@@ -913,7 +839,7 @@
                         <th>Tipo</th>
                         <th>Factura</th>
                         <th>Documento</th>
-                        <th>Converter</th>
+                        <th>Ações</th>
                         <th>Origem</th>
                         <th>Destino</th>
                         <th>Estado</th>
@@ -998,6 +924,56 @@
                 <div id="clientesGrid" class="grid grid-2"></div>
               </div>
             </div>
+
+            <div id="internal-equipa" class="tab-content hidden" style="margin-top:18px;">
+              <div class="card">
+                <div class="panel-head">
+                  <div>
+                    <h2 class="section-title">Funcionários EF</h2>
+                    <div class="section-sub">Crie acessos internos com permissões limitadas para gestão de processos e cotações.</div>
+                  </div>
+                </div>
+
+                <div class="card" style="background:#fafafa;border-radius:20px;">
+                  <h3 style="margin-top:0;">Novo funcionário</h3>
+                  <div class="grid grid-2">
+                    <div>
+                      <label>Nome</label>
+                      <input id="eq_nome" />
+                    </div>
+                    <div>
+                      <label>Email</label>
+                      <input id="eq_email" />
+                    </div>
+                    <div>
+                      <label>Nível</label>
+                      <select id="eq_nivel">
+                        <option value="operador">Operador</option>
+                        <option value="supervisor">Supervisor</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label>Estado</label>
+                      <select id="eq_activo">
+                        <option value="true">Activo</option>
+                        <option value="false">Inactivo</option>
+                      </select>
+                    </div>
+                  </div>
+                  <button class="btn" style="margin-top:14px;" onclick="criarFuncionario()">Criar funcionário</button>
+                </div>
+
+                <div class="toolbar no-print" style="margin-top:18px;">
+                  <div class="field">
+                    <label>Pesquisar funcionário</label>
+                    <input id="teamSearch" placeholder="Nome ou email" oninput="renderEquipaGrid()" />
+                  </div>
+                </div>
+
+                <div id="equipaGrid" class="grid grid-2"></div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -1165,6 +1141,7 @@
                     <th>Destino</th>
                     <th>Documento</th>
                     <th>Estado</th>
+                    <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody id="clientCotacoesTable"></tbody>
@@ -1173,6 +1150,7 @@
           </div>
         </div>
       </div>
+
     </div>
   </div>
 
@@ -1214,6 +1192,50 @@
     </div>
   </div>
 
+  <div id="equipaModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <h2 class="section-title" style="margin-bottom:4px;">Editar funcionário</h2>
+          <div class="small">Atualize os dados do funcionário interno.</div>
+        </div>
+        <button class="btn-mini secondary" onclick="closeEquipaModal()">Fechar</button>
+      </div>
+
+      <input type="hidden" id="edit_eq_id" />
+
+      <div class="grid grid-2">
+        <div>
+          <label>Nome</label>
+          <input id="edit_eq_nome" />
+        </div>
+        <div>
+          <label>Email</label>
+          <input id="edit_eq_email" />
+        </div>
+        <div>
+          <label>Nível</label>
+          <select id="edit_eq_nivel">
+            <option value="operador">Operador</option>
+            <option value="supervisor">Supervisor</option>
+          </select>
+        </div>
+        <div>
+          <label>Estado</label>
+          <select id="edit_eq_activo">
+            <option value="true">Activo</option>
+            <option value="false">Inactivo</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn" onclick="saveEquipaEdit()">Guardar alterações</button>
+        <button class="btn btn-outline" onclick="closeEquipaModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const SUPABASE_URL = "https://fefkyzutcouoklbiwybs.supabase.co";
     const SUPABASE_KEY = "sb_publishable_uOowmqEhVdq8h0uzagYPEA_DXXpGOgA";
@@ -1245,6 +1267,9 @@
     let docsCache = [];
     let clientCotacoesCache = [];
     let clientesCache = [];
+    let equipaCache = [];
+    let currentUserRole = "client";
+    let currentUserEmail = "";
 
     document.addEventListener("DOMContentLoaded", () => {
       const facturaInput = document.getElementById("cot_factura_file");
@@ -1256,6 +1281,7 @@
         });
       }
       setupCompanyLogo();
+      detectRecoveryMode();
     });
 
     function setupCompanyLogo() {
@@ -1282,14 +1308,38 @@
       img.src = COMPANY_LOGO_URL;
     }
 
-    function showRegister() {
+    function hideAuthModes() {
       document.getElementById("loginMode").classList.add("hidden");
-      document.getElementById("registerMode").classList.remove("hidden");
+      document.getElementById("registerMode").classList.add("hidden");
+      document.getElementById("forgotMode").classList.add("hidden");
+      document.getElementById("resetMode").classList.add("hidden");
     }
 
     function showLogin() {
-      document.getElementById("registerMode").classList.add("hidden");
+      hideAuthModes();
       document.getElementById("loginMode").classList.remove("hidden");
+    }
+
+    function showRegister() {
+      hideAuthModes();
+      document.getElementById("registerMode").classList.remove("hidden");
+    }
+
+    function showForgot() {
+      hideAuthModes();
+      document.getElementById("forgotMode").classList.remove("hidden");
+    }
+
+    function showReset() {
+      hideAuthModes();
+      document.getElementById("resetMode").classList.remove("hidden");
+    }
+
+    function detectRecoveryMode() {
+      const hash = window.location.hash || "";
+      if (hash.includes("type=recovery")) {
+        showReset();
+      }
     }
 
     function withTimeout(promise, ms = 8000) {
@@ -1299,6 +1349,91 @@
       ]);
     }
 
+    async function sendPasswordReset() {
+      const email = document.getElementById("forgot_email").value.trim();
+      const msg = document.getElementById("forgotMsg");
+
+      if (!email) {
+        msg.textContent = "Digite o email.";
+        msg.className = "message-err";
+        return;
+      }
+
+      msg.textContent = "A enviar link...";
+      msg.className = "small";
+
+      try {
+        const { error } = await withTimeout(
+          supabaseClient.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin + window.location.pathname
+          }),
+          10000
+        );
+
+        if (error) {
+          msg.textContent = error.message;
+          msg.className = "message-err";
+          return;
+        }
+
+        msg.textContent = "Link enviado com sucesso. Verifique o email.";
+        msg.className = "message-ok";
+      } catch (e) {
+        msg.textContent = e.message || "Erro ao enviar link.";
+        msg.className = "message-err";
+      }
+    }
+
+    async function updateRecoveredPassword() {
+      const p1 = document.getElementById("reset_password_1").value;
+      const p2 = document.getElementById("reset_password_2").value;
+      const msg = document.getElementById("resetMsg");
+
+      if (!p1 || !p2) {
+        msg.textContent = "Preencha os dois campos.";
+        msg.className = "message-err";
+        return;
+      }
+
+      if (p1.length < 6) {
+        msg.textContent = "A password deve ter pelo menos 6 caracteres.";
+        msg.className = "message-err";
+        return;
+      }
+
+      if (p1 !== p2) {
+        msg.textContent = "As passwords não coincidem.";
+        msg.className = "message-err";
+        return;
+      }
+
+      msg.textContent = "A guardar nova password...";
+      msg.className = "small";
+
+      try {
+        const { error } = await withTimeout(
+          supabaseClient.auth.updateUser({ password: p1 }),
+          10000
+        );
+
+        if (error) {
+          msg.textContent = error.message;
+          msg.className = "message-err";
+          return;
+        }
+
+        msg.textContent = "Password actualizada com sucesso. Já pode entrar.";
+        msg.className = "message-ok";
+        window.history.replaceState({}, document.title, window.location.pathname);
+        setTimeout(() => {
+          showLogin();
+        }, 1200);
+      } catch (e) {
+        msg.textContent = e.message || "Erro ao actualizar password.";
+        msg.className = "message-err";
+      }
+    }
+
     async function sendEmail(to, subject, html) {
       try {
         const res = await fetch('/api/send-email', {
@@ -1306,7 +1441,6 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ to, subject, html })
         });
-
         const data = await res.json();
         console.log("EMAIL RESULT:", data);
       } catch (e) {
@@ -1391,16 +1525,17 @@
 
     function showInternalTab(tab) {
       document.querySelectorAll(".sidebar-btn").forEach(b => b.classList.remove("active"));
-
       if (tab === "processos") document.getElementById("side-processos")?.classList.add("active");
       if (tab === "cotacoes") document.getElementById("side-cotacoes")?.classList.add("active");
       if (tab === "financeiro") document.getElementById("side-financeiro")?.classList.add("active");
       if (tab === "clientes") document.getElementById("side-clientes")?.classList.add("active");
+      if (tab === "equipa") document.getElementById("side-equipa")?.classList.add("active");
 
       document.getElementById("internal-processos").classList.toggle("hidden", tab !== "processos");
       document.getElementById("internal-cotacoes").classList.toggle("hidden", tab !== "cotacoes");
       document.getElementById("internal-financeiro").classList.toggle("hidden", tab !== "financeiro");
       document.getElementById("internal-clientes").classList.toggle("hidden", tab !== "clientes");
+      document.getElementById("internal-equipa").classList.toggle("hidden", tab !== "equipa");
     }
 
     function showClientTab(tab, btn) {
@@ -1411,6 +1546,22 @@
       document.getElementById("client-historico").classList.toggle("hidden", tab !== "historico");
 
       if (tab === "historico") loadClientCotacoes();
+    }
+
+    function applyInternalPermissions() {
+      const isAdmin = currentUserRole === "admin";
+      const isEmployee = currentUserRole === "employee";
+
+      document.getElementById("side-financeiro").style.display = isAdmin ? "block" : "none";
+      document.getElementById("side-clientes").style.display = isAdmin ? "block" : "none";
+      document.getElementById("side-equipa").style.display = isAdmin ? "block" : "none";
+
+      if (isEmployee) {
+        document.getElementById("internal-financeiro").classList.add("hidden");
+        document.getElementById("internal-clientes").classList.add("hidden");
+        document.getElementById("internal-equipa").classList.add("hidden");
+        showInternalTab("processos");
+      }
     }
 
     async function registerClient() {
@@ -1494,7 +1645,6 @@
           showLogin();
           document.getElementById("email").value = email;
         }, 1200);
-
       } catch (e) {
         msg.textContent = e.message || "Erro ao criar conta.";
         msg.className = "message-err";
@@ -1546,26 +1696,46 @@
     }
 
     async function loadApp(user) {
-      const email = (user.email || "").toLowerCase();
+      currentUserEmail = (user.email || "").toLowerCase();
 
       document.getElementById("loginView").classList.add("hidden");
       document.getElementById("appView").classList.remove("hidden");
 
-      if (email === "ef.edmilsonfumo@gmail.com") {
-        document.getElementById("welcome").textContent = "Edmilson Fumo • admin";
+      if (currentUserEmail === ADMIN_EMAIL.toLowerCase()) {
+        currentUserRole = "admin";
+        document.getElementById("welcome").textContent = "Edmilson Fumo • administrador";
         document.getElementById("internalView").classList.remove("hidden");
         document.getElementById("clientView").classList.add("hidden");
+        applyInternalPermissions();
         setTimeout(loadInternal, 100);
         return;
       }
 
+      try {
+        const { data: membro } = await withTimeout(
+          supabaseClient.from("equipa").select("*").eq("email", currentUserEmail).eq("activo", true).maybeSingle(),
+          8000
+        );
+
+        if (membro) {
+          currentUserRole = "employee";
+          document.getElementById("welcome").textContent = `${membro.nome || "Funcionário"} • ${membro.nivel || "operador"}`;
+          document.getElementById("internalView").classList.remove("hidden");
+          document.getElementById("clientView").classList.add("hidden");
+          applyInternalPermissions();
+          setTimeout(loadInternal, 100);
+          return;
+        }
+      } catch (_) {}
+
+      currentUserRole = "client";
       document.getElementById("welcome").textContent = "Cliente • portal";
       document.getElementById("clientView").classList.remove("hidden");
       document.getElementById("internalView").classList.add("hidden");
 
       try {
         const { data: cliente } = await withTimeout(
-          supabaseClient.from("clientes").select("*").eq("email", user.email).maybeSingle(),
+          supabaseClient.from("clientes").select("*").eq("email", currentUserEmail).maybeSingle(),
           8000
         );
 
@@ -1576,7 +1746,7 @@
           document.getElementById("cot_contacto").value = cliente.contacto || "";
           document.getElementById("cot_email").value = cliente.email || "";
         } else {
-          document.getElementById("cot_email").value = user.email || "";
+          document.getElementById("cot_email").value = currentUserEmail || "";
         }
 
         await loadClientCotacoes();
@@ -1687,7 +1857,7 @@
 
         const historicoAtual = processo?.historico || "";
         const agora = new Date().toLocaleString("pt-PT");
-        const novoHistorico = `${historicoAtual}\n• ${agora} - Documentos em falta atualizados.`.trim();
+        const novoHistorico = `${historicoAtual}\n• ${agora} - Documentos em falta actualizados.`.trim();
 
         const { error } = await withTimeout(
           supabaseClient
@@ -1705,7 +1875,7 @@
           return;
         }
 
-        alert("Documentos em falta atualizados");
+        alert("Documentos em falta actualizados");
         await loadInternal();
       } catch (e) {
         alert(e.message);
@@ -1713,6 +1883,11 @@
     }
 
     async function salvarFinanceiro(processoId) {
+      if (currentUserRole !== "admin") {
+        alert("Sem permissão.");
+        return;
+      }
+
       const valorCobrado = Number(document.getElementById("cobrado_" + processoId).value || 0);
       const custos = Number(document.getElementById("custos_" + processoId).value || 0);
       const margem = valorCobrado - custos;
@@ -1750,7 +1925,7 @@
           return;
         }
 
-        alert("Financeiro atualizado");
+        alert("Financeiro actualizado");
         await loadInternal();
       } catch (e) {
         alert(e.message);
@@ -1793,7 +1968,7 @@
             nome_ficheiro: file.name,
             ficheiro_path: path,
             visivel_cliente: !!visibleInput?.checked,
-            uploaded_by: "admin"
+            uploaded_by: currentUserRole === "admin" ? "admin" : "funcionario"
           }),
           10000
         );
@@ -1911,7 +2086,53 @@
       }
     }
 
+    async function deleteCotacao(cotacaoId, facturaPath = null, ownerEmail = "") {
+      const isAdminOrEmployee = currentUserRole === "admin" || currentUserRole === "employee";
+      const isOwner = currentUserRole === "client" && ownerEmail.toLowerCase() === currentUserEmail.toLowerCase();
+
+      if (!isAdminOrEmployee && !isOwner) {
+        alert("Sem permissão para apagar esta cotação.");
+        return;
+      }
+
+      if (!confirm("Apagar esta cotação?")) return;
+
+      try {
+        if (facturaPath) {
+          await withTimeout(
+            supabaseClient.storage.from("cotacoes").remove([facturaPath]),
+            10000
+          );
+        }
+
+        const { error } = await withTimeout(
+          supabaseClient.from("pedidos_cotacao").delete().eq("id", cotacaoId),
+          10000
+        );
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        alert("Cotação apagada com sucesso.");
+
+        if (currentUserRole === "client") {
+          await loadClientCotacoes();
+        } else {
+          await loadInternal();
+        }
+      } catch (e) {
+        alert(e.message || "Erro ao apagar cotação.");
+      }
+    }
+
     async function criarCliente() {
+      if (currentUserRole !== "admin") {
+        alert("Sem permissão.");
+        return;
+      }
+
       const nome = document.getElementById("cli_nome").value.trim();
       const email = document.getElementById("cli_email").value.trim();
       const nuit = document.getElementById("cli_nuit").value.trim();
@@ -1968,6 +2189,11 @@
     }
 
     async function saveClienteEdit() {
+      if (currentUserRole !== "admin") {
+        alert("Sem permissão.");
+        return;
+      }
+
       const id = document.getElementById("edit_cliente_id").value;
       const nome = document.getElementById("edit_cliente_nome").value.trim();
       const email = document.getElementById("edit_cliente_email").value.trim();
@@ -1999,6 +2225,11 @@
     }
 
     async function deleteCliente(clienteId) {
+      if (currentUserRole !== "admin") {
+        alert("Sem permissão.");
+        return;
+      }
+
       const c = clientesCache.find(x => String(x.id) === String(clienteId));
       if (!c) return;
 
@@ -2017,6 +2248,132 @@
         }
 
         alert("Cliente eliminado com sucesso");
+        await loadInternal();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    async function criarFuncionario() {
+      if (currentUserRole !== "admin") {
+        alert("Sem permissão.");
+        return;
+      }
+
+      const nome = document.getElementById("eq_nome").value.trim();
+      const email = document.getElementById("eq_email").value.trim().toLowerCase();
+      const nivel = document.getElementById("eq_nivel").value;
+      const activo = document.getElementById("eq_activo").value === "true";
+
+      if (!nome || !email) {
+        alert("Nome e email obrigatórios.");
+        return;
+      }
+
+      try {
+        const { error } = await withTimeout(
+          supabaseClient.from("equipa").insert({
+            nome,
+            email,
+            nivel,
+            activo
+          }),
+          10000
+        );
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        alert("Funcionário criado com sucesso");
+        document.getElementById("eq_nome").value = "";
+        document.getElementById("eq_email").value = "";
+        document.getElementById("eq_nivel").value = "operador";
+        document.getElementById("eq_activo").value = "true";
+
+        await loadInternal();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    function openEquipaModal(id) {
+      const m = equipaCache.find(x => String(x.id) === String(id));
+      if (!m) return;
+
+      document.getElementById("edit_eq_id").value = m.id || "";
+      document.getElementById("edit_eq_nome").value = m.nome || "";
+      document.getElementById("edit_eq_email").value = m.email || "";
+      document.getElementById("edit_eq_nivel").value = m.nivel || "operador";
+      document.getElementById("edit_eq_activo").value = String(!!m.activo);
+
+      document.getElementById("equipaModalBackdrop").style.display = "flex";
+    }
+
+    function closeEquipaModal() {
+      document.getElementById("equipaModalBackdrop").style.display = "none";
+    }
+
+    async function saveEquipaEdit() {
+      if (currentUserRole !== "admin") {
+        alert("Sem permissão.");
+        return;
+      }
+
+      const id = document.getElementById("edit_eq_id").value;
+      const nome = document.getElementById("edit_eq_nome").value.trim();
+      const email = document.getElementById("edit_eq_email").value.trim().toLowerCase();
+      const nivel = document.getElementById("edit_eq_nivel").value;
+      const activo = document.getElementById("edit_eq_activo").value === "true";
+
+      if (!id) return;
+
+      try {
+        const { error } = await withTimeout(
+          supabaseClient
+            .from("equipa")
+            .update({ nome, email, nivel, activo })
+            .eq("id", id),
+          10000
+        );
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        alert("Funcionário atualizado com sucesso");
+        closeEquipaModal();
+        await loadInternal();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    async function deleteFuncionario(id) {
+      if (currentUserRole !== "admin") {
+        alert("Sem permissão.");
+        return;
+      }
+
+      const m = equipaCache.find(x => String(x.id) === String(id));
+      if (!m) return;
+
+      if (!confirm(`Eliminar o funcionário "${m.nome || m.email}"?`)) return;
+
+      try {
+        const { error } = await withTimeout(
+          supabaseClient.from("equipa").delete().eq("id", id),
+          10000
+        );
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        alert("Funcionário eliminado com sucesso");
         await loadInternal();
       } catch (e) {
         alert(e.message);
@@ -2080,6 +2437,19 @@
         const procDocs = docsByProcess[p.id] || [];
         const historicoHtml = (p.historico || "Sem histórico").replace(/\n/g, "<br>");
 
+        const financeiroCell = currentUserRole === "admin"
+          ? `
+            <label style="margin-top:0;">Valor cobrado</label>
+            <input id="cobrado_${p.id}" type="number" step="0.01" value="${Number(p.valor_cobrado || 0)}" />
+            <label style="margin-top:8px;">Custos</label>
+            <input id="custos_${p.id}" type="number" step="0.01" value="${Number(p.custos_processo || 0)}" />
+            <div class="small" style="margin-top:8px;">Margem atual: ${formatMoney(p.margem_lucro || 0)}</div>
+            <div style="margin-top:8px;">
+              <button class="btn-mini info" onclick="salvarFinanceiro('${p.id}')">Guardar financeiro</button>
+            </div>
+          `
+          : `<span class="small">Sem permissão</span>`;
+
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td><strong>${p.numero_processo || ""}</strong></td>
@@ -2107,16 +2477,7 @@
               <button class="btn-mini info" onclick="salvarDocsEmFalta('${p.id}')">Guardar docs</button>
             </div>
           </td>
-          <td style="min-width:220px;">
-            <label style="margin-top:0;">Valor cobrado</label>
-            <input id="cobrado_${p.id}" type="number" step="0.01" value="${Number(p.valor_cobrado || 0)}" />
-            <label style="margin-top:8px;">Custos</label>
-            <input id="custos_${p.id}" type="number" step="0.01" value="${Number(p.custos_processo || 0)}" />
-            <div class="small" style="margin-top:8px;">Margem atual: ${formatMoney(p.margem_lucro || 0)}</div>
-            <div style="margin-top:8px;">
-              <button class="btn-mini info" onclick="salvarFinanceiro('${p.id}')">Guardar financeiro</button>
-            </div>
-          </td>
+          <td style="min-width:220px;">${financeiroCell}</td>
           <td style="min-width:240px;">
             <input id="procfile_${p.id}" type="file" />
             <label style="margin-top:8px;display:flex;gap:8px;align-items:center;">
@@ -2165,6 +2526,7 @@
             ${convertido
               ? `<span class="badge green">Convertido</span>`
               : `<button class="btn-mini" onclick="converterCotacaoEmProcesso('${String(c.id).replace(/'/g, "\\'")}')">Converter</button>`}
+            <button class="btn-mini danger" onclick="deleteCotacao('${String(c.id).replace(/'/g, "\\'")}', '${String(c.factura_path || "").replace(/'/g, "\\'")}', '${String(c.email || "").replace(/'/g, "\\'")}')">Apagar</button>
           </td>
           <td>${c.origem || ""}</td>
           <td>${c.destino || ""}</td>
@@ -2210,7 +2572,6 @@
           c.contacto,
           c.nuit
         ].join(" ").toLowerCase();
-
         return !q || blob.includes(q);
       });
 
@@ -2223,10 +2584,9 @@
 
       filtered.forEach(c => {
         const processosDoCliente = processosCache.filter(p => {
-          const byEmail = (c.email || "").trim().toLowerCase();
           const procCliente = (p.importador_exportador || "").trim().toLowerCase();
           const nomeCliente = (c.nome || "").trim().toLowerCase();
-          return procCliente === nomeCliente || procCliente === byEmail;
+          return procCliente === nomeCliente;
         }).length;
 
         const cotacoesDoCliente = cotacoesCache.filter(x => {
@@ -2249,6 +2609,47 @@
           <div class="client-actions">
             <button class="btn-mini" onclick="openClienteModal('${String(c.id).replace(/'/g, "\\'")}')">Editar</button>
             <button class="btn-mini danger" onclick="deleteCliente('${String(c.id).replace(/'/g, "\\'")}')">Eliminar</button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function renderEquipaGrid() {
+      const grid = document.getElementById("equipaGrid");
+      if (!grid) return;
+
+      const q = (document.getElementById("teamSearch")?.value || "").trim().toLowerCase();
+
+      const filtered = equipaCache.filter(e => {
+        const blob = [e.nome, e.email, e.nivel].join(" ").toLowerCase();
+        return !q || blob.includes(q);
+      });
+
+      grid.innerHTML = "";
+
+      if (!filtered.length) {
+        grid.innerHTML = `<div class="muted-box">Nenhum funcionário encontrado.</div>`;
+        return;
+      }
+
+      filtered.forEach(e => {
+        const card = document.createElement("div");
+        card.className = "client-card";
+        card.innerHTML = `
+          <div class="client-name">${e.nome || "Sem nome"}</div>
+          <div class="small">${e.email || "Sem email"}</div>
+
+          <div class="client-meta">
+            <div><strong>Nível:</strong> ${e.nivel || "-"}</div>
+            <div><strong>Estado:</strong> ${e.activo ? "Activo" : "Inactivo"}</div>
+            <div><strong>Criado:</strong> ${formatDate(e.created_at) || "-"}</div>
+            <div><strong>Portal:</strong> Interno EF</div>
+          </div>
+
+          <div class="client-actions">
+            <button class="btn-mini" onclick="openEquipaModal('${String(e.id).replace(/'/g, "\\'")}')">Editar</button>
+            <button class="btn-mini danger" onclick="deleteFuncionario('${String(e.id).replace(/'/g, "\\'")}')">Eliminar</button>
           </div>
         `;
         grid.appendChild(card);
@@ -2320,17 +2721,19 @@
 
     async function loadInternal() {
       try {
-        const [{ data: clientes }, { data: processos }, { data: cotacoes }, { data: docs }] = await Promise.all([
+        const [{ data: clientes }, { data: processos }, { data: cotacoes }, { data: docs }, { data: equipa }] = await Promise.all([
           withTimeout(supabaseClient.from("clientes").select("*").order("created_at", { ascending: false }), 8000),
           withTimeout(supabaseClient.from("processos").select("*").order("created_at", { ascending: false }), 8000),
           withTimeout(supabaseClient.from("pedidos_cotacao").select("*").order("created_at", { ascending: false }), 8000),
-          withTimeout(supabaseClient.from("processos_documentos").select("*").order("created_at", { ascending: false }), 8000)
+          withTimeout(supabaseClient.from("processos_documentos").select("*").order("created_at", { ascending: false }), 8000),
+          withTimeout(supabaseClient.from("equipa").select("*").order("created_at", { ascending: false }), 8000)
         ]);
 
         clientesCache = clientes || [];
         processosCache = processos || [];
         cotacoesCache = cotacoes || [];
         docsCache = docs || [];
+        equipaCache = equipa || [];
 
         const totalCobrado = processosCache.reduce((s, p) => s + Number(p.valor_cobrado || 0), 0);
         const totalCustos = processosCache.reduce((s, p) => s + Number(p.custos_processo || 0), 0);
@@ -2352,8 +2755,9 @@
         renderCotacoesTable();
         renderFinanceiroTable();
         renderClientesGrid();
+        renderEquipaGrid();
       } catch (e) {
-        document.getElementById("welcome").textContent = "Edmilson Fumo • admin • " + e.message;
+        document.getElementById("welcome").textContent = "Painel interno • " + e.message;
       }
     }
 
@@ -2361,13 +2765,13 @@
       const tbody = document.getElementById("clientCotacoesTable");
       if (!tbody) return;
 
-      tbody.innerHTML = `<tr><td colspan="7">A carregar...</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8">A carregar...</td></tr>`;
 
       try {
         const { data: userData } = await withTimeout(supabaseClient.auth.getUser(), 8000);
         const user = userData?.user;
         if (!user?.email) {
-          tbody.innerHTML = `<tr><td colspan="7">Não foi possível identificar o utilizador.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="8">Não foi possível identificar o utilizador.</td></tr>`;
           return;
         }
 
@@ -2377,14 +2781,14 @@
         );
 
         if (error) {
-          tbody.innerHTML = `<tr><td colspan="7">${error.message}</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="8">${error.message}</td></tr>`;
           return;
         }
 
         clientCotacoesCache = cotacoes || [];
 
         if (!clientCotacoesCache.length) {
-          tbody.innerHTML = `<tr><td colspan="7">Ainda não enviou nenhuma cotação.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="8">Ainda não enviou nenhuma cotação.</td></tr>`;
           return;
         }
 
@@ -2403,11 +2807,14 @@
                 : '-'}
             </td>
             <td>${badgeEstado(c.estado || "recebido")}</td>
+            <td>
+              <button class="btn-mini danger" onclick="deleteCotacao('${String(c.id).replace(/'/g, "\\'")}', '${String(c.factura_path || "").replace(/'/g, "\\'")}', '${String(c.email || "").replace(/'/g, "\\'")}')">Apagar</button>
+            </td>
           `;
           tbody.appendChild(tr);
         });
       } catch (e) {
-        tbody.innerHTML = `<tr><td colspan="7">${e.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8">${e.message}</td></tr>`;
       }
     }
 
