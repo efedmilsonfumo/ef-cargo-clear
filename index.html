@@ -1221,6 +1221,7 @@
                     <div>
                       <label>Número da fatura</label>
                       <input id="fat_numero" readonly />
+                      <input id="fat_edit_id" type="hidden" />
                     </div>
                     <div>
                       <label>Data</label>
@@ -1306,8 +1307,9 @@
                   </div>
 
                   <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
-                    <button class="btn" onclick="saveInvoice(false)">Guardar fatura</button>
+                    <button class="btn" id="fat_save_btn" onclick="saveInvoice(false)">Guardar fatura</button>
                     <button class="btn btn-outline" onclick="previewDraftInvoice()">Pré-visualizar</button>
+                    <button class="btn btn-outline" onclick="resetInvoiceForm()">Nova fatura</button>
                   </div>
                 </div>
 
@@ -5244,9 +5246,9 @@
       "ISENÇÃO",
       "Certificado de Origem",
       "CONTRA MARCA",
-      "Manuseamento (CFM)",
+      "Manuseamento",
       "Conhecimento de Embarque (O.E.)",
-      "CAUÇÃO (flat rack containers)",
+      "CAUÇÃO",
       "Armazenagem",
       "Scanner (Certificação de Mercadoria)",
       "FRETE",
@@ -5264,6 +5266,68 @@
       "DIVERSOS",
       "IVA"
     ];
+
+
+    function sanitizeInvoiceNumber(value) {
+      return String(value || '').replace(/[^0-9.,-]/g, '').trim();
+    }
+
+    function numeroPorExtensoPt(n) {
+      n = Math.round((Number(n) || 0) * 100) / 100;
+      const inteiro = Math.floor(n);
+      const centavos = Math.round((n - inteiro) * 100);
+
+      const unidades = ['zero','um','dois','três','quatro','cinco','seis','sete','oito','nove'];
+      const especiais = ['dez','onze','doze','treze','catorze','quinze','dezasseis','dezassete','dezoito','dezanove'];
+      const dezenas = ['', '', 'vinte','trinta','quarenta','cinquenta','sessenta','setenta','oitenta','noventa'];
+      const centenas = ['', 'cento','duzentos','trezentos','quatrocentos','quinhentos','seiscentos','setecentos','oitocentos','novecentos'];
+
+      function ate999(num) {
+        if (num === 0) return '';
+        if (num === 100) return 'cem';
+        let parts = [];
+        const c = Math.floor(num / 100);
+        const r = num % 100;
+        if (c) parts.push(centenas[c]);
+        if (r) {
+          if (r < 10) parts.push(unidades[r]);
+          else if (r < 20) parts.push(especiais[r - 10]);
+          else {
+            const d = Math.floor(r / 10);
+            const u = r % 10;
+            parts.push(u ? `${dezenas[d]} e ${unidades[u]}` : dezenas[d]);
+          }
+        }
+        return parts.filter(Boolean).join(' e ');
+      }
+
+      function inteiroExtenso(num) {
+        if (num === 0) return 'zero';
+        const milhoes = Math.floor(num / 1000000);
+        const milhares = Math.floor((num % 1000000) / 1000);
+        const resto = num % 1000;
+        let parts = [];
+        if (milhoes) {
+          parts.push(milhoes === 1 ? 'um milhão' : `${ate999(milhoes)} milhões`);
+        }
+        if (milhares) {
+          if (milhares === 1) parts.push('mil');
+          else parts.push(`${ate999(milhares)} mil`);
+        }
+        if (resto) parts.push(ate999(resto));
+        return parts.join(parts.length > 1 ? ', ' : '');
+      }
+
+      let txt = `${inteiroExtenso(inteiro)} meticais`;
+      if (centavos > 0) txt += ` e ${inteiroExtenso(centavos)} centavos`;
+      return txt.toUpperCase();
+    }
+
+    function setInvoiceSaveButtonLabel() {
+      const btn = document.getElementById('fat_save_btn');
+      if (!btn) return;
+      btn.textContent = document.getElementById('fat_edit_id')?.value ? 'Atualizar fatura' : 'Guardar fatura';
+    }
 
     function buildInvoiceLines(containerId, lines, type) {
       const el = document.getElementById(containerId);
@@ -5304,9 +5368,11 @@
       document.getElementById('fat_data').value = new Date().toISOString().slice(0,10);
       document.getElementById('fat_nota').value = 'Nota:- Os valores indicados nesta fatura poderão sofrer alterações resultantes da taxa cambial até conclusão do processo';
       document.getElementById('fat_extenso').value = '';
+      document.getElementById('fat_edit_id').value = '';
       currentInvoiceExtraCounter = 0;
       document.querySelectorAll('.extra-invoice-line').forEach(x => x.remove());
       recalcInvoice();
+      setInvoiceSaveButtonLabel();
     }
 
     function applyInvoiceSourceData() {
@@ -5376,8 +5442,10 @@
       const encEl = document.getElementById('fat_subtotal_encargos'); if (encEl) encEl.textContent = formatMoney(subtotalEnc);
       const srvEl = document.getElementById('fat_subtotal_servicos'); if (srvEl) srvEl.textContent = formatMoney(subtotalSrv);
       setVal('fat_total', total.toFixed(2));
-      if (!document.getElementById('fat_extenso').value.trim()) {
-        document.getElementById('fat_extenso').value = `TOTAL DE ${formatMoney(total)} METICAIS`;
+      const extensoEl = document.getElementById('fat_extenso');
+      if (extensoEl && (!extensoEl.value.trim() || extensoEl.dataset.auto === '1')) {
+        extensoEl.value = numeroPorExtensoPt(total);
+        extensoEl.dataset.auto = '1';
       }
     }
 
@@ -5406,6 +5474,8 @@
         total_mt: total,
         extenso: document.getElementById('fat_extenso').value.trim(),
         nota: document.getElementById('fat_nota').value.trim(),
+        processado_por_nome: currentUserName || (currentUserRole === 'admin' ? 'Administrador' : 'Operador'),
+        processado_por_perfil: currentUserRole === 'admin' ? 'Administrador' : (currentUserRole === 'employee' ? 'Operador' : 'Cliente'),
         status_envio: 'rascunho'
       };
     }
@@ -5418,16 +5488,26 @@
           alert('Selecione o cliente e confirme o email.');
           return;
         }
-        const { data, error } = await withTimeout(
-          supabaseClient.from('faturas').insert(payload).select('*').single(),
-          12000
-        );
+        const editId = document.getElementById('fat_edit_id').value || '';
+        let data, error;
+        if (editId) {
+          ({ data, error } = await withTimeout(
+            supabaseClient.from('faturas').update(payload).eq('id', editId).select('*').single(),
+            12000
+          ));
+        } else {
+          ({ data, error } = await withTimeout(
+            supabaseClient.from('faturas').insert(payload).select('*').single(),
+            12000
+          ));
+        }
         if (error) {
           alert(error.message);
           return;
         }
-        alert('Fatura guardada com sucesso.');
-        faturasCache.unshift(data);
+        alert(editId ? 'Fatura atualizada com sucesso.' : 'Fatura guardada com sucesso.');
+        const idx = faturasCache.findIndex(x => x.id === data.id);
+        if (idx >= 0) faturasCache[idx] = data; else faturasCache.unshift(data);
         renderFaturasTable();
         if (sendAfter) {
           await sendInvoiceEmail(data.id);
@@ -5436,6 +5516,54 @@
       } catch (e) {
         alert(e.message || 'Erro ao guardar fatura.');
       }
+    }
+
+    function resetInvoiceForm() {
+      initInvoiceForm();
+      const formCard = document.getElementById('internal-faturas');
+      formCard?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function editInvoice(id) {
+      const f = faturasCache.find(x => x.id === id);
+      if (!f) return;
+      initInvoiceForm();
+      document.getElementById('fat_edit_id').value = f.id;
+      document.getElementById('fat_numero').value = f.numero_fatura || getNextInvoiceNumber();
+      document.getElementById('fat_data').value = f.data_fatura || new Date().toISOString().slice(0,10);
+      document.getElementById('fat_cliente').value = f.cliente_id || '';
+      document.getElementById('fat_email').value = f.cliente_email || '';
+      document.getElementById('fat_cotacao').value = f.cotacao_id || '';
+      document.getElementById('fat_processo').value = f.processo_id || '';
+      document.getElementById('fat_nuit').value = f.cliente_nuit || '';
+      document.getElementById('fat_referencia').value = f.referencia || '';
+      document.getElementById('fat_mercadoria').value = f.tipo_mercadoria || '';
+      document.getElementById('fat_origem').value = f.origem || '';
+      document.getElementById('fat_valor_origem').value = Number(f.valor_origem || 0);
+      document.getElementById('fat_cambio').value = Number(f.cambio || 0);
+      document.getElementById('fat_contravalor').value = Number(f.contravalor_mt || 0);
+      document.getElementById('fat_extenso').value = f.extenso || '';
+      document.getElementById('fat_extenso').dataset.auto = '0';
+      document.getElementById('fat_nota').value = f.nota || '';
+
+      const encargos = Array.isArray(f.encargos_json) ? f.encargos_json : [];
+      FATURA_ENCARGOS_FIXOS.forEach((name, idx) => {
+        const item = encargos.find(x => x.nome === name);
+        const el = document.getElementById(`enc_line_${idx}`);
+        if (el) el.value = Number(item?.valor || 0);
+      });
+
+      const servicos = Array.isArray(f.servicos_json) ? f.servicos_json : [];
+      FATURA_SERVICOS_FIXOS.forEach((name, idx) => {
+        const item = servicos.find(x => x.nome === name);
+        const el = document.getElementById(`srv_line_${idx}`);
+        if (el) el.value = Number(item?.valor || 0);
+      });
+      const extras = servicos.filter(x => !FATURA_SERVICOS_FIXOS.includes(x.nome));
+      extras.forEach(x => addInvoiceExtraLine(x.nome, x.valor));
+      recalcInvoice();
+      setInvoiceSaveButtonLabel();
+      document.getElementById('internal-faturas')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function invoiceHtmlFromRecord(fatura) {
@@ -5449,11 +5577,11 @@
             <div>
               <h1 style="margin:0;color:#BE001A;">Fatura</h1>
               <div style="margin-top:10px;font-size:14px;line-height:1.6;">
-                <strong>${escapeHtml(cfg.nome_empresa || 'EF & ASSOCIADOS, LDA')}</strong><br>
-                NUIT: ${escapeHtml(cfg.nuit || '400458796')}<br>
-                ${escapeHtml(cfg.endereco || 'Avª. Karl Marx nº 1881 - Maputo')}<br>
-                Tel: ${escapeHtml(cfg.telefone || '+258 845178833 / +258 865178833')}<br>
-                Email: ${escapeHtml(cfg.email || 'ef.edmilsonfumo@gmail.com')}
+                <strong>EF & ASSOCIADOS DESP ADUANEIROS LDA</strong><br>
+                NUIT: 400458796<br>
+                Avª. Karl Marx nº 1881 - Maputo<br>
+                Tel: +258 845178833 / +258 865178833<br>
+                Email: ef.edmilsonfumo@gmail.com
               </div>
             </div>
             <div style="text-align:right;font-size:14px;line-height:1.6;">
@@ -5502,7 +5630,12 @@
               Banco: ${escapeHtml(cfg.banco_nome || 'Standard Bank')}<br>
               Conta: ${escapeHtml(cfg.banco_conta || '1258956341001')}<br>
               NIB: ${escapeHtml(cfg.banco_nib || '000301250895634100135')}<br>
-              IBAN: ${escapeHtml(cfg.banco_iban || 'MZ59000301250895634100135')}
+              IBAN: MZ59000301250895634100135<br>
+              SWIFT: SBICMZMX
+            </div>
+            <div style="margin-top:14px;font-size:12px;color:#444;border-top:1px solid #ddd;padding-top:10px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+              <div><strong>Powered by EF Cargo Clear</strong></div>
+              <div>Processado por computador • ${escapeHtml(fatura.processado_por_perfil || '')} • ${escapeHtml(fatura.processado_por_nome || '')}</div>
             </div>
           </div>
         </div>
@@ -5535,6 +5668,7 @@
           <td>${formatMoney(f.total_mt || 0)}</td>
           <td>${escapeHtml(f.cliente_email || '')}</td>
           <td>
+            <button class="btn-mini" onclick="editInvoice('${f.id}')">Editar</button>
             <button class="btn-mini secondary" onclick="previewInvoice('${f.id}')">Ver</button>
             <button class="btn-mini info" onclick="downloadInvoicePdf('${f.id}')">Baixar</button>
             <button class="btn-mini green" onclick="sendInvoiceEmail('${f.id}')">Enviar</button>
@@ -5570,7 +5704,10 @@
       const html = invoiceHtmlFromRecord(f);
       await sendEmail(f.cliente_email, `Fatura ${f.numero_fatura}`, html);
       try {
-        await withTimeout(supabaseClient.from('faturas').update({ status_envio: 'enviado', enviado_at: new Date().toISOString() }).eq('id', id), 10000);
+        const stamp = new Date().toISOString();
+        await withTimeout(supabaseClient.from('faturas').update({ status_envio: 'enviado', enviado_at: stamp }).eq('id', id), 10000);
+        const idx = faturasCache.findIndex(x => x.id === id);
+        if (idx >= 0) { faturasCache[idx].status_envio = 'enviado'; faturasCache[idx].enviado_at = stamp; }
       } catch (_) {}
       alert('Fatura enviada ao cliente.');
       loadInternal();
