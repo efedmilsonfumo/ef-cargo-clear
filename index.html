@@ -666,6 +666,10 @@
       gap:18px;
     }
 
+    .invoice-line{display:grid;grid-template-columns:1fr 140px;gap:10px;align-items:center;margin-bottom:8px;}
+    .invoice-line .name{font-size:14px;color:#111827;font-weight:600;}
+    .invoice-preview-wrap{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;}
+
     .contact-card{
       border:1px solid var(--line);
       border-radius:20px;
@@ -988,6 +992,7 @@
               <button class="sidebar-btn" id="side-processos" onclick="showInternalTab('processos')">Processos</button>
               <button class="sidebar-btn" id="side-cotacoes" onclick="showInternalTab('cotacoes')">Pedidos de cotação</button>
               <button class="sidebar-btn" id="side-financeiro" onclick="showInternalTab('financeiro')">Financeiro</button>
+              <button class="sidebar-btn" id="side-faturas" onclick="showInternalTab('faturas')">Faturas</button>
               <button class="sidebar-btn" id="side-clientes" onclick="showInternalTab('clientes')">Clientes</button>
               <button class="sidebar-btn" id="side-equipa" onclick="showInternalTab('equipa')">Funcionários</button>
               <button class="sidebar-btn" id="side-mensagens" onclick="showInternalTab('mensagens')">
@@ -1198,6 +1203,131 @@
                     </thead>
                     <tbody id="financeiroTable"></tbody>
                   </table>
+                </div>
+              </div>
+            </div>
+
+            <div id="internal-faturas" class="tab-content hidden" style="margin-top:18px;">
+              <div class="card">
+                <div class="panel-head">
+                  <div>
+                    <h2 class="section-title">Faturação</h2>
+                    <div class="section-sub">Crie faturas com linhas pré-preenchidas, gere PDF e envie automaticamente ao cliente.</div>
+                  </div>
+                </div>
+
+                <div class="card" style="background:#fafafa;border-radius:20px;">
+                  <div class="grid grid-3">
+                    <div>
+                      <label>Número da fatura</label>
+                      <input id="fat_numero" readonly />
+                    </div>
+                    <div>
+                      <label>Data</label>
+                      <input id="fat_data" type="date" />
+                    </div>
+                    <div>
+                      <label>Referência</label>
+                      <input id="fat_referencia" placeholder="Ex: STH1256A2" />
+                    </div>
+                    <div>
+                      <label>Cliente</label>
+                      <select id="fat_cliente" onchange="applyInvoiceSourceData()"></select>
+                    </div>
+                    <div>
+                      <label>Email do cliente</label>
+                      <input id="fat_email" placeholder="email@cliente.com" />
+                    </div>
+                    <div>
+                      <label>Ligado à cotação</label>
+                      <select id="fat_cotacao" onchange="applyInvoiceSourceData()"></select>
+                    </div>
+                    <div>
+                      <label>Ligado ao processo</label>
+                      <select id="fat_processo" onchange="applyInvoiceSourceData()"></select>
+                    </div>
+                    <div>
+                      <label>NUIT</label>
+                      <input id="fat_nuit" />
+                    </div>
+                    <div>
+                      <label>Tipo Mercadoria</label>
+                      <input id="fat_mercadoria" />
+                    </div>
+                    <div>
+                      <label>Origem</label>
+                      <input id="fat_origem" />
+                    </div>
+                    <div>
+                      <label>Valor</label>
+                      <input id="fat_valor_origem" type="number" step="0.01" oninput="recalcInvoice()" />
+                    </div>
+                    <div>
+                      <label>Câmbio</label>
+                      <input id="fat_cambio" type="number" step="0.01" oninput="recalcInvoice()" />
+                    </div>
+                    <div>
+                      <label>Contravalor Mt</label>
+                      <input id="fat_contravalor" type="number" step="0.01" readonly />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="grid grid-2" style="margin-top:18px;">
+                  <div class="card" style="background:#fafafa;border-radius:20px;">
+                    <h3 style="margin-top:0;">Encargos</h3>
+                    <div id="fat_encargos"></div>
+                    <div class="small" style="margin-top:10px;">Sub-total encargos: <strong id="fat_subtotal_encargos">0,00</strong></div>
+                  </div>
+                  <div class="card" style="background:#fafafa;border-radius:20px;">
+                    <h3 style="margin-top:0;">Prestação de Serviços</h3>
+                    <div id="fat_servicos"></div>
+                    <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+                      <button class="btn-mini info" onclick="addInvoiceExtraLine()">Adicionar linha extra</button>
+                      <div class="small">Sub-total serviços: <strong id="fat_subtotal_servicos">0,00</strong></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card" style="background:#fafafa;border-radius:20px;">
+                  <div class="grid grid-3">
+                    <div>
+                      <label>Total Mt</label>
+                      <input id="fat_total" readonly />
+                    </div>
+                    <div>
+                      <label>Extenso</label>
+                      <input id="fat_extenso" />
+                    </div>
+                    <div>
+                      <label>Nota</label>
+                      <input id="fat_nota" value="Nota:- Os valores indicados nesta fatura poderão sofrer alterações resultantes da taxa cambial até conclusão do processo" />
+                    </div>
+                  </div>
+
+                  <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+                    <button class="btn" onclick="saveInvoice(false)">Guardar fatura</button>
+                    <button class="btn btn-outline" onclick="previewDraftInvoice()">Pré-visualizar</button>
+                  </div>
+                </div>
+
+                <div class="card" style="background:#fff;border-radius:20px;">
+                  <h3 style="margin-top:0;">Faturas geradas</h3>
+                  <div class="table-scroll">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Número</th>
+                          <th>Data</th>
+                          <th>Cliente</th>
+                          <th>Total</th>
+                          <th>Email</th>
+                          <th>Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody id="faturasTable"></tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1932,6 +2062,8 @@
     let currentUserName = "";
     let currentSelectedThread = "";
     let companyConfig = null;
+    let faturasCache = [];
+    let currentInvoiceExtraCounter = 0;
     let estadoDonutChart = null;
     let processosMesChart = null;
     let financeiroMesChart = null;
@@ -2226,6 +2358,7 @@
       if (tab === "processos") document.getElementById("side-processos")?.classList.add("active");
       if (tab === "cotacoes") document.getElementById("side-cotacoes")?.classList.add("active");
       if (tab === "financeiro") document.getElementById("side-financeiro")?.classList.add("active");
+      if (tab === "faturas") document.getElementById("side-faturas")?.classList.add("active");
       if (tab === "clientes") document.getElementById("side-clientes")?.classList.add("active");
       if (tab === "equipa") document.getElementById("side-equipa")?.classList.add("active");
       if (tab === "mensagens") document.getElementById("side-mensagens")?.classList.add("active");
@@ -2234,6 +2367,7 @@
       document.getElementById("internal-processos").classList.toggle("hidden", tab !== "processos");
       document.getElementById("internal-cotacoes").classList.toggle("hidden", tab !== "cotacoes");
       document.getElementById("internal-financeiro").classList.toggle("hidden", tab !== "financeiro");
+      document.getElementById("internal-faturas").classList.toggle("hidden", tab !== "faturas");
       document.getElementById("internal-clientes").classList.toggle("hidden", tab !== "clientes");
       document.getElementById("internal-equipa").classList.toggle("hidden", tab !== "equipa");
       document.getElementById("internal-mensagens").classList.toggle("hidden", tab !== "mensagens");
@@ -2267,11 +2401,13 @@
 
       document.getElementById("side-financeiro").style.display = isAdmin ? "block" : "none";
       document.getElementById("side-clientes").style.display = isAdmin ? "block" : "none";
+      document.getElementById("side-faturas").style.display = isAdmin ? "block" : "none";
       document.getElementById("side-equipa").style.display = isAdmin ? "block" : "none";
 
       if (isEmployee) {
         document.getElementById("internal-financeiro").classList.add("hidden");
         document.getElementById("internal-clientes").classList.add("hidden");
+        document.getElementById("internal-faturas").classList.add("hidden");
         document.getElementById("internal-equipa").classList.add("hidden");
         showInternalTab("processos");
       }
@@ -4740,14 +4876,15 @@
 
     async function loadInternal() {
       try {
-        const [{ data: clientes }, { data: processos }, { data: cotacoes }, { data: docs }, { data: equipa }, { data: tarefas }, { data: cotacaoDocs }] = await Promise.all([
+        const [{ data: clientes }, { data: processos }, { data: cotacoes }, { data: docs }, { data: equipa }, { data: tarefas }, { data: cotacaoDocs }, { data: faturas }] = await Promise.all([
           withTimeout(supabaseClient.from("clientes").select("*").order("created_at", { ascending: false }), 8000),
           withTimeout(supabaseClient.from("processos").select("*").order("created_at", { ascending: false }), 8000),
           withTimeout(supabaseClient.from("pedidos_cotacao").select("*").order("created_at", { ascending: false }), 8000),
           withTimeout(supabaseClient.from("processos_documentos").select("*").order("created_at", { ascending: false }), 8000),
           withTimeout(supabaseClient.from("equipa").select("*").order("created_at", { ascending: false }), 8000),
           withTimeout(supabaseClient.from("processos_tarefas").select("*").order("created_at", { ascending: false }), 8000),
-          withTimeout(supabaseClient.from("pedidos_cotacao_documentos").select("*").order("created_at", { ascending: false }), 8000)
+          withTimeout(supabaseClient.from("pedidos_cotacao_documentos").select("*").order("created_at", { ascending: false }), 8000),
+          withTimeout(supabaseClient.from("faturas").select("*").order("created_at", { ascending: false }), 8000)
         ]);
 
         clientesCache = clientes || [];
@@ -4757,6 +4894,7 @@
         equipaCache = equipa || [];
         tarefasCache = tarefas || [];
         cotacaoDocsCache = cotacaoDocs || [];
+        faturasCache = faturas || [];
 
         const totalCobrado = processosCache.reduce((s, p) => s + Number(p.valor_cobrado || 0), 0);
         const totalCustos = processosCache.reduce((s, p) => s + Number(p.custos_processo || 0), 0);
@@ -4780,6 +4918,8 @@
         renderFinanceiroTable();
         renderClientesGrid();
         renderEquipaGrid();
+        initInvoiceForm();
+        renderFaturasTable();
         if (currentProcessModalId) {
           openProcessModal(currentProcessModalId);
         }
@@ -5090,6 +5230,350 @@
         msg.textContent = e.message || "Erro ao enviar pedido.";
         msg.className = "message-err";
       }
+    }
+
+
+    const FATURA_ENCARGOS_FIXOS = [
+      "Guia de Emolumentos",
+      "Direitos Aduaneiros",
+      "Imposto de Consumo",
+      "Imposto Valor Acrescentado (I.V.A.)",
+      "T.S.A.",
+      "MCNET",
+      "CORRECÇÃO",
+      "ISENÇÃO",
+      "Certificado de Origem",
+      "CONTRA MARCA",
+      "Manuseamento (CFM)",
+      "Conhecimento de Embarque (O.E.)",
+      "CAUÇÃO (flat rack containers)",
+      "Armazenagem",
+      "Scanner (Certificação de Mercadoria)",
+      "FRETE",
+      "Registos (INATRO)"
+    ];
+
+    const FATURA_SERVICOS_FIXOS = [
+      "Declaração e Requerimentos",
+      "Deslocações",
+      "Comunicação",
+      "Impressos",
+      "Agência",
+      "Fotocópias",
+      "Classificação Pautal",
+      "DIVERSOS",
+      "IVA"
+    ];
+
+    function buildInvoiceLines(containerId, lines, type) {
+      const el = document.getElementById(containerId);
+      if (!el) return;
+      el.innerHTML = lines.map((name, idx) => `
+        <div class="invoice-line">
+          <div class="name">${name}</div>
+          <input type="number" step="0.01" data-line-type="${type}" data-line-name="${name}" id="${type}_line_${idx}" value="0" oninput="recalcInvoice()" />
+        </div>
+      `).join("");
+    }
+
+    function getNextInvoiceNumber() {
+      const year = new Date().getFullYear();
+      const seq = (faturasCache || []).filter(f => String(f.numero_fatura || "").includes(`/EF/${year}`)).length + 1;
+      return `${String(seq).padStart(3,'0')}/EF/${year}`;
+    }
+
+    function initInvoiceForm() {
+      if (!document.getElementById('fat_numero')) return;
+      buildInvoiceLines('fat_encargos', FATURA_ENCARGOS_FIXOS, 'enc');
+      buildInvoiceLines('fat_servicos', FATURA_SERVICOS_FIXOS, 'srv');
+
+      const clienteSel = document.getElementById('fat_cliente');
+      const cotSel = document.getElementById('fat_cotacao');
+      const procSel = document.getElementById('fat_processo');
+      if (clienteSel) {
+        clienteSel.innerHTML = '<option value="">Selecione</option>' + clientesCache.map(c => `<option value="${c.id}">${escapeHtml(c.nome || c.email || 'Cliente')}</option>`).join('');
+      }
+      if (cotSel) {
+        cotSel.innerHTML = '<option value="">Nenhuma</option>' + cotacoesCache.map(c => `<option value="${c.id}">${escapeHtml((c.numero_factura || 'Sem factura') + ' • ' + (c.nome_cliente || 'Cliente'))}</option>`).join('');
+      }
+      if (procSel) {
+        procSel.innerHTML = '<option value="">Nenhum</option>' + processosCache.map(p => `<option value="${p.id}">${escapeHtml((p.numero_processo || '-') + ' • ' + (p.importador_exportador || 'Cliente'))}</option>`).join('');
+      }
+
+      document.getElementById('fat_numero').value = getNextInvoiceNumber();
+      document.getElementById('fat_data').value = new Date().toISOString().slice(0,10);
+      document.getElementById('fat_nota').value = 'Nota:- Os valores indicados nesta fatura poderão sofrer alterações resultantes da taxa cambial até conclusão do processo';
+      document.getElementById('fat_extenso').value = '';
+      currentInvoiceExtraCounter = 0;
+      document.querySelectorAll('.extra-invoice-line').forEach(x => x.remove());
+      recalcInvoice();
+    }
+
+    function applyInvoiceSourceData() {
+      const clienteId = document.getElementById('fat_cliente')?.value || '';
+      const cotId = document.getElementById('fat_cotacao')?.value || '';
+      const procId = document.getElementById('fat_processo')?.value || '';
+      const cliente = clientesCache.find(c => c.id === clienteId);
+      const cot = cotacoesCache.find(c => c.id === cotId);
+      const proc = processosCache.find(p => p.id === procId);
+
+      if (cliente) {
+        document.getElementById('fat_email').value = cliente.email || '';
+        document.getElementById('fat_nuit').value = cliente.nuit || '';
+      }
+      if (cot) {
+        document.getElementById('fat_referencia').value = cot.numero_factura || '';
+        document.getElementById('fat_mercadoria').value = cot.descricao_mercadoria || '';
+        document.getElementById('fat_origem').value = cot.origem || '';
+        document.getElementById('fat_email').value = cot.email || document.getElementById('fat_email').value;
+        document.getElementById('fat_nuit').value = cot.nuit || document.getElementById('fat_nuit').value;
+      }
+      if (proc) {
+        document.getElementById('fat_referencia').value = proc.numero_factura || document.getElementById('fat_referencia').value;
+        document.getElementById('fat_origem').value = proc.pais_origem || document.getElementById('fat_origem').value;
+        document.getElementById('fat_mercadoria').value = proc.regime || document.getElementById('fat_mercadoria').value;
+      }
+      recalcInvoice();
+    }
+
+    function addInvoiceExtraLine(name='', value='0') {
+      const container = document.getElementById('fat_servicos');
+      if (!container) return;
+      currentInvoiceExtraCounter += 1;
+      const wrap = document.createElement('div');
+      wrap.className = 'invoice-line extra-invoice-line';
+      wrap.innerHTML = `
+        <input class="name" id="extra_name_${currentInvoiceExtraCounter}" placeholder="Linha extra" value="${String(name).replace(/"/g,'&quot;')}" style="font-weight:600;" />
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="number" step="0.01" id="extra_value_${currentInvoiceExtraCounter}" value="${value}" oninput="recalcInvoice()" />
+          <button class="btn-mini danger" type="button" onclick="this.closest('.extra-invoice-line').remove();recalcInvoice();">X</button>
+        </div>
+      `;
+      container.appendChild(wrap);
+    }
+
+    function collectInvoiceLines() {
+      const encargos = FATURA_ENCARGOS_FIXOS.map((name, idx) => ({ nome: name, valor: Number(document.getElementById(`enc_line_${idx}`)?.value || 0) }));
+      const servicos = FATURA_SERVICOS_FIXOS.map((name, idx) => ({ nome: name, valor: Number(document.getElementById(`srv_line_${idx}`)?.value || 0) }));
+      document.querySelectorAll('.extra-invoice-line').forEach(line => {
+        const name = line.querySelector('input[id^="extra_name_"]')?.value?.trim() || 'Linha extra';
+        const value = Number(line.querySelector('input[id^="extra_value_"]')?.value || 0);
+        servicos.push({ nome: name, valor: value });
+      });
+      return { encargos, servicos };
+    }
+
+    function recalcInvoice() {
+      const valor = Number(document.getElementById('fat_valor_origem')?.value || 0);
+      const cambio = Number(document.getElementById('fat_cambio')?.value || 0);
+      const contravalor = valor * cambio;
+      const { encargos, servicos } = collectInvoiceLines();
+      const subtotalEnc = encargos.reduce((s, x) => s + Number(x.valor || 0), 0);
+      const subtotalSrv = servicos.reduce((s, x) => s + Number(x.valor || 0), 0);
+      const total = subtotalEnc + subtotalSrv;
+      const setVal = (id, value) => { const el = document.getElementById(id); if (el) el.value = value; };
+      setVal('fat_contravalor', contravalor.toFixed(2));
+      const encEl = document.getElementById('fat_subtotal_encargos'); if (encEl) encEl.textContent = formatMoney(subtotalEnc);
+      const srvEl = document.getElementById('fat_subtotal_servicos'); if (srvEl) srvEl.textContent = formatMoney(subtotalSrv);
+      setVal('fat_total', total.toFixed(2));
+      if (!document.getElementById('fat_extenso').value.trim()) {
+        document.getElementById('fat_extenso').value = `TOTAL DE ${formatMoney(total)} METICAIS`;
+      }
+    }
+
+    function buildInvoicePayload() {
+      const clienteId = document.getElementById('fat_cliente').value || null;
+      const cliente = clientesCache.find(c => c.id === clienteId);
+      const { encargos, servicos } = collectInvoiceLines();
+      const total = Number(document.getElementById('fat_total').value || 0);
+      return {
+        numero_fatura: document.getElementById('fat_numero').value,
+        data_fatura: document.getElementById('fat_data').value || null,
+        cliente_id: clienteId,
+        cliente_nome: cliente?.nome || '',
+        cliente_email: document.getElementById('fat_email').value.trim(),
+        cliente_nuit: document.getElementById('fat_nuit').value.trim(),
+        cotacao_id: document.getElementById('fat_cotacao').value || null,
+        processo_id: document.getElementById('fat_processo').value || null,
+        referencia: document.getElementById('fat_referencia').value.trim(),
+        tipo_mercadoria: document.getElementById('fat_mercadoria').value.trim(),
+        origem: document.getElementById('fat_origem').value.trim(),
+        valor_origem: Number(document.getElementById('fat_valor_origem').value || 0),
+        cambio: Number(document.getElementById('fat_cambio').value || 0),
+        contravalor_mt: Number(document.getElementById('fat_contravalor').value || 0),
+        encargos_json: encargos,
+        servicos_json: servicos,
+        total_mt: total,
+        extenso: document.getElementById('fat_extenso').value.trim(),
+        nota: document.getElementById('fat_nota').value.trim(),
+        status_envio: 'rascunho'
+      };
+    }
+
+    async function saveInvoice(sendAfter) {
+      try {
+        recalcInvoice();
+        const payload = buildInvoicePayload();
+        if (!payload.cliente_nome || !payload.cliente_email) {
+          alert('Selecione o cliente e confirme o email.');
+          return;
+        }
+        const { data, error } = await withTimeout(
+          supabaseClient.from('faturas').insert(payload).select('*').single(),
+          12000
+        );
+        if (error) {
+          alert(error.message);
+          return;
+        }
+        alert('Fatura guardada com sucesso.');
+        faturasCache.unshift(data);
+        renderFaturasTable();
+        if (sendAfter) {
+          await sendInvoiceEmail(data.id);
+        }
+        initInvoiceForm();
+      } catch (e) {
+        alert(e.message || 'Erro ao guardar fatura.');
+      }
+    }
+
+    function invoiceHtmlFromRecord(fatura) {
+      const cfg = companyConfig || {};
+      const encargos = Array.isArray(fatura.encargos_json) ? fatura.encargos_json : [];
+      const servicos = Array.isArray(fatura.servicos_json) ? fatura.servicos_json : [];
+      const row = (name, val) => `<tr><td style="padding:6px 8px;border-bottom:1px solid #ddd;">${escapeHtml(name)}</td><td style="padding:6px 8px;border-bottom:1px solid #ddd;text-align:right;">${formatMoney(val)}</td></tr>`;
+      return `
+        <div style="font-family:Arial,sans-serif;color:#111;max-width:1000px;margin:0 auto;">
+          <div style="display:flex;justify-content:space-between;gap:20px;align-items:flex-start;">
+            <div>
+              <h1 style="margin:0;color:#BE001A;">Fatura</h1>
+              <div style="margin-top:10px;font-size:14px;line-height:1.6;">
+                <strong>${escapeHtml(cfg.nome_empresa || 'EF & ASSOCIADOS, LDA')}</strong><br>
+                NUIT: ${escapeHtml(cfg.nuit || '400458796')}<br>
+                ${escapeHtml(cfg.endereco || 'Avª. Karl Marx nº 1881 - Maputo')}<br>
+                Tel: ${escapeHtml(cfg.telefone || '+258 845178833 / +258 865178833')}<br>
+                Email: ${escapeHtml(cfg.email || 'ef.edmilsonfumo@gmail.com')}
+              </div>
+            </div>
+            <div style="text-align:right;font-size:14px;line-height:1.6;">
+              <strong>${escapeHtml(fatura.numero_fatura || '')}</strong><br>
+              Data: ${escapeHtml(fatura.data_fatura || '')}<br>
+              Refª: ${escapeHtml(fatura.referencia || '')}
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px;">
+            <div style="border:1px solid #ddd;border-radius:12px;padding:14px;">
+              <strong>Cliente</strong><br>
+              ${escapeHtml(fatura.cliente_nome || '')}<br>
+              NUIT: ${escapeHtml(fatura.cliente_nuit || '')}<br>
+              Tipo Mercad.: ${escapeHtml(fatura.tipo_mercadoria || '')}<br>
+              Origem: ${escapeHtml(fatura.origem || '')}
+            </div>
+            <div style="border:1px solid #ddd;border-radius:12px;padding:14px;">
+              <strong>Base de cálculo</strong><br>
+              Valor: ${formatMoney(fatura.valor_origem || 0)}<br>
+              Câmbio: ${formatMoney(fatura.cambio || 0)}<br>
+              Contravalor Mt: ${formatMoney(fatura.contravalor_mt || 0)}
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px;align-items:start;">
+            <div>
+              <h3>Encargos</h3>
+              <table style="width:100%;border-collapse:collapse;border:1px solid #ddd;border-radius:12px;overflow:hidden;">${encargos.map(x => row(x.nome, x.valor)).join('')}<tr><td style="padding:8px;font-weight:bold;">Sub-Total</td><td style="padding:8px;text-align:right;font-weight:bold;">${formatMoney(encargos.reduce((s,x)=>s+Number(x.valor||0),0))}</td></tr></table>
+            </div>
+            <div>
+              <h3>Prestação de Serviços</h3>
+              <table style="width:100%;border-collapse:collapse;border:1px solid #ddd;border-radius:12px;overflow:hidden;">${servicos.map(x => row(x.nome, x.valor)).join('')}<tr><td style="padding:8px;font-weight:bold;">Sub-Total</td><td style="padding:8px;text-align:right;font-weight:bold;">${formatMoney(servicos.reduce((s,x)=>s+Number(x.valor||0),0))}</td></tr></table>
+            </div>
+          </div>
+
+          <div style="margin-top:20px;border:1px solid #ddd;border-radius:12px;padding:14px;">
+            <div style="display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;">
+              <div><strong>Extenso:</strong><br>${escapeHtml(fatura.extenso || '')}</div>
+              <div style="font-size:20px;"><strong>Total Mt: ${formatMoney(fatura.total_mt || 0)}</strong></div>
+            </div>
+            <div style="margin-top:14px;font-size:13px;">${escapeHtml(fatura.nota || '')}</div>
+            <div style="margin-top:14px;font-size:13px;">
+              <strong>Depósitos e Transferências Bancárias:</strong><br>
+              Titular: ${escapeHtml(cfg.banco_titular || 'EF & ASSOCIADOS DESP ADUANEIROS LDA')}<br>
+              Banco: ${escapeHtml(cfg.banco_nome || 'Standard Bank')}<br>
+              Conta: ${escapeHtml(cfg.banco_conta || '1258956341001')}<br>
+              NIB: ${escapeHtml(cfg.banco_nib || '000301250895634100135')}<br>
+              IBAN: ${escapeHtml(cfg.banco_iban || 'MZ59000301250895634100135')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function previewDraftInvoice() {
+      recalcInvoice();
+      const payload = buildInvoicePayload();
+      const fake = { ...payload };
+      const w = window.open('', '_blank');
+      w.document.write(`<html><head><title>${fake.numero_fatura}</title></head><body style="margin:20px;">${invoiceHtmlFromRecord(fake)}</body></html>`);
+      w.document.close();
+    }
+
+    function renderFaturasTable() {
+      const tbody = document.getElementById('faturasTable');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      if (!faturasCache.length) {
+        tbody.innerHTML = '<tr><td colspan="6">Nenhuma fatura gerada ainda.</td></tr>';
+        return;
+      }
+      faturasCache.forEach(f => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(f.numero_fatura || '')}</strong></td>
+          <td>${escapeHtml(f.data_fatura || '')}</td>
+          <td>${escapeHtml(f.cliente_nome || '')}</td>
+          <td>${formatMoney(f.total_mt || 0)}</td>
+          <td>${escapeHtml(f.cliente_email || '')}</td>
+          <td>
+            <button class="btn-mini secondary" onclick="previewInvoice('${f.id}')">Ver</button>
+            <button class="btn-mini info" onclick="downloadInvoicePdf('${f.id}')">Baixar</button>
+            <button class="btn-mini green" onclick="sendInvoiceEmail('${f.id}')">Enviar</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function previewInvoice(id) {
+      const f = faturasCache.find(x => x.id === id);
+      if (!f) return;
+      const w = window.open('', '_blank');
+      w.document.write(`<html><head><title>${f.numero_fatura}</title></head><body style="margin:20px;">${invoiceHtmlFromRecord(f)}</body></html>`);
+      w.document.close();
+    }
+
+    function downloadInvoicePdf(id) {
+      const f = faturasCache.find(x => x.id === id);
+      if (!f) return;
+      const w = window.open('', '_blank');
+      w.document.write(`<html><head><title>${f.numero_fatura}</title></head><body style="margin:20px;">${invoiceHtmlFromRecord(f)}<script>window.onload=()=>window.print();<\/script></body></html>`);
+      w.document.close();
+    }
+
+    async function sendInvoiceEmail(id) {
+      const f = faturasCache.find(x => x.id === id);
+      if (!f) return;
+      if (!f.cliente_email) {
+        alert('Esta fatura não tem email do cliente.');
+        return;
+      }
+      const html = invoiceHtmlFromRecord(f);
+      await sendEmail(f.cliente_email, `Fatura ${f.numero_fatura}`, html);
+      try {
+        await withTimeout(supabaseClient.from('faturas').update({ status_envio: 'enviado', enviado_at: new Date().toISOString() }).eq('id', id), 10000);
+      } catch (_) {}
+      alert('Fatura enviada ao cliente.');
+      loadInternal();
     }
 
     window.addEventListener("load", async () => {
