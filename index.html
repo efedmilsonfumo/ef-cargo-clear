@@ -694,55 +694,21 @@
       color:var(--muted);
     }
 
-
-    .dashboard-grid{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:18px;
-      margin-top:18px;
-    }
-
-    .chart-card{
-      background:linear-gradient(180deg,#ffffff 0%, #fcfcfc 100%);
-      border:1px solid var(--line);
-      border-radius:22px;
-      box-shadow:var(--shadow-soft);
-      padding:18px;
-      min-height:360px;
-    }
-
-    .chart-card canvas{
-      width:100% !important;
-      height:280px !important;
-    }
-
-    .activity-feed{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      max-height:360px;
-      overflow:auto;
-      padding-right:4px;
-    }
-
-    .activity-item{
-      border:1px solid var(--line);
-      border-radius:16px;
-      background:#fff;
-      padding:12px 14px;
-    }
-
-    .activity-title{
-      font-weight:700;
-      color:#111827;
-      margin-bottom:4px;
-      font-size:14px;
-    }
-
-    .activity-meta{
-      font-size:12px;
-      color:var(--muted);
-    }
+    .dashboard-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+    .chart-card{padding:18px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,#fff 0%, #fcfcfc 100%);box-shadow:var(--shadow-soft)}
+    .chart-title{margin:0 0 12px;font-size:16px;font-weight:800;color:#111827}
+    .chart-wrap{position:relative;min-height:280px}
+    .activity-feed{display:flex;flex-direction:column;gap:10px}
+    .activity-item{padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff}
+    .activity-title{font-weight:700;color:#111827;margin-bottom:4px}
+    .activity-meta{font-size:12px;color:var(--muted)}
+    .alerts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .alert-item{padding:14px;border-radius:16px;border:1px solid #fde68a;background:#fffbeb}
+    .alert-item strong{display:block;margin-bottom:6px;color:#92400e}
+    .alert-item.info{border-color:#bfdbfe;background:#eff6ff}
+    .alert-item.info strong{color:#1d4ed8}
+    .alert-item.good{border-color:#bbf7d0;background:#f0fdf4}
+    .alert-item.good strong{color:#166534}
 
     hr{border:none;border-top:1px solid var(--line)}
 
@@ -755,7 +721,7 @@
     @media (max-width:1100px){
       .grid-5{grid-template-columns:repeat(2,1fr)}
       .grid-4{grid-template-columns:repeat(2,1fr)}
-      .grid-3,.detail-grid,.grid-2,.stat-row,.client-meta,.dash-grid,.dashboard-grid{grid-template-columns:1fr}
+      .grid-3,.detail-grid,.grid-2,.stat-row,.client-meta,.dash-grid,.dashboard-grid,.alerts-grid{grid-template-columns:1fr}
     }
 
     @media (max-width:640px){
@@ -937,62 +903,43 @@
               <div class="kpi"><div class="kpi-title">Margem total</div><div class="kpi-value" id="margemTotal">0</div></div>
             </div>
 
-
             <div id="internal-dashboard" class="tab-content" style="margin-top:18px;">
               <div class="card">
                 <div class="panel-head">
                   <div>
                     <h2 class="section-title">Dashboard Analytics</h2>
-                    <div class="section-sub">Visão rápida da operação com gráficos e atividade recente em tempo real.</div>
+                    <div class="section-sub">Visão geral do negócio com gráficos, alertas e atividade recente.</div>
                   </div>
                 </div>
 
-                <div class="grid grid-4">
+                <div class="grid grid-4" style="margin-bottom:18px;">
                   <div class="kpi"><div class="kpi-title">Total de processos</div><div class="kpi-value" id="dashTotalProcessos">0</div></div>
                   <div class="kpi"><div class="kpi-title">Liberados / Entregues</div><div class="kpi-value" id="dashLiberados">0</div></div>
-                  <div class="kpi"><div class="kpi-title">Pendências de docs</div><div class="kpi-value" id="dashPendencias">0</div></div>
-                  <div class="kpi"><div class="kpi-title">Margem total</div><div class="kpi-value" id="dashMargem">0</div></div>
+                  <div class="kpi"><div class="kpi-title">Pendências de docs</div><div class="kpi-value" id="dashPendenciasDocs">0</div></div>
+                  <div class="kpi"><div class="kpi-title">Margem total</div><div class="kpi-value" id="dashMargemTotal">0</div></div>
+                </div>
+
+                <div class="chart-card" style="margin-bottom:18px;">
+                  <div class="chart-title">⚠️ Alertas inteligentes</div>
+                  <div id="dashboardAlerts" class="alerts-grid"></div>
                 </div>
 
                 <div class="dashboard-grid">
                   <div class="chart-card">
-                    <div class="panel-head">
-                      <div>
-                        <h3 style="margin:0;">Distribuição por estado</h3>
-                        <div class="small">Processos por fase atual</div>
-                      </div>
-                    </div>
-                    <canvas id="dashboardDonutChart"></canvas>
+                    <div class="chart-title">Distribuição por estado</div>
+                    <div class="chart-wrap"><canvas id="estadoDonutChart"></canvas></div>
                   </div>
-
                   <div class="chart-card">
-                    <div class="panel-head">
-                      <div>
-                        <h3 style="margin:0;">Processos por mês</h3>
-                        <div class="small">Últimos 6 meses</div>
-                      </div>
-                    </div>
-                    <canvas id="dashboardBarChart"></canvas>
+                    <div class="chart-title">Processos por mês</div>
+                    <div class="chart-wrap"><canvas id="processosMesChart"></canvas></div>
                   </div>
-
                   <div class="chart-card">
-                    <div class="panel-head">
-                      <div>
-                        <h3 style="margin:0;">Cobrado vs custos</h3>
-                        <div class="small">Financeiro mensal dos últimos 6 meses</div>
-                      </div>
-                    </div>
-                    <canvas id="dashboardRevenueChart"></canvas>
+                    <div class="chart-title">Cobrado vs custos</div>
+                    <div class="chart-wrap"><canvas id="financeiroMesChart"></canvas></div>
                   </div>
-
                   <div class="chart-card">
-                    <div class="panel-head">
-                      <div>
-                        <h3 style="margin:0;">Atividade recente</h3>
-                        <div class="small">Últimas ações e movimentos do sistema</div>
-                      </div>
-                    </div>
-                    <div id="dashboardActivityFeed" class="activity-feed"></div>
+                    <div class="chart-title">Atividade recente</div>
+                    <div id="recentActivityFeed" class="activity-feed"></div>
                   </div>
                 </div>
               </div>
@@ -1586,6 +1533,25 @@
     </div>
   </div>
 
+
+  <footer style="margin-top:40px;padding:20px;text-align:center;color:#666;font-size:13px;">
+    © 2026 EF Cargo Clear — Todos os direitos reservados<br>
+    EF & Associados – Despachantes Aduaneiros, Lda<br><br>
+    <span onclick="openSobre()" style="cursor:pointer;color:#BE001A;">Sobre Nós</span> |
+    <span onclick="openTermos()" style="cursor:pointer;color:#BE001A;">Termos</span> |
+    <span onclick="openPrivacidade()" style="cursor:pointer;color:#BE001A;">Privacidade</span>
+  </footer>
+
+  <div id="modalLegal" class="modal-backdrop" style="z-index:1100;">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 id="modalTitle" class="section-title" style="margin:0;"></h2>
+        <button class="btn-mini secondary" onclick="closeModal()">Fechar</button>
+      </div>
+      <div id="modalContent" class="small" style="font-size:14px;line-height:1.7;color:#374151;"></div>
+    </div>
+  </div>
+
   <script>
     const SUPABASE_URL = "https://fefkyzutcouoklbiwybs.supabase.co";
     const SUPABASE_KEY = "sb_publishable_uOowmqEhVdq8h0uzagYPEA_DXXpGOgA";
@@ -1624,9 +1590,9 @@
     let currentUserName = "";
     let currentSelectedThread = "";
     let companyConfig = null;
-    let dashboardDonutChart = null;
-    let dashboardBarChart = null;
-    let dashboardRevenueChart = null;
+    let estadoDonutChart = null;
+    let processosMesChart = null;
+    let financeiroMesChart = null;
 
     document.addEventListener("DOMContentLoaded", () => {
       const facturaInput = document.getElementById("cot_factura_file");
@@ -1805,16 +1771,44 @@
       }
     }
 
+
+    function openModal(title, content){
+      document.getElementById("modalTitle").innerText = title;
+      document.getElementById("modalContent").innerHTML = content;
+      document.getElementById("modalLegal").style.display = "flex";
+    }
+
+    function closeModal(){
+      document.getElementById("modalLegal").style.display = "none";
+    }
+
+    function openSobre(){
+      openModal("Sobre Nós", `
+        <p><strong>EF Cargo Clear</strong> é a plataforma digital da EF & Associados – Despachantes Aduaneiros, Lda, criada para simplificar o acompanhamento de processos aduaneiros.</p>
+        <p>A plataforma permite submissão de cotações, consulta de processos, troca de mensagens e gestão documental com mais transparência e controlo.</p>
+      `);
+    }
+
+    function openTermos(){
+      openModal("Termos de Uso", `
+        <p>Ao utilizar esta plataforma, o utilizador compromete-se a fornecer dados verdadeiros, proteger os seus acessos e usar o sistema de forma legal e responsável.</p>
+        <p>A EF Cargo Clear pode suspender acessos em caso de uso indevido e não se responsabiliza por atrasos causados por terceiros ou entidades externas.</p>
+      `);
+    }
+
+    function openPrivacidade(){
+      openModal("Política de Privacidade", `
+        <p>Os dados recolhidos são utilizados apenas para gestão de processos, comunicação com o cliente e melhoria do serviço.</p>
+        <p>Os dados não são vendidos a terceiros e são tratados com medidas adequadas de segurança.</p>
+      `);
+    }
+
     function setWelcomeMessage() {
       const el = document.getElementById("welcome");
       if (!el) return;
-      if (currentUserRole === "admin") {
-        el.innerHTML = "👑 Bem-vindo, <strong>Edmilson</strong> — painel de controlo total da operação.";
-      } else if (currentUserRole === "employee") {
-        el.innerHTML = "🧑‍💼 Bem-vindo, <strong>" + (currentUserName || "Funcionário") + "</strong> — gestão de processos ativa.";
-      } else {
-        el.innerHTML = "📦 Bem-vindo ao portal EF Cargo Clear — acompanhe os seus processos em tempo real.";
-      }
+      if (currentUserRole === "admin") el.innerHTML = "👑 Bem-vindo, <strong>Edmilson</strong> — painel de controlo total da operação.";
+      else if (currentUserRole === "employee") el.innerHTML = `🧑‍💼 Bem-vindo, <strong>${currentUserName || "Funcionário"}</strong> — gestão de processos ativa.`;
+      else el.innerHTML = "📦 Bem-vindo ao portal EF Cargo Clear — acompanhe os seus processos em tempo real.";
     }
 
     function badgeEstado(estado) {
@@ -1913,9 +1907,6 @@
       if (tab === "mensagens") {
         loadInternalMessages();
       }
-      if (tab === "dashboard") {
-        renderDashboardAnalytics();
-      }
     }
 
     function showClientTab(tab, btn) {
@@ -1948,9 +1939,8 @@
         document.getElementById("internal-financeiro").classList.add("hidden");
         document.getElementById("internal-clientes").classList.add("hidden");
         document.getElementById("internal-equipa").classList.add("hidden");
+        showInternalTab("processos");
       }
-
-      showInternalTab("dashboard");
     }
 
     async function registerClient() {
@@ -2096,10 +2086,10 @@
         currentUserRole = "admin";
         currentUserName = "Administrador";
         document.getElementById("welcome").textContent = "Edmilson Fumo • administrador";
-        setWelcomeMessage();
         document.getElementById("internalView").classList.remove("hidden");
         document.getElementById("clientView").classList.add("hidden");
         applyInternalPermissions();
+        setWelcomeMessage();
         setTimeout(async () => {
           await loadInternal();
           await loadInternalMessages();
@@ -2117,10 +2107,10 @@
           currentUserRole = "employee";
           currentUserName = membro.nome || "Funcionário";
           document.getElementById("welcome").textContent = `${membro.nome || "Funcionário"} • ${membro.nivel || "operador"}`;
-          setWelcomeMessage();
           document.getElementById("internalView").classList.remove("hidden");
           document.getElementById("clientView").classList.add("hidden");
           applyInternalPermissions();
+          setWelcomeMessage();
           setTimeout(async () => {
             await loadInternal();
             await loadInternalMessages();
@@ -2887,6 +2877,204 @@
       });
     }
 
+    function getLastSixMonthsLabels() {
+      const labels = [];
+      const now = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        labels.push(d.toLocaleDateString("pt-PT", { month: "short", year: "2-digit" }));
+      }
+      return labels;
+    }
+
+    function getMonthIndexMap() {
+      const map = new Map();
+      const now = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        map.set(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, "0")}`, 5 - i);
+      }
+      return map;
+    }
+
+    function parsePossibleDate(value) {
+      if (!value) return null;
+      const d = new Date(value);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    function getRecentActivities() {
+      const processActivities = processosCache.slice(0, 8).map(p => ({
+        type: 'processo',
+        title: `Processo ${p.numero_processo || '-'} • ${p.estado || 'Sem estado'}`,
+        meta: `${p.importador_exportador || '-'} • Factura ${p.numero_factura || '-'}`,
+        date: p.updated_at || p.created_at || null
+      }));
+
+      const cotacaoActivities = cotacoesCache.slice(0, 8).map(c => ({
+        type: 'cotacao',
+        title: `Cotação ${c.numero_factura || '-'} • ${c.estado || 'recebido'}`,
+        meta: `${c.nome_cliente || '-'} • ${c.tipo_operacao || '-'}`,
+        date: c.created_at || null
+      }));
+
+      return [...processActivities, ...cotacaoActivities]
+        .sort((a,b) => new Date(b.date || 0) - new Date(a.date || 0))
+        .slice(0, 8);
+    }
+
+    function buildDashboardAlerts() {
+      const alerts = [];
+      const now = new Date();
+
+      const docsPendentes = processosCache.filter(p => (p.documentos_em_falta || '').trim() !== '');
+      if (docsPendentes.length) alerts.push({type:'warn', title:'Documentos em falta', text:`${docsPendentes.length} processo(s) com documentação pendente.`});
+
+      const parados = processosCache.filter(p => {
+        const d = parsePossibleDate(p.updated_at || p.created_at);
+        if (!d) return false;
+        const dias = (now - d) / 86400000;
+        return dias > 5 && !['Liberado','Entregue'].includes(p.estado || '');
+      });
+      if (parados.length) alerts.push({type:'warn', title:'Processos parados', text:`${parados.length} processo(s) sem atualização há mais de 5 dias.`});
+
+      const margemNegativa = processosCache.filter(p => Number(p.margem_lucro || 0) < 0);
+      if (margemNegativa.length) alerts.push({type:'warn', title:'Margem negativa', text:`${margemNegativa.length} processo(s) com margem abaixo de zero.`});
+
+      const novasCotacoes = cotacoesCache.filter(c => !c.convertido_em_processo && String(c.estado || '').toLowerCase() !== 'convertido em processo');
+      if (novasCotacoes.length) alerts.push({type:'info', title:'Cotações por converter', text:`${novasCotacoes.length} cotação(ões) ainda por converter em processo.`});
+
+      const unread = mensagensCache.filter(m => !m.lido_interno && (m.remetente || '') !== 'interno');
+      if (unread.length) alerts.push({type:'info', title:'Mensagens não lidas', text:`${unread.length} mensagem(ns) aguardam leitura interna.`});
+
+      const proximosPrazos = processosCache.filter(p => {
+        const d = parsePossibleDate(p.prazo);
+        if (!d) return false;
+        const dias = (d - now) / 86400000;
+        return dias >= 0 && dias <= 3 && !['Liberado','Entregue'].includes(p.estado || '');
+      });
+      if (proximosPrazos.length) alerts.push({type:'info', title:'Prazos próximos', text:`${proximosPrazos.length} processo(s) com prazo nos próximos 3 dias.`});
+
+      const recentThreshold = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 45);
+      const activeClientEmails = new Set([
+        ...cotacoesCache.filter(c => c.created_at && new Date(c.created_at) >= recentThreshold).map(c => (c.email || '').toLowerCase()),
+        ...processosCache.filter(p => (p.created_at || p.updated_at) && new Date(p.updated_at || p.created_at) >= recentThreshold).map(p => (p.cliente_email || '').toLowerCase())
+      ]);
+      const inactiveClients = clientesCache.filter(c => c.email && !activeClientEmails.has(String(c.email).toLowerCase()));
+      if (inactiveClients.length) alerts.push({type:'info', title:'Clientes inativos', text:`${inactiveClients.length} cliente(s) sem atividade nos últimos 45 dias.`});
+
+      const topMap = {};
+      processosCache.forEach(p => {
+        const k = p.importador_exportador || 'Sem cliente';
+        topMap[k] = (topMap[k] || 0) + 1;
+      });
+      const topEntry = Object.entries(topMap).sort((a,b)=>b[1]-a[1])[0];
+      if (topEntry) alerts.push({type:'good', title:'Cliente líder', text:`${topEntry[0]} lidera com ${topEntry[1]} processo(s).`});
+
+      if (!alerts.length) alerts.push({type:'good', title:'Tudo sob controlo', text:'Nenhum alerta crítico no momento.'});
+      return alerts.slice(0, 8);
+    }
+
+    function renderInternalDashboard() {
+      const totalProcessos = processosCache.length;
+      const liberados = processosCache.filter(p => ['Liberado','Entregue'].includes(p.estado || '')).length;
+      const docsPendentes = processosCache.filter(p => (p.documentos_em_falta || '').trim() !== '').length;
+      const margemTotal = processosCache.reduce((sum,p) => sum + Number(p.margem_lucro || 0), 0);
+
+      const el = (id) => document.getElementById(id);
+      if (el('dashTotalProcessos')) el('dashTotalProcessos').textContent = totalProcessos;
+      if (el('dashLiberados')) el('dashLiberados').textContent = liberados;
+      if (el('dashPendenciasDocs')) el('dashPendenciasDocs').textContent = docsPendentes;
+      if (el('dashMargemTotal')) el('dashMargemTotal').textContent = formatMoney(margemTotal);
+
+      const estadoMap = {};
+      processosCache.forEach(p => {
+        const k = p.estado || 'Sem estado';
+        estadoMap[k] = (estadoMap[k] || 0) + 1;
+      });
+      const labelsEstado = Object.keys(estadoMap);
+      const dataEstado = Object.values(estadoMap);
+      const colors = labelsEstado.map(label => {
+        const t = String(label).toLowerCase();
+        if (t.includes('liberado') || t.includes('entregue')) return '#16a34a';
+        if (t.includes('análise') || t.includes('submetido') || t.includes('desembaraço')) return '#0284c7';
+        return '#dc2626';
+      });
+
+      if (estadoDonutChart) estadoDonutChart.destroy();
+      const donutCanvas = document.getElementById('estadoDonutChart');
+      if (donutCanvas) {
+        estadoDonutChart = new Chart(donutCanvas, {
+          type: 'doughnut',
+          data: { labels: labelsEstado, datasets: [{ data: dataEstado, backgroundColor: colors }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+      }
+
+      const labelsMes = getLastSixMonthsLabels();
+      const map = getMonthIndexMap();
+      const processosMes = [0,0,0,0,0,0];
+      const cobradoMes = [0,0,0,0,0,0];
+      const custosMes = [0,0,0,0,0,0];
+
+      processosCache.forEach(p => {
+        const d = parsePossibleDate(p.created_at);
+        if (!d) return;
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        const idx = map.get(key);
+        if (idx === undefined) return;
+        processosMes[idx] += 1;
+        cobradoMes[idx] += Number(p.valor_cobrado || 0);
+        custosMes[idx] += Number(p.custos_processo || 0);
+      });
+
+      if (processosMesChart) processosMesChart.destroy();
+      const procCanvas = document.getElementById('processosMesChart');
+      if (procCanvas) {
+        processosMesChart = new Chart(procCanvas, {
+          type: 'bar',
+          data: { labels: labelsMes, datasets: [{ label: 'Processos', data: processosMes, backgroundColor: '#0284c7' }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+      }
+
+      if (financeiroMesChart) financeiroMesChart.destroy();
+      const finCanvas = document.getElementById('financeiroMesChart');
+      if (finCanvas) {
+        financeiroMesChart = new Chart(finCanvas, {
+          type: 'bar',
+          data: { labels: labelsMes, datasets: [
+            { label: 'Cobrado', data: cobradoMes, backgroundColor: '#16a34a' },
+            { label: 'Custos', data: custosMes, backgroundColor: '#dc2626' }
+          ] },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      }
+
+      const feed = document.getElementById('recentActivityFeed');
+      if (feed) {
+        const items = getRecentActivities();
+        feed.innerHTML = items.length ? items.map(item => `
+          <div class="activity-item">
+            <div class="activity-title">${item.title}</div>
+            <div>${item.meta}</div>
+            <div class="activity-meta">${formatDate(item.date)}</div>
+          </div>
+        `).join('') : '<div class="empty-chat">Sem atividade recente.</div>';
+      }
+
+      const alertsBox = document.getElementById('dashboardAlerts');
+      if (alertsBox) {
+        const alerts = buildDashboardAlerts();
+        alertsBox.innerHTML = alerts.map(a => `
+          <div class="alert-item ${a.type === 'info' ? 'info' : a.type === 'good' ? 'good' : ''}">
+            <strong>${a.title}</strong>
+            <div>${a.text}</div>
+          </div>
+        `).join('');
+      }
+    }
+
     function renderProcessosTable() {
       const procList = getFilteredProcessos();
       const docsByProcess = {};
@@ -3023,192 +3211,6 @@
         `;
         ftbody.appendChild(tr);
       });
-    }
-
-
-    function getLastSixMonthsKeys() {
-      const months = [];
-      const now = new Date();
-      for (let i = 5; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-        const label = d.toLocaleDateString("pt-PT", { month: "short", year: "2-digit" });
-        months.push({ key, label });
-      }
-      return months;
-    }
-
-    function getProcessMonthKey(item) {
-      const raw = item?.created_at || item?.prazo || null;
-      if (!raw) return "";
-      const d = new Date(raw);
-      if (isNaN(d.getTime())) return "";
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    }
-
-    function normaliseEstadoLabel(estado) {
-      const e = String(estado || "Sem estado").trim();
-      if (!e) return "Sem estado";
-      return e;
-    }
-
-    function destroyDashboardCharts() {
-      if (dashboardDonutChart) { dashboardDonutChart.destroy(); dashboardDonutChart = null; }
-      if (dashboardBarChart) { dashboardBarChart.destroy(); dashboardBarChart = null; }
-      if (dashboardRevenueChart) { dashboardRevenueChart.destroy(); dashboardRevenueChart = null; }
-    }
-
-    function renderDashboardAnalytics() {
-      const totalProcessos = processosCache.length;
-      const liberados = processosCache.filter(p => ["Liberado", "Entregue"].includes(p.estado)).length;
-      const pendencias = processosCache.filter(p => p.documentos_em_falta && p.documentos_em_falta.trim() !== "").length;
-      const margem = processosCache.reduce((s, p) => s + Number(p.margem_lucro || 0), 0);
-
-      const totalEl = document.getElementById("dashTotalProcessos");
-      const libEl = document.getElementById("dashLiberados");
-      const pendEl = document.getElementById("dashPendencias");
-      const margEl = document.getElementById("dashMargem");
-      if (totalEl) totalEl.textContent = totalProcessos;
-      if (libEl) libEl.textContent = liberados;
-      if (pendEl) pendEl.textContent = pendencias;
-      if (margEl) margEl.textContent = formatMoney(margem);
-
-      destroyDashboardCharts();
-
-      const stateMap = {};
-      processosCache.forEach(p => {
-        const estado = normaliseEstadoLabel(p.estado);
-        stateMap[estado] = (stateMap[estado] || 0) + 1;
-      });
-
-      const donutCanvas = document.getElementById("dashboardDonutChart");
-      if (donutCanvas && window.Chart) {
-        const labels = Object.keys(stateMap);
-        const values = Object.values(stateMap);
-        dashboardDonutChart = new Chart(donutCanvas, {
-          type: "doughnut",
-          data: {
-            labels,
-            datasets: [{
-              data: values,
-              backgroundColor: labels.map(label => {
-                const l = label.toLowerCase();
-                if (l.includes("liberado") || l.includes("entregue")) return "#16a34a";
-                if (l.includes("análise") || l.includes("submetido") || l.includes("desembaraço") || l.includes("recebido")) return "#2563eb";
-                return "#dc2626";
-              }),
-              borderWidth: 0
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { position: "bottom" } }
-          }
-        });
-      }
-
-      const months = getLastSixMonthsKeys();
-      const processMonthCounts = Object.fromEntries(months.map(m => [m.key, 0]));
-      processosCache.forEach(p => {
-        const key = getProcessMonthKey(p);
-        if (key in processMonthCounts) processMonthCounts[key]++;
-      });
-
-      const barCanvas = document.getElementById("dashboardBarChart");
-      if (barCanvas && window.Chart) {
-        dashboardBarChart = new Chart(barCanvas, {
-          type: "bar",
-          data: {
-            labels: months.map(m => m.label),
-            datasets: [{
-              label: "Processos",
-              data: months.map(m => processMonthCounts[m.key]),
-              backgroundColor: "#2563eb",
-              borderRadius: 8
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
-            plugins: { legend: { display: false } }
-          }
-        });
-      }
-
-      const revenueMap = Object.fromEntries(months.map(m => [m.key, { cobrado: 0, custos: 0 }]));
-      processosCache.forEach(p => {
-        const key = getProcessMonthKey(p);
-        if (key in revenueMap) {
-          revenueMap[key].cobrado += Number(p.valor_cobrado || 0);
-          revenueMap[key].custos += Number(p.custos_processo || 0);
-        }
-      });
-
-      const revenueCanvas = document.getElementById("dashboardRevenueChart");
-      if (revenueCanvas && window.Chart) {
-        dashboardRevenueChart = new Chart(revenueCanvas, {
-          type: "bar",
-          data: {
-            labels: months.map(m => m.label),
-            datasets: [
-              {
-                label: "Valor cobrado",
-                data: months.map(m => revenueMap[m.key].cobrado),
-                backgroundColor: "#16a34a",
-                borderRadius: 8
-              },
-              {
-                label: "Custos",
-                data: months.map(m => revenueMap[m.key].custos),
-                backgroundColor: "#dc2626",
-                borderRadius: 8
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: { y: { beginAtZero: true } },
-            plugins: { legend: { position: "bottom" } }
-          }
-        });
-      }
-
-      const feed = document.getElementById("dashboardActivityFeed");
-      if (feed) {
-        const recent = [
-          ...processosCache.slice(0, 5).map(p => ({
-            title: `Processo ${p.numero_processo || "-"}`,
-            subtitle: `${p.importador_exportador || "Cliente"} • ${p.estado || "Sem estado"}`,
-            date: formatDate(p.created_at),
-            type: "processo"
-          })),
-          ...cotacoesCache.slice(0, 5).map(c => ({
-            title: `Cotação ${c.numero_factura || "-"}`,
-            subtitle: `${c.nome_cliente || "Cliente"} • ${c.estado || "recebido"}`,
-            date: formatDate(c.created_at),
-            type: "cotacao"
-          }))
-        ].sort((a, b) => new Date(b.date.split(" ").reverse().join(" ")) - new Date(a.date.split(" ").reverse().join(" ")));
-
-        feed.innerHTML = "";
-        recent.slice(0, 8).forEach(item => {
-          const div = document.createElement("div");
-          div.className = "activity-item";
-          div.innerHTML = `
-            <div class="activity-title">${item.title}</div>
-            <div>${item.subtitle}</div>
-            <div class="activity-meta">${item.date}</div>
-          `;
-          feed.appendChild(div);
-        });
-
-        if (!recent.length) {
-          feed.innerHTML = '<div class="empty-chat">Sem atividade recente.</div>';
-        }
-      }
     }
 
     function renderClientesGrid() {
@@ -3689,12 +3691,12 @@
         document.getElementById("custosTotal").textContent = formatMoney(totalCustos);
         document.getElementById("margemTotal").textContent = formatMoney(totalMargem);
 
+        renderInternalDashboard();
         renderProcessosTable();
         renderCotacoesTable();
         renderFinanceiroTable();
         renderClientesGrid();
         renderEquipaGrid();
-        renderDashboardAnalytics();
       } catch (e) {
         document.getElementById("welcome").textContent = "Painel interno • " + e.message;
       }
@@ -3962,41 +3964,6 @@
       }
     }
 
-    function openModal(title, content){
-      document.getElementById("modalTitle").innerText = title;
-      document.getElementById("modalContent").innerHTML = content;
-      document.getElementById("modalLegal").style.display = "flex";
-    }
-
-    function closeModal(){
-      document.getElementById("modalLegal").style.display = "none";
-    }
-
-    function openSobre(){
-      openModal("Sobre Nós", `
-        <p><strong>EF Cargo Clear</strong> é uma solução digital da EF & Associados – Despachantes Aduaneiros, Lda.</p>
-        <p>A plataforma permite acompanhar processos, submeter pedidos de cotação, consultar documentos e comunicar com a nossa equipa.</p>
-        <p>O nosso objetivo é trazer mais transparência, rapidez e controlo ao despacho aduaneiro.</p>
-      `);
-    }
-
-    function openTermos(){
-      openModal("Termos de Uso", `
-        <p>Ao utilizar esta plataforma, o utilizador compromete-se a fornecer dados verdadeiros e a utilizar o sistema de forma responsável.</p>
-        <p>O uso indevido pode resultar em suspensão da conta.</p>
-        <p>A EF Cargo Clear não se responsabiliza por atrasos causados por terceiros ou entidades externas.</p>
-      `);
-    }
-
-    function openPrivacidade(){
-      openModal("Política de Privacidade", `
-        <p>Os dados recolhidos são utilizados apenas para gestão de processos, comunicação e melhoria do serviço.</p>
-        <p>Não vendemos dados a terceiros.</p>
-        <p>O utilizador pode solicitar correção ou eliminação dos seus dados.</p>
-      `);
-    }
-
-
     window.addEventListener("load", async () => {
       try {
         const { data } = await withTimeout(supabaseClient.auth.getSession(), 8000);
@@ -4006,22 +3973,5 @@
       } catch (_) {}
     });
   </script>
-  <footer style="margin-top:40px;padding:20px;text-align:center;color:#666;font-size:13px;">
-    © 2026 EF Cargo Clear — Todos os direitos reservados<br>
-    EF & Associados – Despachantes Aduaneiros, Lda<br><br>
-    <span onclick="openSobre()" style="cursor:pointer;color:#BE001A;">Sobre Nós</span> |
-    <span onclick="openTermos()" style="cursor:pointer;color:#BE001A;">Termos</span> |
-    <span onclick="openPrivacidade()" style="cursor:pointer;color:#BE001A;">Privacidade</span>
-  </footer>
-
-  <div id="modalLegal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#00000088;align-items:center;justify-content:center;z-index:9999;">
-    <div style="background:#fff;padding:20px;border-radius:10px;width:90%;max-width:600px;max-height:80vh;overflow:auto;">
-      <h2 id="modalTitle"></h2>
-      <div id="modalContent"></div>
-      <br>
-      <button class="btn" onclick="closeModal()">Fechar</button>
-    </div>
-  </div>
-
 </body>
 </html>
