@@ -710,6 +710,49 @@
     .alert-item.good{border-color:#bbf7d0;background:#f0fdf4}
     .alert-item.good strong{color:#166534}
 
+
+    .task-box{
+      min-width:280px;
+    }
+
+    .task-item{
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px;
+      background:#fafafa;
+      margin-top:8px;
+    }
+
+    .task-item.done{
+      background:#f0fdf4;
+      border-color:#bbf7d0;
+    }
+
+    .task-title{
+      font-size:13px;
+      font-weight:700;
+      color:#111827;
+      margin-bottom:6px;
+    }
+
+    .task-meta{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:8px;
+    }
+
+    .responsavel-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:#f3f4f6;
+      border:1px solid #e5e7eb;
+      font-size:12px;
+      font-weight:700;
+    }
+
     hr{border:none;border-top:1px solid var(--line)}
 
     @media (max-width:1180px){
@@ -997,8 +1040,10 @@
                         <th>Factura</th>
                         <th>Cliente</th>
                         <th>Regime</th>
+                        <th>Responsável</th>
                         <th>Estado</th>
                         <th>Docs em falta</th>
+                        <th>Tarefas</th>
                         <th>Financeiro</th>
                         <th>Documentos</th>
                         <th>Histórico</th>
@@ -1584,6 +1629,7 @@
     let clientCotacoesCache = [];
     let clientesCache = [];
     let equipaCache = [];
+    let tarefasCache = [];
     let mensagensCache = [];
     let currentUserRole = "client";
     let currentUserEmail = "";
@@ -3075,13 +3121,190 @@
       }
     }
 
+    function getResponsavelOptions(selectedEmail = "") {
+      const pessoas = [];
+
+      pessoas.push({ email: ADMIN_EMAIL.toLowerCase(), nome: "Edmilson Fumo (Admin)" });
+
+      equipaCache
+        .filter(e => e.activo)
+        .forEach(e => {
+          if (e.email) pessoas.push({ email: String(e.email).toLowerCase(), nome: `${e.nome || e.email} (${e.nivel || "equipa"})` });
+        });
+
+      const seen = new Set();
+      const unique = pessoas.filter(p => {
+        if (!p.email || seen.has(p.email)) return false;
+        seen.add(p.email);
+        return true;
+      });
+
+      return [`<option value="">Sem responsável</option>`]
+        .concat(unique.map(p => `<option value="${p.email}" ${String(selectedEmail || "").toLowerCase() === p.email ? "selected" : ""}>${p.nome}</option>`))
+        .join("");
+    }
+
+    async function saveResponsavel(processoId) {
+      const select = document.getElementById("resp_" + processoId);
+      if (!select) return;
+
+      const responsavelEmail = select.value || null;
+      let responsavelNome = null;
+
+      if (responsavelEmail) {
+        if (responsavelEmail.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+          responsavelNome = "Edmilson Fumo";
+        } else {
+          const found = equipaCache.find(e => String(e.email || "").toLowerCase() === responsavelEmail.toLowerCase());
+          responsavelNome = found?.nome || responsavelEmail;
+        }
+      }
+
+      try {
+        const { data: processo, error: readError } = await withTimeout(
+          supabaseClient.from("processos").select("historico, numero_processo").eq("id", processoId).single(),
+          8000
+        );
+
+        if (readError) {
+          alert(readError.message);
+          return;
+        }
+
+        const agora = new Date().toLocaleString("pt-PT");
+        const historicoAtual = processo?.historico || "";
+        const historicoNovo = `${historicoAtual}
+• ${agora} - Responsável atribuído: ${responsavelNome || "Sem responsável"}`.trim();
+
+        const { error } = await withTimeout(
+          supabaseClient
+            .from("processos")
+            .update({
+              responsavel_email: responsavelEmail,
+              responsavel_nome: responsavelNome,
+              historico: historicoNovo
+            })
+            .eq("id", processoId),
+          10000
+        );
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        alert("Responsável atualizado com sucesso");
+        await loadInternal();
+      } catch (e) {
+        alert(e.message || "Erro ao atribuir responsável.");
+      }
+    }
+
+    async function addTaskToProcess(processoId) {
+      const tituloEl = document.getElementById("task_title_" + processoId);
+      const prazoEl = document.getElementById("task_due_" + processoId);
+      const respEl = document.getElementById("resp_" + processoId);
+
+      const titulo = tituloEl?.value.trim();
+      const prazo = prazoEl?.value || null;
+      const responsavelEmail = respEl?.value || null;
+
+      if (!titulo) {
+        alert("Digite o título da tarefa.");
+        return;
+      }
+
+      try {
+        const { error } = await withTimeout(
+          supabaseClient.from("processos_tarefas").insert({
+            processo_id: processoId,
+            titulo,
+            prazo,
+            estado: "pendente",
+            responsavel_email: responsavelEmail
+          }),
+          10000
+        );
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        tituloEl.value = "";
+        prazoEl.value = "";
+
+        const { data: processo } = await withTimeout(
+          supabaseClient.from("processos").select("historico").eq("id", processoId).single(),
+          8000
+        );
+        const agora = new Date().toLocaleString("pt-PT");
+        const historicoAtual = processo?.historico || "";
+        await withTimeout(
+          supabaseClient.from("processos")
+            .update({ historico: `${historicoAtual}
+• ${agora} - Nova tarefa adicionada: ${titulo}`.trim() })
+            .eq("id", processoId),
+          10000
+        );
+
+        await loadInternal();
+      } catch (e) {
+        alert(e.message || "Erro ao criar tarefa.");
+      }
+    }
+
+    async function toggleTaskStatus(taskId, nextStatus) {
+      try {
+        const { error } = await withTimeout(
+          supabaseClient.from("processos_tarefas").update({ estado: nextStatus }).eq("id", taskId),
+          10000
+        );
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        await loadInternal();
+      } catch (e) {
+        alert(e.message || "Erro ao atualizar tarefa.");
+      }
+    }
+
+    async function deleteTaskFromProcess(taskId) {
+      if (!confirm("Apagar esta tarefa?")) return;
+
+      try {
+        const { error } = await withTimeout(
+          supabaseClient.from("processos_tarefas").delete().eq("id", taskId),
+          10000
+        );
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        await loadInternal();
+      } catch (e) {
+        alert(e.message || "Erro ao apagar tarefa.");
+      }
+    }
+
     function renderProcessosTable() {
       const procList = getFilteredProcessos();
       const docsByProcess = {};
+      const tasksByProcess = {};
 
       docsCache.forEach(d => {
         if (!docsByProcess[d.processo_id]) docsByProcess[d.processo_id] = [];
         docsByProcess[d.processo_id].push(d);
+      });
+
+      tarefasCache.forEach(t => {
+        if (!tasksByProcess[t.processo_id]) tasksByProcess[t.processo_id] = [];
+        tasksByProcess[t.processo_id].push(t);
       });
 
       const tbody = document.getElementById("processosTable");
@@ -3089,6 +3312,7 @@
 
       procList.forEach(p => {
         const procDocs = docsByProcess[p.id] || [];
+        const procTasks = tasksByProcess[p.id] || [];
         const historicoHtml = (p.historico || "Sem histórico").replace(/\n/g, "<br>");
 
         const financeiroCell = currentUserRole === "admin"
@@ -3104,12 +3328,34 @@
           `
           : `<span class="small">Sem permissão</span>`;
 
+        const taskHtml = procTasks.length
+          ? procTasks.map(t => `
+              <div class="task-item ${t.estado === "concluida" ? "done" : ""}">
+                <div class="task-title">${t.titulo || "Tarefa"}</div>
+                <div class="task-meta">Prazo: ${t.prazo || "-"} • ${t.responsavel_email || p.responsavel_nome || "sem responsável"}</div>
+                <div>
+                  ${t.estado === "concluida"
+                    ? `<span class="badge green">Concluída</span><button class="btn-mini info" onclick="toggleTaskStatus('${t.id}','pendente')">Reabrir</button>`
+                    : `<span class="badge amber">Pendente</span><button class="btn-mini green" onclick="toggleTaskStatus('${t.id}','concluida')">Concluir</button>`}
+                  <button class="btn-mini danger" onclick="deleteTaskFromProcess('${t.id}')">Apagar</button>
+                </div>
+              </div>
+            `).join("")
+          : `<span class="small">Sem tarefas</span>`;
+
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td><strong>${p.numero_processo || ""}</strong></td>
           <td>${p.numero_factura || ""}</td>
           <td><strong>${p.importador_exportador || ""}</strong></td>
           <td>${p.regime || ""}</td>
+          <td style="min-width:220px;">
+            <div class="responsavel-chip" style="margin-bottom:8px;">${p.responsavel_nome || "Sem responsável"}</div>
+            <select id="resp_${p.id}">${getResponsavelOptions(p.responsavel_email || "")}</select>
+            <div style="margin-top:8px;">
+              <button class="btn-mini info" onclick="saveResponsavel('${p.id}')">Guardar responsável</button>
+            </div>
+          </td>
           <td>
             <div style="display:flex;flex-direction:column;gap:8px;min-width:180px;">
               <div>${badgeEstado(p.estado || "Recebido")}</div>
@@ -3131,6 +3377,14 @@
               <button class="btn-mini info" onclick="salvarDocsEmFalta('${p.id}')">Guardar docs</button>
             </div>
           </td>
+          <td class="task-box">
+            <input id="task_title_${p.id}" placeholder="Nova tarefa" />
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+              <input id="task_due_${p.id}" type="date" />
+              <button class="btn-mini secondary" onclick="addTaskToProcess('${p.id}')">Adicionar</button>
+            </div>
+            <div style="margin-top:8px;">${taskHtml}</div>
+          </td>
           <td style="min-width:220px;">${financeiroCell}</td>
           <td style="min-width:240px;">
             <input id="procfile_${p.id}" type="file" />
@@ -3146,7 +3400,7 @@
                 ? procDocs.map(d => `
                   <span class="doc-chip">
                     <span>${d.nome_ficheiro || "Documento"}</span>
-                    <button class="btn-mini secondary" style="margin:0;padding:4px 8px;" onclick="openProcessoDocumento('${String(d.ficheiro_path).replace(/'/g, "\\'")}')">Abrir</button>
+                    <button class="btn-mini secondary" style="margin:0;padding:4px 8px;" onclick="openProcessoDocumento('${String(d.ficheiro_path).replace(/'/g, "\'")}')">Abrir</button>
                   </span>
                 `).join("")
                 : '<span class="small">Sem documentos</span>'}
