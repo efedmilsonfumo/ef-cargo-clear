@@ -3648,4 +3648,60 @@
     });
   </script>
 </body>
+  <!-- ====== LEGAL + FOOTER ====== -->
+<footer>
+  © 2026 EF Cargo Clear — Todos os direitos reservados<br>
+  EF & Associados – Despachantes Aduaneiros, Lda<br><br>
+
+  <span onclick="openSobre()" style="cursor:pointer;color:#BE001A;">Sobre Nós</span> |
+  <span onclick="openTermos()" style="cursor:pointer;color:#BE001A;">Termos</span> |
+  <span onclick="openPrivacidade()" style="cursor:pointer;color:#BE001A;">Privacidade</span>
+</footer>
+
+<div id="modalLegal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#00000088;align-items:center;justify-content:center;">
+  <div style="background:#fff;padding:20px;border-radius:10px;width:90%;max-width:600px;">
+    <h2 id="modalTitle"></h2>
+    <div id="modalContent"></div>
+    <br>
+    <button onclick="closeModal()">Fechar</button>
+  </div>
+</div>
+
+<script>
+function openModal(title, content){
+  document.getElementById("modalTitle").innerText = title;
+  document.getElementById("modalContent").innerHTML = content;
+  document.getElementById("modalLegal").style.display = "flex";
+}
+
+function closeModal(){
+  document.getElementById("modalLegal").style.display = "none";
+}
+
+function openSobre(){
+  openModal("Sobre Nós", "A EF Cargo Clear é uma plataforma para gestão de processos aduaneiros.");
+}
+
+function openTermos(){
+  openModal("Termos", "O uso indevido pode resultar em bloqueio da conta.");
+}
+
+function openPrivacidade(){
+  openModal("Privacidade", "Os seus dados são protegidos e usados apenas para o serviço.");
+}
+
+function setWelcomeMessage() {
+  const el = document.getElementById("welcome");
+
+  if (!el) return;
+
+  if (currentUserRole === "admin") {
+    el.innerHTML = "👑 Bem-vindo Edmilson — controlo total.";
+  } else if (currentUserRole === "employee") {
+    el.innerHTML = "🧑‍💼 Bem-vindo — gestão ativa.";
+  } else {
+    el.innerHTML = "📦 Bem-vindo — acompanhe os seus processos.";
+  }
+}
+</script>
 </html>
