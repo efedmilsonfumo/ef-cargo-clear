@@ -3647,6 +3647,193 @@
       } catch (_) {}
     });
   </script>
+  <script>
+(function() {
+  'use strict';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('✅ EF Cargo Clear - Funcionalidades adicionais carregadas');
+
+    // 🔧 CONFIGURAÇÃO RÁPIDA (ajuste se necessário)
+    const CFG = {
+      navTriggers: '[data-view], .menu-item, a[href^="#"]',
+      views: '.view-section, .page-content, main > section, [id*="view-"], [id*="section-"]',
+      tableSearch: '.table-search, input[placeholder*="Pesquisa"], input[placeholder*="pesquisa"]',
+      modalTriggers: '[data-modal], .btn-modal, [data-toggle="modal"]',
+      modals: '.modal, [id*="modal"], [id*="Modal"]',
+      exportCSV: '.btn-export-csv, [data-export="csv"]',
+      chatForms: '.chat-form, .message-form, form:has(input[name="mensagem"], textarea[name="mensagem"])'
+    };
+
+    // 1️⃣ NAVEGAÇÃO SPA (troca de secções sem recarregar)
+    const setupNavigation = () => {
+      const triggers = document.querySelectorAll(CFG.navTriggers);
+      const views = document.querySelectorAll(CFG.views);
+      if (!triggers.length || !views.length) return;
+
+      // Esconde todas as views exceto a primeira (ou a que já está visível)
+      views.forEach((v, i) => { if (i > 0 && !v.style.display) v.style.display = 'none'; });
+
+      triggers.forEach(btn => {
+        btn.addEventListener('click', e => {
+          const targetId = btn.getAttribute('href')?.slice(1) || btn.getAttribute('data-view');
+          if (!targetId) return;
+          e.preventDefault();
+
+          const target = document.getElementById(targetId);
+          if (!target) return;
+
+          views.forEach(v => v.style.display = v === target ? '' : 'none');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      });
+    };
+
+    // 2️⃣ FILTRO DE TABELAS
+    const setupTableSearch = () => {
+      document.querySelectorAll(CFG.tableSearch).forEach(input => {
+        input.addEventListener('input', e => {
+          const term = e.target.value.toLowerCase();
+          // Procura a tabela mais próxima
+          const table = e.target.closest('section, .table-wrapper, .card')?.querySelector('table') ||
+                        document.querySelector('table:has(tbody)');
+          if (!table) return;
+
+          table.querySelectorAll('tbody tr').forEach(row => {
+            row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
+          });
+        });
+      });
+    };
+
+    // 3️⃣ MODAIS (abrir/fechar, ESC, clique fora)
+    const setupModals = () => {
+      document.querySelectorAll(CFG.modalTriggers).forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.preventDefault();
+          const modalId = btn.getAttribute('data-modal') || btn.closest('[data-modal]')?.getAttribute('data-modal');
+          const modal = document.getElementById(modalId) || document.querySelector(CFG.modals + ':not(.hidden)');
+          if (modal) {
+            modal.style.display = 'flex';
+            modal.setAttribute('aria-hidden', 'false');
+            modal.querySelector('input, textarea, button, select')?.focus();
+          }
+        });
+      });
+
+      // Fechar ao clicar no fundo ou botão fechar
+      document.addEventListener('click', e => {
+        const modal = e.target.closest(CFG.modals);
+        if (e.target.matches('.close-modal, .btn-cancelar, .modal-bg, .btn-fechar') || 
+            (modal && e.target === modal)) {
+          modal.style.display = 'none';
+          modal.setAttribute('aria-hidden', 'true');
+        }
+      });
+
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+          document.querySelectorAll(CFG.modals).forEach(m => {
+            if (m.style.display !== 'none') {
+              m.style.display = 'none';
+              m.setAttribute('aria-hidden', 'true');
+            }
+          });
+        }
+      });
+    };
+
+    // 4️⃣ FORMULÁRIOS (previne reload, simula envio, reseta)
+    const setupForms = () => {
+      document.querySelectorAll('form').forEach(form => {
+        if (form.getAttribute('data-skip')) return; // Ignora formulários que não quer alterar
+        form.addEventListener('submit', e => {
+          e.preventDefault();
+          const btn = form.querySelector('button[type="submit"]');
+          if (!btn) return;
+
+          const originalText = btn.textContent || btn.value;
+          btn.textContent = 'A processar...';
+          btn.disabled = true;
+
+          setTimeout(() => {
+            btn.textContent = originalText;
+            btn.disabled = false;
+            alert('✅ Ação executada com sucesso! (Simulação)');
+            if (!form.id.includes('login')) form.reset();
+          }, 800);
+        });
+      });
+    };
+
+    // 5️⃣ EXPORTAR PARA CSV
+    const setupExports = () => {
+      document.querySelectorAll(CFG.exportCSV).forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.preventDefault();
+          const container = btn.closest('section, .table-wrapper, .card') || btn.parentElement;
+          const table = container?.querySelector('table') || document.querySelector('table:has(tbody)');
+          if (!table) return alert('⚠️ Tabela não encontrada para exportação.');
+
+          const rows = Array.from(table.querySelectorAll('tr'));
+          const csv = rows.map(row => 
+            Array.from(row.querySelectorAll('th, td')).map(cell => 
+              `"${cell.textContent.trim().replace(/"/g, '""')}"`
+            ).join(',')
+          ).join('\n');
+
+          const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = `EF_Cargo_Export_${new Date().toISOString().slice(0,10)}.csv`;
+          link.click();
+          URL.revokeObjectURL(link.href);
+        });
+      });
+    };
+
+    // 6️⃣ CHAT / MENSAGENS (simulação)
+    const setupChat = () => {
+      document.querySelectorAll(CFG.chatForms).forEach(form => {
+        const input = form.querySelector('input, textarea');
+        const container = form.closest('.chat-container, .messages-panel') || form.parentElement;
+        const list = container?.querySelector('.messages-list, .chat-history, .msg-container');
+        if (!input || !list) return;
+
+        form.addEventListener('submit', e => {
+          e.preventDefault();
+          const msg = input.value.trim();
+          if (!msg) return;
+
+          const div = document.createElement('div');
+          div.className = 'message user';
+          div.innerHTML = `<div class="bubble">${msg}</div><small class="time">${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</small>`;
+          list.appendChild(div);
+          list.scrollTop = list.scrollHeight;
+          input.value = '';
+
+          // Resposta automática simulada
+          setTimeout(() => {
+            const reply = document.createElement('div');
+            reply.className = 'message system';
+            reply.innerHTML = `<div class="bubble">Mensagem recebida. A equipa EF Cargo Clear responderá em breve.</div><small class="time">${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</small>`;
+            list.appendChild(reply);
+            list.scrollTop = list.scrollHeight;
+          }, 1000);
+        });
+      });
+    };
+
+    // 🚀 INICIALIZAÇÃO
+    setupNavigation();
+    setupTableSearch();
+    setupModals();
+    setupForms();
+    setupExports();
+    setupChat();
+  });
+})();
+</script>
 </body>
   <!-- ====== LEGAL + FOOTER ====== -->
 <footer>
