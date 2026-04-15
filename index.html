@@ -59,6 +59,7 @@
       background:linear-gradient(90deg,var(--primary) 0%, #d91b35 45%, #f0b7bf 100%);
     }
 
+    
     .login-shell{
       min-height:100vh;
       display:flex;
@@ -67,22 +68,17 @@
       padding:20px;
       position:relative;
       overflow:hidden;
-      background:
-        radial-gradient(circle at top right, rgba(190,0,26,.08), transparent 25%),
-        radial-gradient(circle at bottom left, rgba(190,0,26,.06), transparent 20%),
-        linear-gradient(180deg,#fafafa 0%, #f2f2f2 100%);
+      background-image:var(--login-bg-image);
+      background-size:cover;
+      background-position:center;
+      background-repeat:no-repeat;
     }
 
     .login-shell::before{
       content:"";
       position:absolute;
       inset:0;
-      background-image:var(--login-bg-image);
-      background-size:cover;
-      background-position:center;
-      opacity:.38;
-      filter:blur(0.6px) saturate(.98);
-      transform:scale(1.03);
+      background:rgba(255,255,255,.12);
       pointer-events:none;
     }
 
@@ -90,17 +86,17 @@
       content:"";
       position:absolute;
       inset:0;
-      background:linear-gradient(180deg, rgba(255,255,255,.18) 0%, rgba(244,246,248,.28) 100%);
-      backdrop-filter:blur(2px);
+      background:linear-gradient(180deg, rgba(255,255,255,.08) 0%, rgba(255,255,255,.18) 100%);
       pointer-events:none;
     }
+
 
     .login-card{
       width:100%;
       position:relative;
       z-index:1;
       max-width:640px;
-      background:#fff;
+      background:rgba(255,255,255,.94);
       border-radius:28px;
       box-shadow:var(--shadow);
       padding:32px;
