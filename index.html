@@ -694,6 +694,59 @@
       color:var(--muted);
     }
 
+    .process-summary-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:18px;
+      margin-bottom:18px;
+    }
+
+    .process-panel{
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:18px;
+      background:linear-gradient(180deg,#fff 0%, #fcfcfc 100%);
+      box-shadow:var(--shadow-soft);
+      margin-bottom:16px;
+    }
+
+    .task-item{
+      padding:10px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#fff;
+      margin-bottom:8px;
+    }
+
+    .task-item.done{
+      background:#f0fdf4;
+      border-color:#bbf7d0;
+    }
+
+    .task-title{
+      font-weight:700;
+      color:#111827;
+      margin-bottom:6px;
+    }
+
+    .task-meta{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:8px;
+    }
+
+    .responsavel-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:#f3f4f6;
+      border:1px solid #e5e7eb;
+      font-size:12px;
+      font-weight:700;
+    }
+
     .dashboard-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
     .chart-card{padding:18px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,#fff 0%, #fcfcfc 100%);box-shadow:var(--shadow-soft)}
     .chart-title{margin:0 0 12px;font-size:16px;font-weight:800;color:#111827}
@@ -1042,11 +1095,7 @@
                         <th>Regime</th>
                         <th>Responsável</th>
                         <th>Estado</th>
-                        <th>Docs em falta</th>
-                        <th>Tarefas</th>
-                        <th>Financeiro</th>
-                        <th>Documentos</th>
-                        <th>Histórico</th>
+                        <th>Ação</th>
                       </tr>
                     </thead>
                     <tbody id="processosTable"></tbody>
@@ -1390,9 +1439,15 @@
               </div>
 
               <div class="muted-box">
-                <label for="cot_factura_file">Anexar factura (PDF, JPG, PNG)</label>
-                <input id="cot_factura_file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" />
-                <div id="cot_factura_file_name" class="small" style="margin-top:8px;">Nenhum ficheiro selecionado.</div>
+                <label>Carregar documentos da cotação (até 5 ficheiros)</label>
+                <div class="grid grid-2">
+                  <input id="cot_factura_file_1" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" />
+                  <input id="cot_factura_file_2" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" />
+                  <input id="cot_factura_file_3" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" />
+                  <input id="cot_factura_file_4" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" />
+                  <input id="cot_factura_file_5" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" />
+                </div>
+                <div class="small" style="margin-top:8px;">Pode anexar factura, packing list, BL/AWB e outros documentos relevantes.</div>
               </div>
 
               <div style="max-width:260px;">
@@ -1496,7 +1551,21 @@
     </div>
   </div>
 
-  <div id="clienteModalBackdrop" class="modal-backdrop">
+  
+  <div id="processModalBackdrop" class="modal-backdrop">
+    <div class="modal" style="max-width:1100px;">
+      <div class="modal-head">
+        <div>
+          <h2 id="processModalTitle" class="section-title" style="margin-bottom:4px;">Detalhe do processo</h2>
+          <div id="processModalSub" class="small">Visualização completa do processo</div>
+        </div>
+        <button class="btn-mini secondary" onclick="closeProcessModal()">Fechar</button>
+      </div>
+      <div id="processModalContent"></div>
+    </div>
+  </div>
+
+<div id="clienteModalBackdrop" class="modal-backdrop">
     <div class="modal">
       <div class="modal-head">
         <div>
@@ -1631,6 +1700,8 @@
     let equipaCache = [];
     let tarefasCache = [];
     let mensagensCache = [];
+    let cotacaoDocsCache = [];
+    let currentProcessModalId = null;
     let currentUserRole = "client";
     let currentUserEmail = "";
     let currentUserName = "";
@@ -1641,14 +1712,6 @@
     let financeiroMesChart = null;
 
     document.addEventListener("DOMContentLoaded", () => {
-      const facturaInput = document.getElementById("cot_factura_file");
-      if (facturaInput) {
-        facturaInput.addEventListener("change", () => {
-          const file = facturaInput.files?.[0];
-          document.getElementById("cot_factura_file_name").textContent =
-            file ? file.name : "Nenhum ficheiro selecionado.";
-        });
-      }
       setupCompanyLogo();
       detectRecoveryMode();
     });
@@ -2423,49 +2486,52 @@
     }
 
     async function uploadProcessoDocumento(processoId) {
-      const input = document.getElementById("procfile_" + processoId);
       const visibleInput = document.getElementById("procvis_" + processoId);
-      const file = input.files?.[0];
+      const files = [1,2,3,4,5]
+        .map(i => document.getElementById(`procfile_${processoId}_${i}`)?.files?.[0] || null)
+        .filter(Boolean);
 
-      if (!file) {
-        alert("Escolha um ficheiro.");
+      if (!files.length) {
+        alert("Escolha pelo menos um ficheiro.");
         return;
       }
 
       try {
-        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-        const path = `${processoId}/${Date.now()}_${safeName}`;
+        for (const file of files) {
+          const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+          const path = `${processoId}/${Date.now()}_${safeName}`;
 
-        const { error: uploadError } = await withTimeout(
-          supabaseClient.storage
-            .from("processos")
-            .upload(path, file, {
-              cacheControl: "3600",
-              upsert: false,
-              contentType: file.type || "application/octet-stream"
+          const { error: uploadError } = await withTimeout(
+            supabaseClient.storage
+              .from("processos")
+              .upload(path, file, {
+                cacheControl: "3600",
+                upsert: false,
+                contentType: file.type || "application/octet-stream"
+              }),
+            15000
+          );
+
+          if (uploadError) {
+            alert(uploadError.message);
+            return;
+          }
+
+          const { error: insertError } = await withTimeout(
+            supabaseClient.from("processos_documentos").insert({
+              processo_id: processoId,
+              nome_ficheiro: file.name,
+              ficheiro_path: path,
+              visivel_cliente: !!visibleInput?.checked,
+              uploaded_by: currentUserRole === "admin" ? "admin" : "interno"
             }),
-          15000
-        );
+            10000
+          );
 
-        if (uploadError) {
-          alert(uploadError.message);
-          return;
-        }
-
-        const { error: insertError } = await withTimeout(
-          supabaseClient.from("processos_documentos").insert({
-            processo_id: processoId,
-            nome_ficheiro: file.name,
-            ficheiro_path: path,
-            visivel_cliente: !!visibleInput?.checked,
-            uploaded_by: currentUserRole === "admin" ? "admin" : "funcionario"
-          }),
-          10000
-        );
-
-        if (insertError) {
-          alert(insertError.message);
-          return;
+          if (insertError) {
+            alert(insertError.message);
+            return;
+          }
         }
 
         const { data: processo } = await withTimeout(
@@ -2477,114 +2543,16 @@
         const agora = new Date().toLocaleString("pt-PT");
         await withTimeout(
           supabaseClient.from("processos")
-            .update({ historico: `${historicoAtual}\n• ${agora} - Documento anexado: ${file.name}`.trim() })
+            .update({ historico: `${historicoAtual}
+• ${agora} - ${files.length} documento(s) anexado(s).`.trim() })
             .eq("id", processoId),
           10000
         );
 
-        alert("Documento anexado com sucesso");
-        input.value = "";
+        alert("Documento(s) anexado(s) com sucesso");
         await loadInternal();
-        if (currentUserRole === "client") await refreshClientDashboard();
       } catch (e) {
         alert(e.message || "Erro ao anexar documento.");
-      }
-    }
-
-    async function converterCotacaoEmProcesso(cotacaoId) {
-      if (!confirm("Converter esta cotação em processo?")) return;
-
-      try {
-        const { data: cotacao, error: cotacaoError } = await withTimeout(
-          supabaseClient.from("pedidos_cotacao").select("*").eq("id", cotacaoId).single(),
-          10000
-        );
-
-        if (cotacaoError || !cotacao) {
-          alert(cotacaoError?.message || "Cotação não encontrada.");
-          return;
-        }
-
-        if (cotacao.convertido_em_processo) {
-          alert("Esta cotação já foi convertida.");
-          return;
-        }
-
-        let cliente_id = null;
-
-        if (cotacao.email) {
-          const { data: clienteByEmail } = await withTimeout(
-            supabaseClient.from("clientes").select("id").eq("email", cotacao.email).maybeSingle(),
-            8000
-          );
-
-          if (clienteByEmail?.id) cliente_id = clienteByEmail.id;
-        }
-
-        const numeroProcesso = gerarNumeroProcesso();
-
-        const payloadProcesso = {
-          cliente_id,
-          numero_processo: numeroProcesso,
-          numero_factura: cotacao.numero_factura || "",
-          importador_exportador: cotacao.nome_cliente || "",
-          regime: cotacao.tipo_operacao || "",
-          pais_origem: cotacao.origem || "",
-          pais_destino: cotacao.destino || "",
-          porto_fronteira: "",
-          bl_awb_manifesto: "",
-          prazo: null,
-          estado: "Recebido",
-          documentos_em_falta: cotacao.factura_path ? "" : "Factura em falta",
-          valor_cobrado: 0,
-          custos_processo: 0,
-          margem_lucro: 0,
-          historico: `• ${new Date().toLocaleString("pt-PT")} - Processo criado a partir da cotação ${cotacao.numero_factura || ""}. Mercadoria: ${cotacao.descricao_mercadoria || ""}`
-        };
-
-        const { data: novoProcesso, error: processoError } = await withTimeout(
-          supabaseClient.from("processos").insert(payloadProcesso).select("id, numero_processo").single(),
-          10000
-        );
-
-        if (processoError || !novoProcesso) {
-          alert(processoError?.message || "Erro ao criar processo.");
-          return;
-        }
-
-        const { error: updateError } = await withTimeout(
-          supabaseClient
-            .from("pedidos_cotacao")
-            .update({
-              convertido_em_processo: true,
-              processo_id: novoProcesso.id,
-              estado: "convertido em processo"
-            })
-            .eq("id", cotacaoId),
-          10000
-        );
-
-        if (updateError) {
-          alert(updateError.message);
-          return;
-        }
-
-        if (cotacao.email) {
-          await supabaseClient.from("mensagens").insert({
-            cliente_email: cotacao.email,
-            remetente: currentUserRole === "admin" ? "admin" : "funcionario",
-            mensagem: `A sua cotação foi convertida em processo. Número do processo: ${novoProcesso.numero_processo}`,
-            processo_numero: novoProcesso.numero_processo,
-            lido_cliente: false,
-            lido_interno: true
-          });
-        }
-
-        alert(`Cotação convertida com sucesso. Processo criado: ${novoProcesso.numero_processo}`);
-        await loadInternal();
-        showInternalTab("processos");
-      } catch (e) {
-        alert(e.message || "Erro ao converter cotação em processo.");
       }
     }
 
@@ -3292,123 +3260,183 @@
       }
     }
 
+
+    function getProcessTasks(processoId) {
+      return (tarefasCache || []).filter(x => String(x.processo_id) === String(processoId));
+    }
+
+    function getProcessDocs(processoId) {
+      return (docsCache || []).filter(x => String(x.processo_id) === String(processoId));
+    }
+
+    function getCotacaoDocs(pedidoId, fallbackPath) {
+      const docs = (cotacaoDocsCache || []).filter(x => String(x.pedido_id) === String(pedidoId));
+      if (docs.length) return docs;
+      if (fallbackPath) return [{ ficheiro_path: fallbackPath, nome_ficheiro: "Documento" }];
+      return [];
+    }
+
+    function getCotacaoDocButtons(pedidoId, fallbackPath) {
+      const docs = getCotacaoDocs(pedidoId, fallbackPath);
+      if (!docs.length) return '-';
+      return docs.map(d => `<button class="btn-mini secondary" onclick="openFactura('${String(d.ficheiro_path).replace(/'/g, "\\'")}')">${d.nome_ficheiro || 'Documento'}</button>`).join("");
+    }
+
+    function closeProcessModal() {
+      currentProcessModalId = null;
+      const modal = document.getElementById("processModalBackdrop");
+      if (modal) modal.style.display = "none";
+    }
+
+    function openProcessModal(processoId) {
+      currentProcessModalId = processoId;
+      const processo = processosCache.find(x => String(x.id) === String(processoId));
+      if (!processo) return;
+
+      const modal = document.getElementById("processModalBackdrop");
+      const title = document.getElementById("processModalTitle");
+      const sub = document.getElementById("processModalSub");
+      const content = document.getElementById("processModalContent");
+
+      const procTasks = getProcessTasks(processoId);
+      const procDocs = getProcessDocs(processoId);
+      const historicoHtml = (processo.historico || "Sem histórico").replace(/\n/g, "<br>");
+
+      title.textContent = `Processo ${processo.numero_processo || '-'}`;
+      sub.textContent = `${processo.importador_exportador || '-'} • Factura ${processo.numero_factura || '-'}`;
+
+      const financeiroHtml = currentUserRole === "admin" ? `
+        <label style="margin-top:0;">Valor cobrado</label>
+        <input id="cobrado_${processo.id}" type="number" step="0.01" value="${Number(processo.valor_cobrado || 0)}" />
+        <label style="margin-top:8px;">Custos</label>
+        <input id="custos_${processo.id}" type="number" step="0.01" value="${Number(processo.custos_processo || 0)}" />
+        <div class="small" style="margin-top:8px;">Margem atual: ${formatMoney(processo.margem_lucro || 0)}</div>
+        <div style="margin-top:8px;">
+          <button class="btn-mini info" onclick="salvarFinanceiro('${processo.id}')">Guardar financeiro</button>
+        </div>
+      ` : `<span class="small">Sem permissão</span>`;
+
+      const taskHtml = procTasks.length ? procTasks.map(t => `
+        <div class="task-item ${t.estado === "concluida" ? "done" : ""}">
+          <div class="task-title">${t.titulo || "Tarefa"}</div>
+          <div class="task-meta">Prazo: ${t.prazo || "-"} • ${t.responsavel_email || processo.responsavel_nome || "sem responsável"}</div>
+          <div>
+            ${t.estado === "concluida"
+              ? `<span class="badge green">Concluída</span><button class="btn-mini info" onclick="toggleTaskStatus('${t.id}','pendente')">Reabrir</button>`
+              : `<span class="badge amber">Pendente</span><button class="btn-mini green" onclick="toggleTaskStatus('${t.id}','concluida')">Concluir</button>`}
+            <button class="btn-mini danger" onclick="deleteTaskFromProcess('${t.id}')">Apagar</button>
+          </div>
+        </div>
+      `).join("") : `<span class="small">Sem tarefas</span>`;
+
+      const docsHtml = procDocs.length ? procDocs.map(d => `
+        <span class="doc-chip">
+          <span>${d.nome_ficheiro || "Documento"}</span>
+          <button class="btn-mini secondary" style="margin:0;padding:4px 8px;" onclick="openProcessoDocumento('${String(d.ficheiro_path).replace(/'/g, "\\'")}')">Abrir</button>
+        </span>
+      `).join("") : `<span class="small">Sem documentos</span>`;
+
+      content.innerHTML = `
+        <div class="process-summary-grid">
+          <div class="process-panel"><strong>Factura</strong><div style="margin-top:6px;">${processo.numero_factura || "-"}</div></div>
+          <div class="process-panel"><strong>Cliente</strong><div style="margin-top:6px;">${processo.importador_exportador || "-"}</div></div>
+          <div class="process-panel"><strong>Regime</strong><div style="margin-top:6px;">${processo.regime || "-"}</div></div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="process-panel">
+            <h3 style="margin-top:0;">Responsável e estado</h3>
+            <div class="responsavel-chip" style="margin-bottom:10px;">${processo.responsavel_nome || "Sem responsável"}</div>
+            <label>Responsável</label>
+            <select id="resp_${processo.id}">${getResponsavelOptions(processo.responsavel_email || "")}</select>
+            <div style="margin-top:8px;">
+              <button class="btn-mini info" onclick="saveResponsavel('${processo.id}')">Guardar responsável</button>
+            </div>
+
+            <label style="margin-top:14px;">Estado</label>
+            <select id="estado_${processo.id}">
+              <option ${processo.estado === "Recebido" ? "selected" : ""}>Recebido</option>
+              <option ${processo.estado === "Em análise" ? "selected" : ""}>Em análise</option>
+              <option ${processo.estado === "Documentos em falta" ? "selected" : ""}>Documentos em falta</option>
+              <option ${processo.estado === "Submetido" ? "selected" : ""}>Submetido</option>
+              <option ${processo.estado === "Em desembaraço" ? "selected" : ""}>Em desembaraço</option>
+              <option ${processo.estado === "Liberado" ? "selected" : ""}>Liberado</option>
+              <option ${processo.estado === "Entregue" ? "selected" : ""}>Entregue</option>
+            </select>
+            <div style="margin-top:8px;">
+              <button class="btn-mini" onclick="atualizarEstado('${processo.id}')">Atualizar estado</button>
+            </div>
+          </div>
+
+          <div class="process-panel">
+            <h3 style="margin-top:0;">Documentos em falta</h3>
+            <textarea id="docs_${processo.id}" style="min-height:120px;">${processo.documentos_em_falta || ""}</textarea>
+            <div style="margin-top:8px;">
+              <button class="btn-mini info" onclick="salvarDocsEmFalta('${processo.id}')">Guardar docs</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="process-panel">
+            <h3 style="margin-top:0;">Tarefas</h3>
+            <input id="task_title_${processo.id}" placeholder="Nova tarefa" />
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+              <input id="task_due_${processo.id}" type="date" />
+              <button class="btn-mini secondary" onclick="addTaskToProcess('${processo.id}')">Adicionar</button>
+            </div>
+            <div style="margin-top:10px;">${taskHtml}</div>
+          </div>
+
+          <div class="process-panel">
+            <h3 style="margin-top:0;">Financeiro</h3>
+            ${financeiroHtml}
+          </div>
+        </div>
+
+        <div class="process-panel">
+          <h3 style="margin-top:0;">Documentos carregados</h3>
+          <div class="grid grid-2">
+            <input id="procfile_${processo.id}_1" type="file" />
+            <input id="procfile_${processo.id}_2" type="file" />
+            <input id="procfile_${processo.id}_3" type="file" />
+            <input id="procfile_${processo.id}_4" type="file" />
+            <input id="procfile_${processo.id}_5" type="file" />
+          </div>
+          <label style="margin-top:8px;display:flex;gap:8px;align-items:center;">
+            <input id="procvis_${processo.id}" type="checkbox" checked style="width:auto;" />
+            <span class="small">Visível ao cliente</span>
+          </label>
+          <div style="margin-top:8px;">
+            <button class="btn-mini secondary" onclick="uploadProcessoDocumento('${processo.id}')">Anexar documentos</button>
+          </div>
+          <div class="doc-list">${docsHtml}</div>
+        </div>
+
+        <div class="process-panel">
+          <h3 style="margin-top:0;">Histórico</h3>
+          <div class="history-box">${historicoHtml}</div>
+        </div>
+      `;
+
+      modal.style.display = "flex";
+    }
+
     function renderProcessosTable() {
       const procList = getFilteredProcessos();
-      const docsByProcess = {};
-      const tasksByProcess = {};
-
-      docsCache.forEach(d => {
-        if (!docsByProcess[d.processo_id]) docsByProcess[d.processo_id] = [];
-        docsByProcess[d.processo_id].push(d);
-      });
-
-      tarefasCache.forEach(t => {
-        if (!tasksByProcess[t.processo_id]) tasksByProcess[t.processo_id] = [];
-        tasksByProcess[t.processo_id].push(t);
-      });
-
       const tbody = document.getElementById("processosTable");
       tbody.innerHTML = "";
 
       procList.forEach(p => {
-        const procDocs = docsByProcess[p.id] || [];
-        const procTasks = tasksByProcess[p.id] || [];
-        const historicoHtml = (p.historico || "Sem histórico").replace(/\n/g, "<br>");
-
-        const financeiroCell = currentUserRole === "admin"
-          ? `
-            <label style="margin-top:0;">Valor cobrado</label>
-            <input id="cobrado_${p.id}" type="number" step="0.01" value="${Number(p.valor_cobrado || 0)}" />
-            <label style="margin-top:8px;">Custos</label>
-            <input id="custos_${p.id}" type="number" step="0.01" value="${Number(p.custos_processo || 0)}" />
-            <div class="small" style="margin-top:8px;">Margem atual: ${formatMoney(p.margem_lucro || 0)}</div>
-            <div style="margin-top:8px;">
-              <button class="btn-mini info" onclick="salvarFinanceiro('${p.id}')">Guardar financeiro</button>
-            </div>
-          `
-          : `<span class="small">Sem permissão</span>`;
-
-        const taskHtml = procTasks.length
-          ? procTasks.map(t => `
-              <div class="task-item ${t.estado === "concluida" ? "done" : ""}">
-                <div class="task-title">${t.titulo || "Tarefa"}</div>
-                <div class="task-meta">Prazo: ${t.prazo || "-"} • ${t.responsavel_email || p.responsavel_nome || "sem responsável"}</div>
-                <div>
-                  ${t.estado === "concluida"
-                    ? `<span class="badge green">Concluída</span><button class="btn-mini info" onclick="toggleTaskStatus('${t.id}','pendente')">Reabrir</button>`
-                    : `<span class="badge amber">Pendente</span><button class="btn-mini green" onclick="toggleTaskStatus('${t.id}','concluida')">Concluir</button>`}
-                  <button class="btn-mini danger" onclick="deleteTaskFromProcess('${t.id}')">Apagar</button>
-                </div>
-              </div>
-            `).join("")
-          : `<span class="small">Sem tarefas</span>`;
-
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td><strong>${p.numero_processo || ""}</strong></td>
           <td>${p.numero_factura || ""}</td>
           <td><strong>${p.importador_exportador || ""}</strong></td>
           <td>${p.regime || ""}</td>
-          <td style="min-width:220px;">
-            <div class="responsavel-chip" style="margin-bottom:8px;">${p.responsavel_nome || "Sem responsável"}</div>
-            <select id="resp_${p.id}">${getResponsavelOptions(p.responsavel_email || "")}</select>
-            <div style="margin-top:8px;">
-              <button class="btn-mini info" onclick="saveResponsavel('${p.id}')">Guardar responsável</button>
-            </div>
-          </td>
-          <td>
-            <div style="display:flex;flex-direction:column;gap:8px;min-width:180px;">
-              <div>${badgeEstado(p.estado || "Recebido")}</div>
-              <select id="estado_${p.id}">
-                <option ${p.estado === "Recebido" ? "selected" : ""}>Recebido</option>
-                <option ${p.estado === "Em análise" ? "selected" : ""}>Em análise</option>
-                <option ${p.estado === "Documentos em falta" ? "selected" : ""}>Documentos em falta</option>
-                <option ${p.estado === "Submetido" ? "selected" : ""}>Submetido</option>
-                <option ${p.estado === "Em desembaraço" ? "selected" : ""}>Em desembaraço</option>
-                <option ${p.estado === "Liberado" ? "selected" : ""}>Liberado</option>
-                <option ${p.estado === "Entregue" ? "selected" : ""}>Entregue</option>
-              </select>
-              <button class="btn-mini" onclick="atualizarEstado('${p.id}')">Atualizar</button>
-            </div>
-          </td>
-          <td style="min-width:220px;">
-            <textarea id="docs_${p.id}" style="min-height:90px;">${p.documentos_em_falta || ""}</textarea>
-            <div style="margin-top:8px;">
-              <button class="btn-mini info" onclick="salvarDocsEmFalta('${p.id}')">Guardar docs</button>
-            </div>
-          </td>
-          <td class="task-box">
-            <input id="task_title_${p.id}" placeholder="Nova tarefa" />
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
-              <input id="task_due_${p.id}" type="date" />
-              <button class="btn-mini secondary" onclick="addTaskToProcess('${p.id}')">Adicionar</button>
-            </div>
-            <div style="margin-top:8px;">${taskHtml}</div>
-          </td>
-          <td style="min-width:220px;">${financeiroCell}</td>
-          <td style="min-width:240px;">
-            <input id="procfile_${p.id}" type="file" />
-            <label style="margin-top:8px;display:flex;gap:8px;align-items:center;">
-              <input id="procvis_${p.id}" type="checkbox" checked style="width:auto;" />
-              <span class="small">Visível ao cliente</span>
-            </label>
-            <div style="margin-top:8px;">
-              <button class="btn-mini secondary" onclick="uploadProcessoDocumento('${p.id}')">Anexar</button>
-            </div>
-            <div class="doc-list">
-              ${procDocs.length
-                ? procDocs.map(d => `
-                  <span class="doc-chip">
-                    <span>${d.nome_ficheiro || "Documento"}</span>
-                    <button class="btn-mini secondary" style="margin:0;padding:4px 8px;" onclick="openProcessoDocumento('${String(d.ficheiro_path).replace(/'/g, "\'")}')">Abrir</button>
-                  </span>
-                `).join("")
-                : '<span class="small">Sem documentos</span>'}
-            </div>
-          </td>
-          <td style="min-width:260px;">
-            <div class="history-box">${historicoHtml}</div>
-          </td>
+          <td>${p.responsavel_nome || "Sem responsável"}</td>
+          <td>${badgeEstado(p.estado || "Recebido")}</td>
+          <td><button class="btn-mini" onclick="openProcessModal('${p.id}')">Abrir</button></td>
         `;
         tbody.appendChild(tr);
       });
@@ -3426,9 +3454,7 @@
           <td>${c.tipo_operacao || ""}</td>
           <td>${c.numero_factura || ""}</td>
           <td>
-            ${c.factura_path
-              ? `<button class="btn-mini secondary" onclick="openFactura('${String(c.factura_path).replace(/'/g, "\\'")}')">Ver factura</button>`
-              : '-'}
+            ${getCotacaoDocButtons(c.id, c.factura_path)}
           </td>
           <td>
             ${convertido
@@ -3915,12 +3941,14 @@
 
     async function loadInternal() {
       try {
-        const [{ data: clientes }, { data: processos }, { data: cotacoes }, { data: docs }, { data: equipa }] = await Promise.all([
+        const [{ data: clientes }, { data: processos }, { data: cotacoes }, { data: docs }, { data: equipa }, { data: tarefas }, { data: cotacaoDocs }] = await Promise.all([
           withTimeout(supabaseClient.from("clientes").select("*").order("created_at", { ascending: false }), 8000),
           withTimeout(supabaseClient.from("processos").select("*").order("created_at", { ascending: false }), 8000),
           withTimeout(supabaseClient.from("pedidos_cotacao").select("*").order("created_at", { ascending: false }), 8000),
           withTimeout(supabaseClient.from("processos_documentos").select("*").order("created_at", { ascending: false }), 8000),
-          withTimeout(supabaseClient.from("equipa").select("*").order("created_at", { ascending: false }), 8000)
+          withTimeout(supabaseClient.from("equipa").select("*").order("created_at", { ascending: false }), 8000),
+          withTimeout(supabaseClient.from("processos_tarefas").select("*").order("created_at", { ascending: false }), 8000),
+          withTimeout(supabaseClient.from("pedidos_cotacao_documentos").select("*").order("created_at", { ascending: false }), 8000)
         ]);
 
         clientesCache = clientes || [];
@@ -3928,6 +3956,8 @@
         cotacoesCache = cotacoes || [];
         docsCache = docs || [];
         equipaCache = equipa || [];
+        tarefasCache = tarefas || [];
+        cotacaoDocsCache = cotacaoDocs || [];
 
         const totalCobrado = processosCache.reduce((s, p) => s + Number(p.valor_cobrado || 0), 0);
         const totalCustos = processosCache.reduce((s, p) => s + Number(p.custos_processo || 0), 0);
@@ -3951,6 +3981,9 @@
         renderFinanceiroTable();
         renderClientesGrid();
         renderEquipaGrid();
+        if (currentProcessModalId) {
+          openProcessModal(currentProcessModalId);
+        }
       } catch (e) {
         document.getElementById("welcome").textContent = "Painel interno • " + e.message;
       }
@@ -3988,6 +4021,15 @@
           return;
         }
 
+        const ids = (clientCotacoesCache || []).map(c => c.id);
+        if (ids.length) {
+          const { data: myCotDocs } = await withTimeout(
+            supabaseClient.from("pedidos_cotacao_documentos").select("*").in("pedido_id", ids),
+            10000
+          );
+          cotacaoDocsCache = myCotDocs || cotacaoDocsCache;
+        }
+
         tbody.innerHTML = "";
         clientCotacoesCache.forEach(c => {
           const tr = document.createElement("tr");
@@ -3998,9 +4040,7 @@
             <td>${c.origem || ""}</td>
             <td>${c.destino || ""}</td>
             <td>
-              ${c.factura_path
-                ? `<button class="btn-mini secondary" onclick="openFactura('${String(c.factura_path).replace(/'/g, "\\'")}')">Ver factura</button>`
-                : '-'}
+              ${getCotacaoDocButtons(c.id, c.factura_path)}
             </td>
             <td>${badgeEstado(c.estado || "recebido")}</td>
             <td>
@@ -4094,6 +4134,19 @@
       return { path, filename: file.name };
     }
 
+    function getCotacaoUploadFiles() {
+      return [1,2,3,4,5]
+        .map(i => document.getElementById(`cot_factura_file_${i}`)?.files?.[0] || null)
+        .filter(Boolean);
+    }
+
+    function clearCotacaoUploadFiles() {
+      [1,2,3,4,5].forEach(i => {
+        const el = document.getElementById(`cot_factura_file_${i}`);
+        if (el) el.value = "";
+      });
+    }
+
     async function submeterCotacao() {
       const msg = document.getElementById("cotacaoMsg");
 
@@ -4107,7 +4160,7 @@
       const descricao_mercadoria = document.getElementById("cot_mercadoria").value.trim();
       const numero_factura = document.getElementById("cot_factura").value.trim();
       const observacoes = document.getElementById("cot_obs").value.trim();
-      const facturaFile = document.getElementById("cot_factura_file").files?.[0] || null;
+      const cotacaoFiles = getCotacaoUploadFiles();
 
       if (!nome_cliente || !tipo_operacao || !origem || !destino || !descricao_mercadoria) {
         msg.textContent = "Preencha os campos obrigatórios.";
@@ -4121,14 +4174,19 @@
       try {
         let factura_path = null;
         let factura_filename = null;
+        const uploadedFiles = [];
 
-        if (facturaFile) {
-          const uploaded = await uploadFactura(facturaFile);
-          factura_path = uploaded.path;
-          factura_filename = uploaded.filename;
+        for (const file of cotacaoFiles) {
+          const uploaded = await uploadFactura(file);
+          uploadedFiles.push(uploaded);
         }
 
-        const { error } = await withTimeout(
+        if (uploadedFiles.length) {
+          factura_path = uploadedFiles[0].path;
+          factura_filename = uploadedFiles[0].filename;
+        }
+
+        const { data: pedidoCriado, error } = await withTimeout(
           supabaseClient.from("pedidos_cotacao").insert({
             nome_cliente,
             nuit,
@@ -4143,7 +4201,7 @@
             factura_path,
             factura_filename,
             estado: "recebido"
-          }),
+          }).select("id").single(),
           8000
         );
 
@@ -4151,6 +4209,23 @@
           msg.textContent = error.message;
           msg.className = "message-err";
           return;
+        }
+
+        if (pedidoCriado?.id && uploadedFiles.length) {
+          const rows = uploadedFiles.map(f => ({
+            pedido_id: pedidoCriado.id,
+            nome_ficheiro: f.filename,
+            ficheiro_path: f.path
+          }));
+          const { error: docsError } = await withTimeout(
+            supabaseClient.from("pedidos_cotacao_documentos").insert(rows),
+            10000
+          );
+          if (docsError) {
+            msg.textContent = docsError.message;
+            msg.className = "message-err";
+            return;
+          }
         }
 
         msg.textContent = "Pedido enviado com sucesso.";
@@ -4207,8 +4282,7 @@
         document.getElementById("cot_mercadoria").value = "";
         document.getElementById("cot_factura").value = "";
         document.getElementById("cot_obs").value = "";
-        document.getElementById("cot_factura_file").value = "";
-        document.getElementById("cot_factura_file_name").textContent = "Nenhum ficheiro selecionado.";
+        clearCotacaoUploadFiles();
 
         await loadClientCotacoes();
         await loadClientMessages();
