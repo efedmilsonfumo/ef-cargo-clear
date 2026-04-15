@@ -806,6 +806,18 @@
       font-weight:700;
     }
 
+
+    .quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+    .quick-btn{border:1px solid var(--line);background:#fff;border-radius:18px;padding:16px;cursor:pointer;text-align:left;box-shadow:var(--shadow-soft);font-weight:700;color:#111827}
+    .quick-btn:hover{border-color:rgba(190,0,26,.28);background:#fff8f8}
+    .quick-btn small{display:block;color:var(--muted);font-weight:400;margin-top:6px;line-height:1.4}
+    .client-highlight-grid{display:grid;grid-template-columns:1.3fr .9fr;gap:18px;margin-top:18px}
+    .progress-card{border:1px solid var(--line);border-radius:20px;padding:18px;background:linear-gradient(180deg,#fff 0%,#fcfcfc 100%);box-shadow:var(--shadow-soft)}
+    .progress-track{height:12px;background:#f3f4f6;border-radius:999px;overflow:hidden;margin:12px 0 10px}
+    .progress-fill{height:100%;background:linear-gradient(90deg,var(--primary) 0%, #e25566 100%);border-radius:999px;width:0%}
+    .client-highlight-list{display:grid;gap:12px}
+    .highlight-pill{border:1px solid var(--line);background:#fff;border-radius:16px;padding:14px}
+
     hr{border:none;border-top:1px solid var(--line)}
 
     @media (max-width:1180px){
@@ -1142,7 +1154,7 @@
                 <div class="panel-head">
                   <div>
                     <h2 class="section-title">Painel Financeiro</h2>
-                    <div class="section-sub">Resumo básico por processo com valor cobrado, custos e margem.</div>
+                    <div class="section-sub">Resumo básico por processo com valor cobrado, custos e margem, com filtros por período.</div>
                   </div>
                   <div class="panel-actions no-print">
                     <button class="btn-mini green" onclick="exportFinanceiroCSV()">Excel/CSV</button>
@@ -1150,10 +1162,32 @@
                   </div>
                 </div>
 
+                <div class="toolbar no-print">
+                  <div class="field">
+                    <label>De</label>
+                    <input id="financeFrom" type="datetime-local" onchange="renderFinanceiroTable()" />
+                  </div>
+                  <div class="field">
+                    <label>Até</label>
+                    <input id="financeTo" type="datetime-local" onchange="renderFinanceiroTable()" />
+                  </div>
+                  <div class="field">
+                    <label>Cliente</label>
+                    <input id="financeCliente" placeholder="Filtrar cliente" oninput="renderFinanceiroTable()" />
+                  </div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+                    <button class="btn-mini info" onclick="setFinancePreset('today')">Hoje</button>
+                    <button class="btn-mini info" onclick="setFinancePreset('7d')">7 dias</button>
+                    <button class="btn-mini info" onclick="setFinancePreset('month')">Este mês</button>
+                    <button class="btn-mini secondary" onclick="clearFinanceFilters()">Limpar</button>
+                  </div>
+                </div>
+
                 <div class="table-scroll">
                   <table>
                     <thead>
                       <tr>
+                        <th>Data</th>
                         <th>Processo</th>
                         <th>Cliente</th>
                         <th>Factura</th>
@@ -1304,8 +1338,8 @@
         <div id="client-dashboard" class="card">
           <div class="panel-head">
             <div>
-              <h2 class="section-title">Dashboard</h2>
-              <div class="section-sub">Resumo rápido da sua atividade no sistema.</div>
+              <h2 class="section-title">Dashboard Premium do Cliente</h2>
+              <div class="section-sub">Tudo o que precisa para acompanhar o processo sem ter de ligar.</div>
             </div>
           </div>
           <div class="dash-grid">
@@ -1313,6 +1347,51 @@
             <div class="kpi"><div class="kpi-title">Mensagens não lidas</div><div class="kpi-value" id="clientDashUnread">0</div></div>
             <div class="kpi"><div class="kpi-title">Docs visíveis</div><div class="kpi-value" id="clientDashDocs">0</div></div>
             <div class="kpi"><div class="kpi-title">Último estado</div><div class="kpi-value" id="clientDashEstado" style="font-size:20px;">-</div></div>
+          </div>
+
+          <div class="quick-actions no-print">
+            <button class="quick-btn" onclick="showClientTab('cotacao', document.querySelectorAll('#clientView .tab-btn')[1])">
+              📥 Nova cotação
+              <small>Envie um novo pedido com os documentos necessários.</small>
+            </button>
+            <button class="quick-btn" onclick="requestClientUpdate()">
+              🔔 Pedir atualização
+              <small>Solicita à equipa uma atualização rápida do seu processo.</small>
+            </button>
+            <button class="quick-btn" onclick="requestClientContact()">
+              📞 Solicitar contacto
+              <small>Pede que a nossa equipa entre em contacto consigo.</small>
+            </button>
+          </div>
+
+          <div class="client-highlight-grid">
+            <div class="progress-card">
+              <div class="kpi-title">Progresso do último processo</div>
+              <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;">
+                <strong id="clientProcessRef">Sem processo recente</strong>
+                <span id="clientProcessResponsavel" class="small">Responsável: -</span>
+              </div>
+              <div class="progress-track"><div id="clientProgressFill" class="progress-fill"></div></div>
+              <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                <span class="small">Etapa atual: <strong id="clientProgressLabel">-</strong></span>
+                <span class="small">Última atualização: <strong id="clientProgressUpdated">-</strong></span>
+              </div>
+            </div>
+
+            <div class="client-highlight-list">
+              <div class="highlight-pill">
+                <div class="kpi-title">Documentos em falta</div>
+                <div id="clientDashDocsMissing" style="font-weight:700;">Sem pendências</div>
+              </div>
+              <div class="highlight-pill">
+                <div class="kpi-title">Próximo passo</div>
+                <div id="clientDashNextStep" style="font-weight:700;">Acompanhar atualizações</div>
+              </div>
+              <div class="highlight-pill">
+                <div class="kpi-title">Responsável atual</div>
+                <div id="clientDashResponsavel" style="font-weight:700;">-</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1665,6 +1744,152 @@
       <div id="modalContent" class="small" style="font-size:14px;line-height:1.7;color:#374151;"></div>
     </div>
   </div>
+
+  <div id="cotacaoEditModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <h2 class="section-title" style="margin-bottom:4px;">Editar cotação</h2>
+          <div class="small">Atualize os dados da sua cotação antes da autorização final.</div>
+        </div>
+        <button class="btn-mini secondary" onclick="closeCotacaoEditModal()">Fechar</button>
+      </div>
+
+      <input type="hidden" id="edit_cotacao_id" />
+
+      <div class="grid grid-2">
+        <div>
+          <label>Tipo de operação</label>
+          <select id="edit_cot_tipo">
+            <option value="">Selecione</option>
+            <option>Importação</option>
+            <option>Exportação</option>
+            <option>Importação Temporária</option>
+            <option>Exportação Temporária</option>
+            <option>Cabotagem</option>
+            <option>Re-importação</option>
+            <option>Re-exportação</option>
+            <option>Trânsito</option>
+          </select>
+        </div>
+        <div>
+          <label>Número da factura</label>
+          <input id="edit_cot_factura" />
+        </div>
+        <div>
+          <label>Origem</label>
+          <input id="edit_cot_origem" />
+        </div>
+        <div>
+          <label>Destino</label>
+          <input id="edit_cot_destino" />
+        </div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <label>Descrição da mercadoria</label>
+        <textarea id="edit_cot_mercadoria"></textarea>
+      </div>
+
+      <div style="margin-top:14px;">
+        <label>Observações</label>
+        <textarea id="edit_cot_obs"></textarea>
+      </div>
+
+      <div class="muted-box" style="margin-top:14px;">
+        <label>Adicionar documentos extra (até 5)</label>
+        <div class="grid grid-2">
+          <input id="edit_cot_file_1" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" />
+          <input id="edit_cot_file_2" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" />
+          <input id="edit_cot_file_3" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" />
+          <input id="edit_cot_file_4" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" />
+          <input id="edit_cot_file_5" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" />
+        </div>
+      </div>
+
+      <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn" onclick="saveCotacaoEdit()">Guardar alterações</button>
+        <button class="btn btn-outline" onclick="closeCotacaoEditModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="cotacaoRespostaModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <h2 class="section-title" style="margin-bottom:4px;">Responder cotação</h2>
+          <div class="small">Informe o valor e as observações para o cliente autorizar.</div>
+        </div>
+        <button class="btn-mini secondary" onclick="closeCotacaoRespostaModal()">Fechar</button>
+      </div>
+
+      <input type="hidden" id="resp_cotacao_id" />
+
+      <div class="grid grid-2">
+        <div>
+          <label>Valor proposto</label>
+          <input id="resp_valor_proposto" type="number" step="0.01" />
+        </div>
+        <div>
+          <label>Moeda</label>
+          <select id="resp_moeda">
+            <option value="MZN">MZN</option>
+            <option value="ZAR">ZAR</option>
+            <option value="USD">USD</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <label>Detalhes / observações da cotação</label>
+        <textarea id="resp_detalhe_cotacao" placeholder="Prazo, condições, notas importantes..."></textarea>
+      </div>
+
+      <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn" onclick="saveCotacaoResponse()">Guardar resposta</button>
+        <button class="btn btn-outline" onclick="closeCotacaoRespostaModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="cotacaoPagamentoModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <h2 class="section-title" style="margin-bottom:4px;">Pagamento da cotação</h2>
+          <div class="small">Use os dados bancários abaixo, pague e envie o comprovativo para seguirmos com o processo.</div>
+        </div>
+        <button class="btn-mini secondary" onclick="closeCotacaoPagamentoModal()">Fechar</button>
+      </div>
+
+      <input type="hidden" id="pay_cotacao_id" />
+
+      <div class="muted-box">
+        <div><strong>Titular:</strong> <span id="payBancoTitular">-</span></div>
+        <div><strong>Banco:</strong> <span id="payBancoNome">-</span></div>
+        <div><strong>Conta:</strong> <span id="payBancoConta">-</span></div>
+        <div><strong>NIB:</strong> <span id="payBancoNib">-</span></div>
+        <div><strong>IBAN:</strong> <span id="payBancoIban">-</span></div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <label>Comprovativo de pagamento</label>
+        <input id="pay_comprovativo_file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" />
+      </div>
+
+      <div style="margin-top:14px;">
+        <label>Observações do pagamento</label>
+        <textarea id="pay_obs" placeholder="Opcional"></textarea>
+      </div>
+
+      <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn" onclick="submitCotacaoPayment()">Enviar comprovativo</button>
+        <button class="btn btn-outline" onclick="closeCotacaoPagamentoModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
 
   <script>
     const SUPABASE_URL = "https://fefkyzutcouoklbiwybs.supabase.co";
@@ -3447,21 +3672,19 @@
       ctbody.innerHTML = "";
 
       cotacoesCache.forEach(c => {
-        const convertido = c.convertido_em_processo === true;
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td><strong>${c.nome_cliente || ""}</strong></td>
+          <td>
+            <strong>${c.nome_cliente || ""}</strong>
+            ${Number(c.valor_proposto || 0) ? `<div class="small" style="margin-top:6px;">Proposta: ${formatQuoteMoney(c)}</div>` : ``}
+          </td>
           <td>${c.tipo_operacao || ""}</td>
           <td>${c.numero_factura || ""}</td>
           <td>
             ${getCotacaoDocButtons(c.id, c.factura_path)}
+            ${c.comprovativo_pagamento_path ? `<div style="margin-top:6px;"><button class="btn-mini secondary" onclick="openFactura('${String(c.comprovativo_pagamento_path).replace(/'/g, "\\'")}')">Ver comprovativo</button></div>` : ``}
           </td>
-          <td>
-            ${convertido
-              ? `<span class="badge green">Convertido</span>`
-              : `<button class="btn-mini" onclick="converterCotacaoEmProcesso('${String(c.id).replace(/'/g, "\\'")}')">Converter</button>`}
-            <button class="btn-mini danger" onclick="deleteCotacao('${String(c.id).replace(/'/g, "\\'")}', '${String(c.factura_path || "").replace(/'/g, "\\'")}', '${String(c.email || "").replace(/'/g, "\\'")}')">Apagar</button>
-          </td>
+          <td>${getCotacaoActionsHtml(c, false)}</td>
           <td>${c.origem || ""}</td>
           <td>${c.destino || ""}</td>
           <td>${badgeEstado(c.estado || "recebido")}</td>
@@ -3470,11 +3693,63 @@
       });
     }
 
+    function getFinanceFilteredProcessos() {
+      let rows = [...processosCache];
+      const fromVal = document.getElementById("financeFrom")?.value || "";
+      const toVal = document.getElementById("financeTo")?.value || "";
+      const clienteQ = (document.getElementById("financeCliente")?.value || "").trim().toLowerCase();
+      const fromDate = fromVal ? new Date(fromVal) : null;
+      const toDate = toVal ? new Date(toVal) : null;
+
+      rows = rows.filter(p => {
+        const baseDate = new Date(p.updated_at || p.created_at || Date.now());
+        const okFrom = !fromDate || baseDate >= fromDate;
+        const okTo = !toDate || baseDate <= toDate;
+        const okCliente = !clienteQ || String(p.importador_exportador || "").toLowerCase().includes(clienteQ);
+        return okFrom && okTo && okCliente;
+      });
+
+      return rows;
+    }
+
+    function clearFinanceFilters() {
+      const ids = ["financeFrom","financeTo","financeCliente"];
+      ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+      renderFinanceiroTable();
+    }
+
+    function setFinancePreset(type) {
+      const now = new Date();
+      const fromEl = document.getElementById("financeFrom");
+      const toEl = document.getElementById("financeTo");
+      if (!fromEl || !toEl) return;
+
+      const fmt = d => {
+        const pad = n => String(n).padStart(2,'0');
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      };
+
+      let from = new Date(now);
+      let to = new Date(now);
+
+      if (type === 'today') {
+        from.setHours(0,0,0,0);
+      } else if (type === '7d') {
+        from.setDate(from.getDate()-7);
+      } else if (type === 'month') {
+        from = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+      }
+
+      fromEl.value = fmt(from);
+      toEl.value = fmt(to);
+      renderFinanceiroTable();
+    }
+
     function renderFinanceiroTable() {
       const ftbody = document.getElementById("financeiroTable");
       ftbody.innerHTML = "";
 
-      getFilteredProcessos().forEach(p => {
+      getFinanceFilteredProcessos().forEach(p => {
         const margem = Number(p.margem_lucro || 0);
         const margemBadge = margem > 0
           ? `<span class="badge green">${formatMoney(margem)}</span>`
@@ -3482,6 +3757,7 @@
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
+          <td>${formatDate(p.updated_at || p.created_at || "")}</td>
           <td><strong>${p.numero_processo || ""}</strong></td>
           <td>${p.importador_exportador || ""}</td>
           <td>${p.numero_factura || ""}</td>
@@ -3835,6 +4111,7 @@
 
       let docsVisible = 0;
       let lastEstado = "-";
+      let latestProcess = null;
 
       try {
         const { data: userData } = await withTimeout(supabaseClient.auth.getUser(), 8000);
@@ -3853,7 +4130,8 @@
           );
 
           if (processos?.length) {
-            lastEstado = processos[0].estado || "-";
+            latestProcess = processos[0];
+            lastEstado = latestProcess.estado || "-";
             const ids = processos.map(p => p.id);
             const { data: docs } = await withTimeout(
               supabaseClient.from("processos_documentos").select("*").in("processo_id", ids).eq("visivel_cliente", true),
@@ -3866,15 +4144,437 @@
         document.getElementById("clientDashCotacoes").textContent = clientCotacoesCache.length;
         document.getElementById("clientDashDocs").textContent = docsVisible;
         document.getElementById("clientDashEstado").textContent = lastEstado;
+
+        if (latestProcess) {
+          document.getElementById("clientProcessRef").textContent = `${latestProcess.numero_processo || '-'} • Factura ${latestProcess.numero_factura || '-'}`;
+          document.getElementById("clientProcessResponsavel").textContent = `Responsável: ${latestProcess.responsavel_nome || latestProcess.responsavel_email || '-'}`;
+          document.getElementById("clientDashResponsavel").textContent = latestProcess.responsavel_nome || latestProcess.responsavel_email || '-';
+          document.getElementById("clientDashDocsMissing").textContent = latestProcess.documentos_em_falta?.trim() ? latestProcess.documentos_em_falta : 'Sem pendências';
+          document.getElementById("clientDashNextStep").textContent = getClientNextStep(latestProcess.estado, latestProcess.documentos_em_falta);
+          document.getElementById("clientProgressLabel").textContent = latestProcess.estado || '-';
+          document.getElementById("clientProgressUpdated").textContent = formatDate(latestProcess.updated_at || latestProcess.created_at || '');
+          document.getElementById("clientProgressFill").style.width = getProcessProgress(latestProcess.estado) + '%';
+        } else {
+          document.getElementById("clientProcessRef").textContent = 'Sem processo recente';
+          document.getElementById("clientProcessResponsavel").textContent = 'Responsável: -';
+          document.getElementById("clientDashResponsavel").textContent = '-';
+          document.getElementById("clientDashDocsMissing").textContent = 'Sem pendências';
+          document.getElementById("clientDashNextStep").textContent = 'Envie a sua primeira cotação';
+          document.getElementById("clientProgressLabel").textContent = '-';
+          document.getElementById("clientProgressUpdated").textContent = '-';
+          document.getElementById("clientProgressFill").style.width = '0%';
+        }
       } catch (_) {}
     }
 
-    function escapeHtml(text) {
+    function getProcessProgress(estado) {
+      const e = String(estado || '').toLowerCase();
+      if (e.includes('recebido')) return 10;
+      if (e.includes('análise')) return 25;
+      if (e.includes('documentos')) return 35;
+      if (e.includes('submetido')) return 55;
+      if (e.includes('desembaraço')) return 75;
+      if (e.includes('liberado')) return 92;
+      if (e.includes('entregue')) return 100;
+      return 0;
+    }
+
+    function getClientNextStep(estado, docsFalta) {
+      if (String(docsFalta || '').trim()) return 'Enviar documentos pendentes';
+      const e = String(estado || '').toLowerCase();
+      if (e.includes('recebido')) return 'Aguardar validação inicial';
+      if (e.includes('análise')) return 'A equipa está a analisar o processo';
+      if (e.includes('submetido')) return 'Aguardar tramitação aduaneira';
+      if (e.includes('desembaraço')) return 'Processo em fase final de desembaraço';
+      if (e.includes('liberado')) return 'Agendar levantamento/entrega';
+      if (e.includes('entregue')) return 'Processo concluído';
+      return 'Acompanhar atualizações';
+    }
+
+    async function sendPresetClientMessage(message) {
+      try {
+        const { error } = await withTimeout(
+          supabaseClient.from("mensagens").insert({
+            cliente_email: currentUserEmail,
+            remetente: "cliente",
+            mensagem: message,
+            processo_numero: "",
+            lido_cliente: true,
+            lido_interno: false
+          }),
+          10000
+        );
+        if (error) {
+          alert(error.message);
+          return;
+        }
+        await loadClientMessages();
+        await loadInternalMessages();
+        alert('Pedido enviado com sucesso.');
+      } catch (e) {
+        alert(e.message || 'Erro ao enviar pedido.');
+      }
+    }
+
+    async function requestClientContact() {
+      await sendPresetClientMessage('Solicito contacto da equipa EF Cargo Clear assim que possível.');
+    }
+
+    async function requestClientUpdate() {
+      await sendPresetClientMessage('Solicito uma atualização do meu processo.');
+    }
+
+        function escapeHtml(text) {
       return String(text || "")
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;");
     }
+
+
+    function formatQuoteMoney(c) {
+      const valor = Number(c.valor_proposto || 0);
+      if (!valor) return "";
+      return `${formatMoney(valor)} ${c.moeda || "MZN"}`;
+    }
+
+    function getCotacaoActionsHtml(c, ownerView = false) {
+      const id = String(c.id).replace(/'/g, "\\'");
+      const ownerEmail = String(c.email || "").replace(/'/g, "\\'");
+      const facturaPath = String(c.factura_path || "").replace(/'/g, "\\'");
+      const responded = Number(c.valor_proposto || 0) > 0 || !!c.respondido_at;
+      const authorized = c.autorizado_cliente === true;
+      const paymentSent = String(c.estado_pagamento || "") === "comprovativo_enviado" || !!c.comprovativo_pagamento_path;
+
+      if (!ownerView) {
+        return `
+          <button class="btn-mini info" onclick="openCotacaoRespostaModal('${id}')">${responded ? "Editar resposta" : "Responder"}</button>
+          ${c.comprovativo_pagamento_path ? `<button class="btn-mini secondary" onclick="openFactura('${String(c.comprovativo_pagamento_path).replace(/'/g, "\\'")}')">Comprovativo</button>` : ``}
+          ${c.convertido_em_processo === true
+            ? `<span class="badge green">Convertido</span>`
+            : `<button class="btn-mini" onclick="converterCotacaoEmProcesso('${id}')">Converter</button>`}
+          <button class="btn-mini danger" onclick="deleteCotacao('${id}', '${facturaPath}', '${ownerEmail}')">Apagar</button>
+        `;
+      }
+
+      let html = "";
+      if (!authorized && String(c.estado || "").toLowerCase() !== "pagamento confirmado") {
+        html += `<button class="btn-mini info" onclick="openCotacaoEditModal('${id}')">Editar</button>`;
+      }
+      if (responded && !authorized) {
+        html += `<button class="btn-mini green" onclick="authorizeCotacao('${id}')">Autorizar</button>`;
+      }
+      if (authorized && !paymentSent) {
+        html += `<button class="btn-mini" onclick="openCotacaoPagamentoModal('${id}')">Pagar</button>`;
+      }
+      if (c.comprovativo_pagamento_path) {
+        html += `<button class="btn-mini secondary" onclick="openFactura('${String(c.comprovativo_pagamento_path).replace(/'/g, "\\'")}')">Comprovativo</button>`;
+      }
+      if (!authorized) {
+        html += `<button class="btn-mini danger" onclick="deleteCotacao('${id}', '${facturaPath}', '${ownerEmail}')">Apagar</button>`;
+      }
+      return html || "-";
+    }
+
+    function fillBankDetailsForPayment() {
+      const cfg = companyConfig || {};
+      const set = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value || "-";
+      };
+      set("payBancoTitular", cfg.banco_titular || cfg.nome_empresa || "EF Cargo Clear");
+      set("payBancoNome", cfg.banco_nome || "-");
+      set("payBancoConta", cfg.banco_conta || "-");
+      set("payBancoNib", cfg.banco_nib || "-");
+      set("payBancoIban", cfg.banco_iban || "-");
+    }
+
+    function closeCotacaoEditModal() {
+      const modal = document.getElementById("cotacaoEditModalBackdrop");
+      if (modal) modal.style.display = "none";
+    }
+
+    function closeCotacaoRespostaModal() {
+      const modal = document.getElementById("cotacaoRespostaModalBackdrop");
+      if (modal) modal.style.display = "none";
+    }
+
+    function closeCotacaoPagamentoModal() {
+      const modal = document.getElementById("cotacaoPagamentoModalBackdrop");
+      if (modal) modal.style.display = "none";
+    }
+
+    function openCotacaoEditModal(cotacaoId) {
+      const c = clientCotacoesCache.find(x => String(x.id) === String(cotacaoId));
+      if (!c) return;
+
+      document.getElementById("edit_cotacao_id").value = c.id;
+      document.getElementById("edit_cot_tipo").value = c.tipo_operacao || "";
+      document.getElementById("edit_cot_factura").value = c.numero_factura || "";
+      document.getElementById("edit_cot_origem").value = c.origem || "";
+      document.getElementById("edit_cot_destino").value = c.destino || "";
+      document.getElementById("edit_cot_mercadoria").value = c.descricao_mercadoria || "";
+      document.getElementById("edit_cot_obs").value = c.observacoes || "";
+
+      [1,2,3,4,5].forEach(i => {
+        const el = document.getElementById(`edit_cot_file_${i}`);
+        if (el) el.value = "";
+      });
+
+      document.getElementById("cotacaoEditModalBackdrop").style.display = "flex";
+    }
+
+    async function saveCotacaoEdit() {
+      const id = document.getElementById("edit_cotacao_id").value;
+      if (!id) return;
+
+      const payload = {
+        tipo_operacao: document.getElementById("edit_cot_tipo").value.trim(),
+        numero_factura: document.getElementById("edit_cot_factura").value.trim(),
+        origem: document.getElementById("edit_cot_origem").value.trim(),
+        destino: document.getElementById("edit_cot_destino").value.trim(),
+        descricao_mercadoria: document.getElementById("edit_cot_mercadoria").value.trim(),
+        observacoes: document.getElementById("edit_cot_obs").value.trim(),
+        editado_cliente_at: new Date().toISOString(),
+        estado: "editado pelo cliente",
+        valor_proposto: null,
+        detalhe_resposta: null,
+        autorizado_cliente: false,
+        autorizado_at: null,
+        estado_pagamento: "nao_iniciado",
+        comprovativo_pagamento_path: null,
+        comprovativo_pagamento_nome: null
+      };
+
+      try {
+        const { error } = await withTimeout(
+          supabaseClient.from("pedidos_cotacao").update(payload).eq("id", id),
+          10000
+        );
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        const editFiles = [1,2,3,4,5]
+          .map(i => document.getElementById(`edit_cot_file_${i}`)?.files?.[0] || null)
+          .filter(Boolean);
+
+        if (editFiles.length) {
+          const uploaded = [];
+          for (const file of editFiles) {
+            uploaded.push(await uploadFactura(file, "cotacoes_edicao"));
+          }
+          const rows = uploaded.map(f => ({
+            pedido_id: id,
+            nome_ficheiro: f.filename,
+            ficheiro_path: f.path
+          }));
+          const { error: docsError } = await withTimeout(
+            supabaseClient.from("pedidos_cotacao_documentos").insert(rows),
+            10000
+          );
+          if (docsError) {
+            alert(docsError.message);
+            return;
+          }
+        }
+
+        await supabaseClient.from("mensagens").insert({
+          cliente_email: currentUserEmail,
+          remetente: "cliente",
+          mensagem: "Atualizei a minha cotação no portal. Peço revisão da proposta.",
+          processo_numero: payload.numero_factura || "",
+          lido_cliente: true,
+          lido_interno: false
+        });
+
+        closeCotacaoEditModal();
+        alert("Cotação atualizada com sucesso.");
+        await loadClientCotacoes();
+        if (currentUserRole === "admin" || currentUserRole === "employee") await loadInternal();
+      } catch (e) {
+        alert(e.message || "Erro ao editar cotação.");
+      }
+    }
+
+    function openCotacaoRespostaModal(cotacaoId) {
+      const c = cotacoesCache.find(x => String(x.id) === String(cotacaoId));
+      if (!c) return;
+
+      document.getElementById("resp_cotacao_id").value = c.id;
+      document.getElementById("resp_valor_proposto").value = Number(c.valor_proposto || 0) || "";
+      document.getElementById("resp_moeda").value = c.moeda || "MZN";
+      document.getElementById("resp_detalhe_cotacao").value = c.detalhe_resposta || "";
+      document.getElementById("cotacaoRespostaModalBackdrop").style.display = "flex";
+    }
+
+    async function saveCotacaoResponse() {
+      const id = document.getElementById("resp_cotacao_id").value;
+      if (!id) return;
+
+      const valor = Number(document.getElementById("resp_valor_proposto").value || 0);
+      const moeda = document.getElementById("resp_moeda").value;
+      const detalhe = document.getElementById("resp_detalhe_cotacao").value.trim();
+
+      if (!valor) {
+        alert("Informe o valor da cotação.");
+        return;
+      }
+
+      try {
+        const { data: cotacao } = await withTimeout(
+          supabaseClient.from("pedidos_cotacao").select("*").eq("id", id).single(),
+          8000
+        );
+
+        const { error } = await withTimeout(
+          supabaseClient.from("pedidos_cotacao").update({
+            valor_proposto: valor,
+            moeda,
+            detalhe_resposta: detalhe,
+            respondido_at: new Date().toISOString(),
+            estado: "cotado",
+            autorizado_cliente: false,
+            autorizado_at: null,
+            estado_pagamento: "nao_iniciado",
+            comprovativo_pagamento_path: null,
+            comprovativo_pagamento_nome: null
+          }).eq("id", id),
+          10000
+        );
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        if (cotacao?.email) {
+          await sendEmail(
+            cotacao.email,
+            "A sua cotação foi respondida",
+            `<div style="font-family:Arial,sans-serif">
+              <h2>Cotação respondida</h2>
+              <p>Cliente: <b>${cotacao.nome_cliente || "-"}</b></p>
+              <p>Factura: <b>${cotacao.numero_factura || "-"}</b></p>
+              <p>Valor: <b>${formatMoney(valor)} ${moeda}</b></p>
+              <p>${detalhe || ""}</p>
+              <p>Entre no portal para autorizar a cotação e enviar o comprovativo de pagamento.</p>
+            </div>`
+          );
+
+          await supabaseClient.from("mensagens").insert({
+            cliente_email: cotacao.email,
+            remetente: "admin",
+            mensagem: `Respondemos a sua cotação. Valor proposto: ${formatMoney(valor)} ${moeda}. Entre no portal para autorizar.`,
+            processo_numero: cotacao.numero_factura || "",
+            lido_cliente: false,
+            lido_interno: true
+          });
+        }
+
+        closeCotacaoRespostaModal();
+        alert("Cotação respondida com sucesso.");
+        await loadInternal();
+      } catch (e) {
+        alert(e.message || "Erro ao responder cotação.");
+      }
+    }
+
+    async function authorizeCotacao(cotacaoId) {
+      if (!confirm("Autorizar esta cotação?")) return;
+      try {
+        const { data: cotacao } = await withTimeout(
+          supabaseClient.from("pedidos_cotacao").select("*").eq("id", cotacaoId).single(),
+          8000
+        );
+
+        const { error } = await withTimeout(
+          supabaseClient.from("pedidos_cotacao").update({
+            autorizado_cliente: true,
+            autorizado_at: new Date().toISOString(),
+            estado: "autorizado"
+          }).eq("id", cotacaoId),
+          10000
+        );
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        await supabaseClient.from("mensagens").insert({
+          cliente_email: currentUserEmail,
+          remetente: "cliente",
+          mensagem: `Autorizei a cotação ${cotacao?.numero_factura || ""}. Vou enviar o comprovativo de pagamento.`,
+          processo_numero: cotacao?.numero_factura || "",
+          lido_cliente: true,
+          lido_interno: false
+        });
+
+        alert("Cotação autorizada com sucesso.");
+        await loadClientCotacoes();
+      } catch (e) {
+        alert(e.message || "Erro ao autorizar.");
+      }
+    }
+
+    async function openCotacaoPagamentoModal(cotacaoId) {
+      document.getElementById("pay_cotacao_id").value = cotacaoId;
+      document.getElementById("pay_comprovativo_file").value = "";
+      document.getElementById("pay_obs").value = "";
+      if (!companyConfig) await loadCompanyConfig();
+      fillBankDetailsForPayment();
+      document.getElementById("cotacaoPagamentoModalBackdrop").style.display = "flex";
+    }
+
+    async function submitCotacaoPayment() {
+      const cotacaoId = document.getElementById("pay_cotacao_id").value;
+      const file = document.getElementById("pay_comprovativo_file").files?.[0] || null;
+      const obs = document.getElementById("pay_obs").value.trim();
+
+      if (!file) {
+        alert("Carregue o comprovativo.");
+        return;
+      }
+
+      try {
+        const uploaded = await uploadFactura(file, "comprovativos_pagamento");
+        const { data: cotacao } = await withTimeout(
+          supabaseClient.from("pedidos_cotacao").select("*").eq("id", cotacaoId).single(),
+          8000
+        );
+
+        const { error } = await withTimeout(
+          supabaseClient.from("pedidos_cotacao").update({
+            comprovativo_pagamento_path: uploaded.path,
+            comprovativo_pagamento_nome: uploaded.filename,
+            estado_pagamento: "comprovativo_enviado",
+            estado: "pagamento enviado"
+          }).eq("id", cotacaoId),
+          10000
+        );
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        await supabaseClient.from("mensagens").insert({
+          cliente_email: currentUserEmail,
+          remetente: "cliente",
+          mensagem: `Enviei o comprovativo de pagamento da cotação ${cotacao?.numero_factura || ""}.${obs ? " Obs: " + obs : ""}`,
+          processo_numero: cotacao?.numero_factura || "",
+          lido_cliente: true,
+          lido_interno: false
+        });
+
+        closeCotacaoPagamentoModal();
+        alert("Comprovativo enviado com sucesso.");
+        await loadClientCotacoes();
+      } catch (e) {
+        alert(e.message || "Erro ao enviar comprovativo.");
+      }
+    }
+
 
     function exportProcessosCSV() {
       const rows = getFilteredProcessos().map(p => [
@@ -3895,7 +4595,8 @@
     }
 
     function exportFinanceiroCSV() {
-      const rows = getFilteredProcessos().map(p => [
+      const rows = getFinanceFilteredProcessos().map(p => [
+        formatDate(p.updated_at || p.created_at || ""),
         p.numero_processo || "",
         p.importador_exportador || "",
         p.numero_factura || "",
@@ -3904,7 +4605,7 @@
         p.margem_lucro || 0
       ]);
       downloadCSV("financeiro.csv",
-        ["Processo","Cliente","Factura","Valor cobrado","Custos","Margem"],
+        ["Data","Processo","Cliente","Factura","Valor cobrado","Custos","Margem"],
         rows
       );
     }
@@ -4041,11 +4742,14 @@
             <td>${c.destino || ""}</td>
             <td>
               ${getCotacaoDocButtons(c.id, c.factura_path)}
+              ${c.comprovativo_pagamento_path ? `<div style="margin-top:6px;"><button class="btn-mini secondary" onclick="openFactura('${String(c.comprovativo_pagamento_path).replace(/'/g, "\\'")}')">Comprovativo</button></div>` : ``}
             </td>
-            <td>${badgeEstado(c.estado || "recebido")}</td>
             <td>
-              <button class="btn-mini danger" onclick="deleteCotacao('${String(c.id).replace(/'/g, "\\'")}', '${String(c.factura_path || "").replace(/'/g, "\\'")}', '${String(c.email || "").replace(/'/g, "\\'")}')">Apagar</button>
+              ${badgeEstado(c.estado || "recebido")}
+              ${Number(c.valor_proposto || 0) ? `<div class="small" style="margin-top:6px;">Valor: ${formatQuoteMoney(c)}</div>` : ``}
+              ${c.detalhe_resposta ? `<div class="small" style="margin-top:6px;">${escapeHtml(c.detalhe_resposta)}</div>` : ``}
             </td>
+            <td>${getCotacaoActionsHtml(c, true)}</td>
           `;
           tbody.appendChild(tr);
         });
@@ -4115,9 +4819,9 @@
       }
     }
 
-    async function uploadFactura(file) {
+    async function uploadFactura(file, folder = "cotacoes") {
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const path = `cotacoes/${Date.now()}_${safeName}`;
+      const path = `${folder}/${Date.now()}_${safeName}`;
 
       const { error } = await withTimeout(
         supabaseClient.storage
