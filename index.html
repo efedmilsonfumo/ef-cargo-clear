@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EF Cargo Clear</title>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root{
       --bg:#f4f6f8;
@@ -693,6 +694,56 @@
       color:var(--muted);
     }
 
+
+    .dashboard-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:18px;
+      margin-top:18px;
+    }
+
+    .chart-card{
+      background:linear-gradient(180deg,#ffffff 0%, #fcfcfc 100%);
+      border:1px solid var(--line);
+      border-radius:22px;
+      box-shadow:var(--shadow-soft);
+      padding:18px;
+      min-height:360px;
+    }
+
+    .chart-card canvas{
+      width:100% !important;
+      height:280px !important;
+    }
+
+    .activity-feed{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      max-height:360px;
+      overflow:auto;
+      padding-right:4px;
+    }
+
+    .activity-item{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:#fff;
+      padding:12px 14px;
+    }
+
+    .activity-title{
+      font-weight:700;
+      color:#111827;
+      margin-bottom:4px;
+      font-size:14px;
+    }
+
+    .activity-meta{
+      font-size:12px;
+      color:var(--muted);
+    }
+
     hr{border:none;border-top:1px solid var(--line)}
 
     @media (max-width:1180px){
@@ -704,7 +755,7 @@
     @media (max-width:1100px){
       .grid-5{grid-template-columns:repeat(2,1fr)}
       .grid-4{grid-template-columns:repeat(2,1fr)}
-      .grid-3,.detail-grid,.grid-2,.stat-row,.client-meta,.dash-grid{grid-template-columns:1fr}
+      .grid-3,.detail-grid,.grid-2,.stat-row,.client-meta,.dash-grid,.dashboard-grid{grid-template-columns:1fr}
     }
 
     @media (max-width:640px){
@@ -859,7 +910,8 @@
           <aside class="sidebar no-print">
             <div class="sidebar-title">Painel Interno</div>
             <div class="sidebar-menu">
-              <button class="sidebar-btn active" id="side-processos" onclick="showInternalTab('processos')">Processos</button>
+              <button class="sidebar-btn active" id="side-dashboard" onclick="showInternalTab('dashboard')">📊 Dashboard</button>
+              <button class="sidebar-btn" id="side-processos" onclick="showInternalTab('processos')">Processos</button>
               <button class="sidebar-btn" id="side-cotacoes" onclick="showInternalTab('cotacoes')">Pedidos de cotação</button>
               <button class="sidebar-btn" id="side-financeiro" onclick="showInternalTab('financeiro')">Financeiro</button>
               <button class="sidebar-btn" id="side-clientes" onclick="showInternalTab('clientes')">Clientes</button>
@@ -885,7 +937,68 @@
               <div class="kpi"><div class="kpi-title">Margem total</div><div class="kpi-value" id="margemTotal">0</div></div>
             </div>
 
-            <div id="internal-processos" class="tab-content" style="margin-top:18px;">
+
+            <div id="internal-dashboard" class="tab-content" style="margin-top:18px;">
+              <div class="card">
+                <div class="panel-head">
+                  <div>
+                    <h2 class="section-title">Dashboard Analytics</h2>
+                    <div class="section-sub">Visão rápida da operação com gráficos e atividade recente em tempo real.</div>
+                  </div>
+                </div>
+
+                <div class="grid grid-4">
+                  <div class="kpi"><div class="kpi-title">Total de processos</div><div class="kpi-value" id="dashTotalProcessos">0</div></div>
+                  <div class="kpi"><div class="kpi-title">Liberados / Entregues</div><div class="kpi-value" id="dashLiberados">0</div></div>
+                  <div class="kpi"><div class="kpi-title">Pendências de docs</div><div class="kpi-value" id="dashPendencias">0</div></div>
+                  <div class="kpi"><div class="kpi-title">Margem total</div><div class="kpi-value" id="dashMargem">0</div></div>
+                </div>
+
+                <div class="dashboard-grid">
+                  <div class="chart-card">
+                    <div class="panel-head">
+                      <div>
+                        <h3 style="margin:0;">Distribuição por estado</h3>
+                        <div class="small">Processos por fase atual</div>
+                      </div>
+                    </div>
+                    <canvas id="dashboardDonutChart"></canvas>
+                  </div>
+
+                  <div class="chart-card">
+                    <div class="panel-head">
+                      <div>
+                        <h3 style="margin:0;">Processos por mês</h3>
+                        <div class="small">Últimos 6 meses</div>
+                      </div>
+                    </div>
+                    <canvas id="dashboardBarChart"></canvas>
+                  </div>
+
+                  <div class="chart-card">
+                    <div class="panel-head">
+                      <div>
+                        <h3 style="margin:0;">Cobrado vs custos</h3>
+                        <div class="small">Financeiro mensal dos últimos 6 meses</div>
+                      </div>
+                    </div>
+                    <canvas id="dashboardRevenueChart"></canvas>
+                  </div>
+
+                  <div class="chart-card">
+                    <div class="panel-head">
+                      <div>
+                        <h3 style="margin:0;">Atividade recente</h3>
+                        <div class="small">Últimas ações e movimentos do sistema</div>
+                      </div>
+                    </div>
+                    <div id="dashboardActivityFeed" class="activity-feed"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="internal-processos" class="tab-content hidden" style="margin-top:18px;">
               <div class="card">
                 <div class="panel-head">
                   <div>
@@ -1511,6 +1624,9 @@
     let currentUserName = "";
     let currentSelectedThread = "";
     let companyConfig = null;
+    let dashboardDonutChart = null;
+    let dashboardBarChart = null;
+    let dashboardRevenueChart = null;
 
     document.addEventListener("DOMContentLoaded", () => {
       const facturaInput = document.getElementById("cot_factura_file");
@@ -1689,6 +1805,18 @@
       }
     }
 
+    function setWelcomeMessage() {
+      const el = document.getElementById("welcome");
+      if (!el) return;
+      if (currentUserRole === "admin") {
+        el.innerHTML = "👑 Bem-vindo, <strong>Edmilson</strong> — painel de controlo total da operação.";
+      } else if (currentUserRole === "employee") {
+        el.innerHTML = "🧑‍💼 Bem-vindo, <strong>" + (currentUserName || "Funcionário") + "</strong> — gestão de processos ativa.";
+      } else {
+        el.innerHTML = "📦 Bem-vindo ao portal EF Cargo Clear — acompanhe os seus processos em tempo real.";
+      }
+    }
+
     function badgeEstado(estado) {
       const e = (estado || "").toLowerCase();
       if (e.includes("liberado") || e.includes("entregue")) return `<span class="badge green">${estado}</span>`;
@@ -1766,6 +1894,7 @@
 
     function showInternalTab(tab) {
       document.querySelectorAll(".sidebar-btn").forEach(b => b.classList.remove("active"));
+      if (tab === "dashboard") document.getElementById("side-dashboard")?.classList.add("active");
       if (tab === "processos") document.getElementById("side-processos")?.classList.add("active");
       if (tab === "cotacoes") document.getElementById("side-cotacoes")?.classList.add("active");
       if (tab === "financeiro") document.getElementById("side-financeiro")?.classList.add("active");
@@ -1773,6 +1902,7 @@
       if (tab === "equipa") document.getElementById("side-equipa")?.classList.add("active");
       if (tab === "mensagens") document.getElementById("side-mensagens")?.classList.add("active");
 
+      document.getElementById("internal-dashboard").classList.toggle("hidden", tab !== "dashboard");
       document.getElementById("internal-processos").classList.toggle("hidden", tab !== "processos");
       document.getElementById("internal-cotacoes").classList.toggle("hidden", tab !== "cotacoes");
       document.getElementById("internal-financeiro").classList.toggle("hidden", tab !== "financeiro");
@@ -1782,6 +1912,9 @@
 
       if (tab === "mensagens") {
         loadInternalMessages();
+      }
+      if (tab === "dashboard") {
+        renderDashboardAnalytics();
       }
     }
 
@@ -1815,8 +1948,9 @@
         document.getElementById("internal-financeiro").classList.add("hidden");
         document.getElementById("internal-clientes").classList.add("hidden");
         document.getElementById("internal-equipa").classList.add("hidden");
-        showInternalTab("processos");
       }
+
+      showInternalTab("dashboard");
     }
 
     async function registerClient() {
@@ -1962,6 +2096,7 @@
         currentUserRole = "admin";
         currentUserName = "Administrador";
         document.getElementById("welcome").textContent = "Edmilson Fumo • administrador";
+        setWelcomeMessage();
         document.getElementById("internalView").classList.remove("hidden");
         document.getElementById("clientView").classList.add("hidden");
         applyInternalPermissions();
@@ -1982,6 +2117,7 @@
           currentUserRole = "employee";
           currentUserName = membro.nome || "Funcionário";
           document.getElementById("welcome").textContent = `${membro.nome || "Funcionário"} • ${membro.nivel || "operador"}`;
+          setWelcomeMessage();
           document.getElementById("internalView").classList.remove("hidden");
           document.getElementById("clientView").classList.add("hidden");
           applyInternalPermissions();
@@ -1996,6 +2132,7 @@
       currentUserRole = "client";
       document.getElementById("clientView").classList.remove("hidden");
       document.getElementById("internalView").classList.add("hidden");
+      setWelcomeMessage();
 
       try {
         const { data: cliente } = await withTimeout(
@@ -2888,6 +3025,192 @@
       });
     }
 
+
+    function getLastSixMonthsKeys() {
+      const months = [];
+      const now = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        const label = d.toLocaleDateString("pt-PT", { month: "short", year: "2-digit" });
+        months.push({ key, label });
+      }
+      return months;
+    }
+
+    function getProcessMonthKey(item) {
+      const raw = item?.created_at || item?.prazo || null;
+      if (!raw) return "";
+      const d = new Date(raw);
+      if (isNaN(d.getTime())) return "";
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    }
+
+    function normaliseEstadoLabel(estado) {
+      const e = String(estado || "Sem estado").trim();
+      if (!e) return "Sem estado";
+      return e;
+    }
+
+    function destroyDashboardCharts() {
+      if (dashboardDonutChart) { dashboardDonutChart.destroy(); dashboardDonutChart = null; }
+      if (dashboardBarChart) { dashboardBarChart.destroy(); dashboardBarChart = null; }
+      if (dashboardRevenueChart) { dashboardRevenueChart.destroy(); dashboardRevenueChart = null; }
+    }
+
+    function renderDashboardAnalytics() {
+      const totalProcessos = processosCache.length;
+      const liberados = processosCache.filter(p => ["Liberado", "Entregue"].includes(p.estado)).length;
+      const pendencias = processosCache.filter(p => p.documentos_em_falta && p.documentos_em_falta.trim() !== "").length;
+      const margem = processosCache.reduce((s, p) => s + Number(p.margem_lucro || 0), 0);
+
+      const totalEl = document.getElementById("dashTotalProcessos");
+      const libEl = document.getElementById("dashLiberados");
+      const pendEl = document.getElementById("dashPendencias");
+      const margEl = document.getElementById("dashMargem");
+      if (totalEl) totalEl.textContent = totalProcessos;
+      if (libEl) libEl.textContent = liberados;
+      if (pendEl) pendEl.textContent = pendencias;
+      if (margEl) margEl.textContent = formatMoney(margem);
+
+      destroyDashboardCharts();
+
+      const stateMap = {};
+      processosCache.forEach(p => {
+        const estado = normaliseEstadoLabel(p.estado);
+        stateMap[estado] = (stateMap[estado] || 0) + 1;
+      });
+
+      const donutCanvas = document.getElementById("dashboardDonutChart");
+      if (donutCanvas && window.Chart) {
+        const labels = Object.keys(stateMap);
+        const values = Object.values(stateMap);
+        dashboardDonutChart = new Chart(donutCanvas, {
+          type: "doughnut",
+          data: {
+            labels,
+            datasets: [{
+              data: values,
+              backgroundColor: labels.map(label => {
+                const l = label.toLowerCase();
+                if (l.includes("liberado") || l.includes("entregue")) return "#16a34a";
+                if (l.includes("análise") || l.includes("submetido") || l.includes("desembaraço") || l.includes("recebido")) return "#2563eb";
+                return "#dc2626";
+              }),
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: "bottom" } }
+          }
+        });
+      }
+
+      const months = getLastSixMonthsKeys();
+      const processMonthCounts = Object.fromEntries(months.map(m => [m.key, 0]));
+      processosCache.forEach(p => {
+        const key = getProcessMonthKey(p);
+        if (key in processMonthCounts) processMonthCounts[key]++;
+      });
+
+      const barCanvas = document.getElementById("dashboardBarChart");
+      if (barCanvas && window.Chart) {
+        dashboardBarChart = new Chart(barCanvas, {
+          type: "bar",
+          data: {
+            labels: months.map(m => m.label),
+            datasets: [{
+              label: "Processos",
+              data: months.map(m => processMonthCounts[m.key]),
+              backgroundColor: "#2563eb",
+              borderRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+            plugins: { legend: { display: false } }
+          }
+        });
+      }
+
+      const revenueMap = Object.fromEntries(months.map(m => [m.key, { cobrado: 0, custos: 0 }]));
+      processosCache.forEach(p => {
+        const key = getProcessMonthKey(p);
+        if (key in revenueMap) {
+          revenueMap[key].cobrado += Number(p.valor_cobrado || 0);
+          revenueMap[key].custos += Number(p.custos_processo || 0);
+        }
+      });
+
+      const revenueCanvas = document.getElementById("dashboardRevenueChart");
+      if (revenueCanvas && window.Chart) {
+        dashboardRevenueChart = new Chart(revenueCanvas, {
+          type: "bar",
+          data: {
+            labels: months.map(m => m.label),
+            datasets: [
+              {
+                label: "Valor cobrado",
+                data: months.map(m => revenueMap[m.key].cobrado),
+                backgroundColor: "#16a34a",
+                borderRadius: 8
+              },
+              {
+                label: "Custos",
+                data: months.map(m => revenueMap[m.key].custos),
+                backgroundColor: "#dc2626",
+                borderRadius: 8
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true } },
+            plugins: { legend: { position: "bottom" } }
+          }
+        });
+      }
+
+      const feed = document.getElementById("dashboardActivityFeed");
+      if (feed) {
+        const recent = [
+          ...processosCache.slice(0, 5).map(p => ({
+            title: `Processo ${p.numero_processo || "-"}`,
+            subtitle: `${p.importador_exportador || "Cliente"} • ${p.estado || "Sem estado"}`,
+            date: formatDate(p.created_at),
+            type: "processo"
+          })),
+          ...cotacoesCache.slice(0, 5).map(c => ({
+            title: `Cotação ${c.numero_factura || "-"}`,
+            subtitle: `${c.nome_cliente || "Cliente"} • ${c.estado || "recebido"}`,
+            date: formatDate(c.created_at),
+            type: "cotacao"
+          }))
+        ].sort((a, b) => new Date(b.date.split(" ").reverse().join(" ")) - new Date(a.date.split(" ").reverse().join(" ")));
+
+        feed.innerHTML = "";
+        recent.slice(0, 8).forEach(item => {
+          const div = document.createElement("div");
+          div.className = "activity-item";
+          div.innerHTML = `
+            <div class="activity-title">${item.title}</div>
+            <div>${item.subtitle}</div>
+            <div class="activity-meta">${item.date}</div>
+          `;
+          feed.appendChild(div);
+        });
+
+        if (!recent.length) {
+          feed.innerHTML = '<div class="empty-chat">Sem atividade recente.</div>';
+        }
+      }
+    }
+
     function renderClientesGrid() {
       const grid = document.getElementById("clientesGrid");
       if (!grid) return;
@@ -3371,6 +3694,7 @@
         renderFinanceiroTable();
         renderClientesGrid();
         renderEquipaGrid();
+        renderDashboardAnalytics();
       } catch (e) {
         document.getElementById("welcome").textContent = "Painel interno • " + e.message;
       }
@@ -3638,6 +3962,41 @@
       }
     }
 
+    function openModal(title, content){
+      document.getElementById("modalTitle").innerText = title;
+      document.getElementById("modalContent").innerHTML = content;
+      document.getElementById("modalLegal").style.display = "flex";
+    }
+
+    function closeModal(){
+      document.getElementById("modalLegal").style.display = "none";
+    }
+
+    function openSobre(){
+      openModal("Sobre Nós", `
+        <p><strong>EF Cargo Clear</strong> é uma solução digital da EF & Associados – Despachantes Aduaneiros, Lda.</p>
+        <p>A plataforma permite acompanhar processos, submeter pedidos de cotação, consultar documentos e comunicar com a nossa equipa.</p>
+        <p>O nosso objetivo é trazer mais transparência, rapidez e controlo ao despacho aduaneiro.</p>
+      `);
+    }
+
+    function openTermos(){
+      openModal("Termos de Uso", `
+        <p>Ao utilizar esta plataforma, o utilizador compromete-se a fornecer dados verdadeiros e a utilizar o sistema de forma responsável.</p>
+        <p>O uso indevido pode resultar em suspensão da conta.</p>
+        <p>A EF Cargo Clear não se responsabiliza por atrasos causados por terceiros ou entidades externas.</p>
+      `);
+    }
+
+    function openPrivacidade(){
+      openModal("Política de Privacidade", `
+        <p>Os dados recolhidos são utilizados apenas para gestão de processos, comunicação e melhoria do serviço.</p>
+        <p>Não vendemos dados a terceiros.</p>
+        <p>O utilizador pode solicitar correção ou eliminação dos seus dados.</p>
+      `);
+    }
+
+
     window.addEventListener("load", async () => {
       try {
         const { data } = await withTimeout(supabaseClient.auth.getSession(), 8000);
@@ -3647,248 +4006,22 @@
       } catch (_) {}
     });
   </script>
-  <script>
-(function() {
-  'use strict';
+  <footer style="margin-top:40px;padding:20px;text-align:center;color:#666;font-size:13px;">
+    © 2026 EF Cargo Clear — Todos os direitos reservados<br>
+    EF & Associados – Despachantes Aduaneiros, Lda<br><br>
+    <span onclick="openSobre()" style="cursor:pointer;color:#BE001A;">Sobre Nós</span> |
+    <span onclick="openTermos()" style="cursor:pointer;color:#BE001A;">Termos</span> |
+    <span onclick="openPrivacidade()" style="cursor:pointer;color:#BE001A;">Privacidade</span>
+  </footer>
 
-  document.addEventListener('DOMContentLoaded', () => {
-    console.log('✅ EF Cargo Clear - Funcionalidades adicionais carregadas');
-
-    // 🔧 CONFIGURAÇÃO RÁPIDA (ajuste se necessário)
-    const CFG = {
-      navTriggers: '[data-view], .menu-item, a[href^="#"]',
-      views: '.view-section, .page-content, main > section, [id*="view-"], [id*="section-"]',
-      tableSearch: '.table-search, input[placeholder*="Pesquisa"], input[placeholder*="pesquisa"]',
-      modalTriggers: '[data-modal], .btn-modal, [data-toggle="modal"]',
-      modals: '.modal, [id*="modal"], [id*="Modal"]',
-      exportCSV: '.btn-export-csv, [data-export="csv"]',
-      chatForms: '.chat-form, .message-form, form:has(input[name="mensagem"], textarea[name="mensagem"])'
-    };
-
-    // 1️⃣ NAVEGAÇÃO SPA (troca de secções sem recarregar)
-    const setupNavigation = () => {
-      const triggers = document.querySelectorAll(CFG.navTriggers);
-      const views = document.querySelectorAll(CFG.views);
-      if (!triggers.length || !views.length) return;
-
-      // Esconde todas as views exceto a primeira (ou a que já está visível)
-      views.forEach((v, i) => { if (i > 0 && !v.style.display) v.style.display = 'none'; });
-
-      triggers.forEach(btn => {
-        btn.addEventListener('click', e => {
-          const targetId = btn.getAttribute('href')?.slice(1) || btn.getAttribute('data-view');
-          if (!targetId) return;
-          e.preventDefault();
-
-          const target = document.getElementById(targetId);
-          if (!target) return;
-
-          views.forEach(v => v.style.display = v === target ? '' : 'none');
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-      });
-    };
-
-    // 2️⃣ FILTRO DE TABELAS
-    const setupTableSearch = () => {
-      document.querySelectorAll(CFG.tableSearch).forEach(input => {
-        input.addEventListener('input', e => {
-          const term = e.target.value.toLowerCase();
-          // Procura a tabela mais próxima
-          const table = e.target.closest('section, .table-wrapper, .card')?.querySelector('table') ||
-                        document.querySelector('table:has(tbody)');
-          if (!table) return;
-
-          table.querySelectorAll('tbody tr').forEach(row => {
-            row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
-          });
-        });
-      });
-    };
-
-    // 3️⃣ MODAIS (abrir/fechar, ESC, clique fora)
-    const setupModals = () => {
-      document.querySelectorAll(CFG.modalTriggers).forEach(btn => {
-        btn.addEventListener('click', e => {
-          e.preventDefault();
-          const modalId = btn.getAttribute('data-modal') || btn.closest('[data-modal]')?.getAttribute('data-modal');
-          const modal = document.getElementById(modalId) || document.querySelector(CFG.modals + ':not(.hidden)');
-          if (modal) {
-            modal.style.display = 'flex';
-            modal.setAttribute('aria-hidden', 'false');
-            modal.querySelector('input, textarea, button, select')?.focus();
-          }
-        });
-      });
-
-      // Fechar ao clicar no fundo ou botão fechar
-      document.addEventListener('click', e => {
-        const modal = e.target.closest(CFG.modals);
-        if (e.target.matches('.close-modal, .btn-cancelar, .modal-bg, .btn-fechar') || 
-            (modal && e.target === modal)) {
-          modal.style.display = 'none';
-          modal.setAttribute('aria-hidden', 'true');
-        }
-      });
-
-      document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') {
-          document.querySelectorAll(CFG.modals).forEach(m => {
-            if (m.style.display !== 'none') {
-              m.style.display = 'none';
-              m.setAttribute('aria-hidden', 'true');
-            }
-          });
-        }
-      });
-    };
-
-    // 4️⃣ FORMULÁRIOS (previne reload, simula envio, reseta)
-    const setupForms = () => {
-      document.querySelectorAll('form').forEach(form => {
-        if (form.getAttribute('data-skip')) return; // Ignora formulários que não quer alterar
-        form.addEventListener('submit', e => {
-          e.preventDefault();
-          const btn = form.querySelector('button[type="submit"]');
-          if (!btn) return;
-
-          const originalText = btn.textContent || btn.value;
-          btn.textContent = 'A processar...';
-          btn.disabled = true;
-
-          setTimeout(() => {
-            btn.textContent = originalText;
-            btn.disabled = false;
-            alert('✅ Ação executada com sucesso! (Simulação)');
-            if (!form.id.includes('login')) form.reset();
-          }, 800);
-        });
-      });
-    };
-
-    // 5️⃣ EXPORTAR PARA CSV
-    const setupExports = () => {
-      document.querySelectorAll(CFG.exportCSV).forEach(btn => {
-        btn.addEventListener('click', e => {
-          e.preventDefault();
-          const container = btn.closest('section, .table-wrapper, .card') || btn.parentElement;
-          const table = container?.querySelector('table') || document.querySelector('table:has(tbody)');
-          if (!table) return alert('⚠️ Tabela não encontrada para exportação.');
-
-          const rows = Array.from(table.querySelectorAll('tr'));
-          const csv = rows.map(row => 
-            Array.from(row.querySelectorAll('th, td')).map(cell => 
-              `"${cell.textContent.trim().replace(/"/g, '""')}"`
-            ).join(',')
-          ).join('\n');
-
-          const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(blob);
-          link.download = `EF_Cargo_Export_${new Date().toISOString().slice(0,10)}.csv`;
-          link.click();
-          URL.revokeObjectURL(link.href);
-        });
-      });
-    };
-
-    // 6️⃣ CHAT / MENSAGENS (simulação)
-    const setupChat = () => {
-      document.querySelectorAll(CFG.chatForms).forEach(form => {
-        const input = form.querySelector('input, textarea');
-        const container = form.closest('.chat-container, .messages-panel') || form.parentElement;
-        const list = container?.querySelector('.messages-list, .chat-history, .msg-container');
-        if (!input || !list) return;
-
-        form.addEventListener('submit', e => {
-          e.preventDefault();
-          const msg = input.value.trim();
-          if (!msg) return;
-
-          const div = document.createElement('div');
-          div.className = 'message user';
-          div.innerHTML = `<div class="bubble">${msg}</div><small class="time">${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</small>`;
-          list.appendChild(div);
-          list.scrollTop = list.scrollHeight;
-          input.value = '';
-
-          // Resposta automática simulada
-          setTimeout(() => {
-            const reply = document.createElement('div');
-            reply.className = 'message system';
-            reply.innerHTML = `<div class="bubble">Mensagem recebida. A equipa EF Cargo Clear responderá em breve.</div><small class="time">${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</small>`;
-            list.appendChild(reply);
-            list.scrollTop = list.scrollHeight;
-          }, 1000);
-        });
-      });
-    };
-
-    // 🚀 INICIALIZAÇÃO
-    setupNavigation();
-    setupTableSearch();
-    setupModals();
-    setupForms();
-    setupExports();
-    setupChat();
-  });
-})();
-</script>
-</body>
-  <!-- ====== LEGAL + FOOTER ====== -->
-<footer>
-  © 2026 EF Cargo Clear — Todos os direitos reservados<br>
-  EF & Associados – Despachantes Aduaneiros, Lda<br><br>
-
-  <span onclick="openSobre()" style="cursor:pointer;color:#BE001A;">Sobre Nós</span> |
-  <span onclick="openTermos()" style="cursor:pointer;color:#BE001A;">Termos</span> |
-  <span onclick="openPrivacidade()" style="cursor:pointer;color:#BE001A;">Privacidade</span>
-</footer>
-
-<div id="modalLegal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#00000088;align-items:center;justify-content:center;">
-  <div style="background:#fff;padding:20px;border-radius:10px;width:90%;max-width:600px;">
-    <h2 id="modalTitle"></h2>
-    <div id="modalContent"></div>
-    <br>
-    <button onclick="closeModal()">Fechar</button>
+  <div id="modalLegal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#00000088;align-items:center;justify-content:center;z-index:9999;">
+    <div style="background:#fff;padding:20px;border-radius:10px;width:90%;max-width:600px;max-height:80vh;overflow:auto;">
+      <h2 id="modalTitle"></h2>
+      <div id="modalContent"></div>
+      <br>
+      <button class="btn" onclick="closeModal()">Fechar</button>
+    </div>
   </div>
-</div>
 
-<script>
-function openModal(title, content){
-  document.getElementById("modalTitle").innerText = title;
-  document.getElementById("modalContent").innerHTML = content;
-  document.getElementById("modalLegal").style.display = "flex";
-}
-
-function closeModal(){
-  document.getElementById("modalLegal").style.display = "none";
-}
-
-function openSobre(){
-  openModal("Sobre Nós", "A EF Cargo Clear é uma plataforma para gestão de processos aduaneiros.");
-}
-
-function openTermos(){
-  openModal("Termos", "O uso indevido pode resultar em bloqueio da conta.");
-}
-
-function openPrivacidade(){
-  openModal("Privacidade", "Os seus dados são protegidos e usados apenas para o serviço.");
-}
-
-function setWelcomeMessage() {
-  const el = document.getElementById("welcome");
-
-  if (!el) return;
-
-  if (currentUserRole === "admin") {
-    el.innerHTML = "👑 Bem-vindo Edmilson — controlo total.";
-  } else if (currentUserRole === "employee") {
-    el.innerHTML = "🧑‍💼 Bem-vindo — gestão ativa.";
-  } else {
-    el.innerHTML = "📦 Bem-vindo — acompanhe os seus processos.";
-  }
-}
-</script>
+</body>
 </html>
