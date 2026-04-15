@@ -4282,11 +4282,11 @@
         const el = document.getElementById(id);
         if (el) el.textContent = value || "-";
       };
-      set("payBancoTitular", cfg.banco_titular || cfg.nome_empresa || "EF Cargo Clear");
-      set("payBancoNome", cfg.banco_nome || "-");
-      set("payBancoConta", cfg.banco_conta || "-");
-      set("payBancoNib", cfg.banco_nib || "-");
-      set("payBancoIban", cfg.banco_iban || "-");
+      set("payBancoTitular", cfg.banco_titular || "EF & ASSOCIADOS DESP ADUANEIROS LDA");
+      set("payBancoNome", cfg.banco_nome || "Standard Bank");
+      set("payBancoConta", cfg.banco_conta || "1258956341001");
+      set("payBancoNib", cfg.banco_nib || "000301250895634100135");
+      set("payBancoIban", cfg.banco_iban || "MZ59000301250895634100135");
     }
 
     function closeCotacaoEditModal() {
@@ -4375,8 +4375,7 @@
             10000
           );
           if (docsError) {
-            alert(docsError.message);
-            return;
+            console.log("Erro ao guardar documentos extras da edição da cotação:", docsError.message);
           }
         }
 
@@ -4395,6 +4394,105 @@
         if (currentUserRole === "admin" || currentUserRole === "employee") await loadInternal();
       } catch (e) {
         alert(e.message || "Erro ao editar cotação.");
+      }
+    }
+
+    async function converterCotacaoEmProcesso(cotacaoId) {
+      if (!confirm("Converter esta cotação em processo?")) return;
+
+      try {
+        const { data: cotacao, error: cotacaoError } = await withTimeout(
+          supabaseClient.from("pedidos_cotacao").select("*").eq("id", cotacaoId).single(),
+          10000
+        );
+
+        if (cotacaoError || !cotacao) {
+          alert(cotacaoError?.message || "Cotação não encontrada.");
+          return;
+        }
+
+        if (cotacao.convertido_em_processo) {
+          alert("Esta cotação já foi convertida.");
+          return;
+        }
+
+        let cliente_id = null;
+
+        if (cotacao.email) {
+          const { data: clienteByEmail } = await withTimeout(
+            supabaseClient.from("clientes").select("id").eq("email", cotacao.email).maybeSingle(),
+            8000
+          );
+
+          if (clienteByEmail?.id) cliente_id = clienteByEmail.id;
+        }
+
+        const numeroProcesso = gerarNumeroProcesso();
+
+        const payloadProcesso = {
+          cliente_id,
+          numero_processo: numeroProcesso,
+          numero_factura: cotacao.numero_factura || "",
+          importador_exportador: cotacao.nome_cliente || "",
+          regime: cotacao.tipo_operacao || "",
+          pais_origem: cotacao.origem || "",
+          pais_destino: cotacao.destino || "",
+          porto_fronteira: "",
+          bl_awb_manifesto: "",
+          prazo: null,
+          estado: "Recebido",
+          documentos_em_falta: cotacao.factura_path ? "" : "Factura em falta",
+          valor_cobrado: Number(cotacao.valor_proposto || 0) || 0,
+          custos_processo: 0,
+          margem_lucro: Number(cotacao.valor_proposto || 0) || 0,
+          historico: `• ${new Date().toLocaleString("pt-PT")} - Processo criado a partir da cotação ${cotacao.numero_factura || ""}. Mercadoria: ${cotacao.descricao_mercadoria || ""}`,
+          responsavel_email: null,
+          responsavel_nome: null
+        };
+
+        const { data: novoProcesso, error: processoError } = await withTimeout(
+          supabaseClient.from("processos").insert(payloadProcesso).select("id, numero_processo").single(),
+          10000
+        );
+
+        if (processoError || !novoProcesso) {
+          alert(processoError?.message || "Erro ao criar processo.");
+          return;
+        }
+
+        const { error: updateError } = await withTimeout(
+          supabaseClient
+            .from("pedidos_cotacao")
+            .update({
+              convertido_em_processo: true,
+              processo_id: novoProcesso.id,
+              estado: "convertido em processo"
+            })
+            .eq("id", cotacaoId),
+          10000
+        );
+
+        if (updateError) {
+          alert(updateError.message);
+          return;
+        }
+
+        if (cotacao.email) {
+          await supabaseClient.from("mensagens").insert({
+            cliente_email: cotacao.email,
+            remetente: currentUserRole === "admin" ? "admin" : "funcionario",
+            mensagem: `A sua cotação foi convertida em processo. Número do processo: ${novoProcesso.numero_processo}`,
+            processo_numero: novoProcesso.numero_processo,
+            lido_cliente: false,
+            lido_interno: true
+          });
+        }
+
+        alert(`Cotação convertida com sucesso. Processo criado: ${novoProcesso.numero_processo}`);
+        await loadInternal();
+        showInternalTab("processos");
+      } catch (e) {
+        alert(e.message || "Erro ao converter cotação em processo.");
       }
     }
 
@@ -4926,9 +5024,7 @@
             10000
           );
           if (docsError) {
-            msg.textContent = docsError.message;
-            msg.className = "message-err";
-            return;
+            console.log("Erro ao guardar documentos extras da cotação:", docsError.message);
           }
         }
 
