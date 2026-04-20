@@ -1474,6 +1474,14 @@
                       <input id="eq_email" />
                     </div>
                     <div>
+                      <label>Password</label>
+                      <input id="eq_password" type="password" placeholder="Defina a password do funcionário" />
+                    </div>
+                    <div>
+                      <label>Confirmar password</label>
+                      <input id="eq_password2" type="password" placeholder="Repita a password" />
+                    </div>
+                    <div>
                       <label>Nível</label>
                       <select id="eq_nivel">
                         <option value="operador">Operador</option>
@@ -1488,6 +1496,7 @@
                       </select>
                     </div>
                   </div>
+                  <div class="small" style="margin-top:10px;">Ao criar o funcionário, a conta de acesso também será criada no Auth do Supabase.</div>
                   <button class="btn" style="margin-top:14px;" onclick="criarFuncionario()">Criar funcionário</button>
                 </div>
 
@@ -3171,15 +3180,67 @@
 
       const nome = document.getElementById("eq_nome").value.trim();
       const email = document.getElementById("eq_email").value.trim().toLowerCase();
+      const password = document.getElementById("eq_password").value;
+      const password2 = document.getElementById("eq_password2").value;
       const nivel = document.getElementById("eq_nivel").value;
       const activo = document.getElementById("eq_activo").value === "true";
 
-      if (!nome || !email) {
-        alert("Nome e email obrigatórios.");
+      if (!nome || !email || !password || !password2) {
+        alert("Nome, email e password são obrigatórios.");
+        return;
+      }
+
+      if (password.length < 6) {
+        alert("A password deve ter pelo menos 6 caracteres.");
+        return;
+      }
+
+      if (password !== password2) {
+        alert("As passwords não coincidem.");
         return;
       }
 
       try {
+        const { data: equipaExistente } = await withTimeout(
+          supabaseClient.from("equipa").select("id").eq("email", email).maybeSingle(),
+          8000
+        );
+
+        if (equipaExistente?.id) {
+          alert("Já existe um funcionário com este email.");
+          return;
+        }
+
+        const authClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+          auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false
+          }
+        });
+
+        const { data: authData, error: authError } = await withTimeout(
+          authClient.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                nome,
+                role: "employee",
+                nivel
+              }
+            }
+          }),
+          12000
+        );
+
+        if (authError) {
+          alert(authError.message);
+          return;
+        }
+
+        const authUserId = authData?.user?.id || null;
+
         const { error } = await withTimeout(
           supabaseClient.from("equipa").insert({
             nome,
@@ -3198,6 +3259,8 @@
         alert("Funcionário criado com sucesso");
         document.getElementById("eq_nome").value = "";
         document.getElementById("eq_email").value = "";
+        document.getElementById("eq_password").value = "";
+        document.getElementById("eq_password2").value = "";
         document.getElementById("eq_nivel").value = "operador";
         document.getElementById("eq_activo").value = "true";
 
