@@ -1181,6 +1181,8 @@
                   </div>
                 </div>
 
+                <div id="financeInsights" class="grid grid-2" style="margin-bottom:18px;"></div>
+
                 <div class="table-scroll">
                   <table>
                     <thead>
@@ -1434,6 +1436,7 @@
                           <th>Cliente</th>
                           <th>Total</th>
                           <th>Email</th>
+                          <th>Estado</th>
                           <th>Ações</th>
                         </tr>
                       </thead>
@@ -1646,6 +1649,7 @@
           <button class="tab-btn" data-client-tab="processos" onclick="showClientTab('processos', this)">Processos</button>
           <button class="tab-btn" data-client-tab="cotacao" onclick="showClientTab('cotacao', this)">Solicitar cotação</button>
           <button class="tab-btn" data-client-tab="historico" onclick="showClientTab('historico', this)">Minhas cotações</button>
+          <button class="tab-btn" data-client-tab="faturas" onclick="showClientTab('faturas', this)">Faturas & Recibos</button>
           <button class="tab-btn" data-client-tab="frete" onclick="showClientTab('frete', this)">Solicitar frete</button>
           <button class="tab-btn" data-client-tab="meus-fretes" onclick="showClientTab('meus-fretes', this)">Meus fretes</button>
           <button class="tab-btn" data-client-tab="mensagens" onclick="showClientTab('mensagens', this)">
@@ -1688,6 +1692,10 @@
             <hr style="margin:22px 0;" />
             <strong>Histórico</strong>
             <div id="pcHistorico" class="history-box" style="margin-top:10px"></div>
+
+            <hr style="margin:22px 0;" />
+            <strong>Fatura e recibo</strong>
+            <div id="pcFinanceDocs" class="doc-list" style="margin-top:10px"></div>
 
             <hr style="margin:22px 0;" />
             <strong>Documentos do processo</strong>
@@ -1829,6 +1837,32 @@
                   </tr>
                 </thead>
                 <tbody id="clientCotacoesTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="client-faturas" class="tab-content hidden">
+          <div class="card">
+            <div class="panel-head">
+              <div>
+                <h2 class="section-title">Faturas e recibos</h2>
+                <div class="section-sub">Baixe as faturas emitidas para a sua conta e, quando houver pagamento registado, o respetivo recibo.</div>
+              </div>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Documento</th>
+                    <th>Referência</th>
+                    <th>Total</th>
+                    <th>Pagamento</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="clientFaturasTable"></tbody>
               </table>
             </div>
           </div>
@@ -2305,6 +2339,7 @@
     let currentSelectedThread = "";
     let companyConfig = null;
     let faturasCache = [];
+    let clientFaturasCache = [];
     let fretesCache = [];
     let clientFretesCache = [];
     let currentInvoiceExtraCounter = 0;
@@ -2494,22 +2529,46 @@
 
     function openSobre(){
       openModal("Sobre Nós", `
-        <p><strong>EF Cargo Clear</strong> é a plataforma digital da EF & Associados – Despachantes Aduaneiros, Lda, criada para simplificar o acompanhamento de processos aduaneiros.</p>
-        <p>A plataforma permite submissão de cotações, consulta de processos, troca de mensagens e gestão documental com mais transparência e controlo.</p>
+        <p><strong>EF Cargo Clear</strong> é a plataforma digital da EF & Associados – Despachantes Aduaneiros, Lda, desenvolvida para centralizar a gestão de desembaraço aduaneiro, faturação, comunicação com clientes, pedidos de frete e controlo documental.</p>
+        <p>A nossa missão é tornar o acompanhamento dos processos mais claro, rápido e profissional, permitindo que cada cliente acompanhe o seu processo, veja documentos, responda a pendências e receba as suas faturas num único ambiente digital.</p>
+        <p>A plataforma foi pensada para operações de importação, exportação, trânsito, regimes especiais, coordenação logística e serviços complementares, incluindo apoio de transporte e organização documental pós-desembaraço.</p>
+        <p>Com o EF Cargo Clear, o cliente passa a ter visibilidade sobre o estado do processo, documentos pendentes, histórico operacional, mensagens da equipa e documentos financeiros autorizados para a sua conta.</p>
+        <p><strong>O que encontra na plataforma:</strong></p>
+        <ul>
+          <li>Submissão de pedidos de cotação e de frete</li>
+          <li>Acompanhamento de processos em tempo real</li>
+          <li>Gestão de faturas e recibos</li>
+          <li>Partilha controlada de documentos</li>
+          <li>Comunicação direta com a equipa interna</li>
+          <li>Painel financeiro interno e relatórios operacionais</li>
+        </ul>
+        <p>A EF Cargo Clear integra o posicionamento profissional da EF & Associados como operador moderno, organizado e orientado à transparência com o cliente.</p>
       `);
     }
 
     function openTermos(){
       openModal("Termos de Uso", `
-        <p>Ao utilizar esta plataforma, o utilizador compromete-se a fornecer dados verdadeiros, proteger os seus acessos e usar o sistema de forma legal e responsável.</p>
-        <p>A EF Cargo Clear pode suspender acessos em caso de uso indevido e não se responsabiliza por atrasos causados por terceiros ou entidades externas.</p>
+        <p>Ao utilizar a plataforma EF Cargo Clear, o utilizador aceita estes termos de utilização, comprometendo-se a usar o sistema de forma lícita, responsável e compatível com a finalidade do serviço.</p>
+        <p><strong>1. Elegibilidade e acesso.</strong> O acesso é concedido a clientes, administradores e funcionários autorizados. Cada utilizador é responsável pela guarda das suas credenciais, pela confidencialidade da password e por toda atividade realizada na sua conta.</p>
+        <p><strong>2. Dados fornecidos.</strong> O utilizador compromete-se a fornecer dados corretos, completos e atualizados, incluindo identificação da empresa, contactos, NUIT, documentos comerciais, faturas, comprovativos e demais elementos necessários ao processamento do serviço.</p>
+        <p><strong>3. Serviços e limitações.</strong> A plataforma funciona como ambiente de apoio operacional, documental, financeiro e comunicacional. A submissão de dados pela plataforma não elimina a necessidade de validação documental, confirmação de instruções, pagamentos, aprovações de entidades públicas ou exigências legais aplicáveis.</p>
+        <p><strong>4. Prazos e terceiros.</strong> A EF & Associados não se responsabiliza por atrasos causados por autoridades aduaneiras, bancos, transportadores, terminais, linhas marítimas, indisponibilidade de sistemas públicos, greves, falhas documentais do cliente ou outros fatores externos ao seu controlo direto.</p>
+        <p><strong>5. Conteúdo e documentos.</strong> O utilizador não deve carregar documentos falsos, incompletos, ilegais ou de terceiros sem autorização. A EF Cargo Clear pode remover conteúdos inadequados, bloquear acessos e registar eventos para fins de auditoria e proteção da operação.</p>
+        <p><strong>6. Faturas, recibos e pagamentos.</strong> As faturas emitidas pela plataforma refletem serviços e encargos registados no sistema. Os recibos apenas são considerados válidos após confirmação do pagamento pela administração. Divergências devem ser comunicadas por escrito com a maior brevidade possível.</p>
+        <p><strong>7. Suspensão e encerramento.</strong> A EF Cargo Clear pode suspender, limitar ou cancelar acessos em caso de incumprimento contratual, uso abusivo, tentativa de fraude, risco para a segurança da conta ou instrução expressa da administração.</p>
+        <p><strong>8. Alterações.</strong> Estes termos podem ser atualizados a qualquer momento para refletir melhorias operacionais, exigências legais, novas funcionalidades ou ajustes de segurança.</p>
       `);
     }
 
     function openPrivacidade(){
       openModal("Política de Privacidade", `
-        <p>Os dados recolhidos são utilizados apenas para gestão de processos, comunicação com o cliente e melhoria do serviço.</p>
-        <p>Os dados não são vendidos a terceiros e são tratados com medidas adequadas de segurança.</p>
+        <p>A EF Cargo Clear trata os dados pessoais e empresariais inseridos na plataforma com o objetivo de executar serviços aduaneiros, logísticos, documentais e financeiros, bem como prestar suporte ao cliente e manter registos operacionais.</p>
+        <p><strong>1. Dados recolhidos.</strong> Podemos recolher nome, email, telefone, NUIT, documentos comerciais, referências de processos, mensagens trocadas na plataforma, anexos, histórico operacional, dados de faturação e comprovativos de pagamento.</p>
+        <p><strong>2. Finalidade do tratamento.</strong> Os dados são usados para abertura e acompanhamento de processos, emissão de cotações, faturação, recibos, pedidos de transporte, comunicação com o cliente, controlo interno, segurança da conta e melhoria contínua do serviço.</p>
+        <p><strong>3. Partilha de dados.</strong> Os dados podem ser partilhados com colaboradores autorizados, prestadores de serviço tecnológico, entidades logísticas e autoridades competentes quando necessário para a execução do serviço ou para cumprimento de obrigações legais. A EF Cargo Clear não vende dados pessoais a terceiros.</p>
+        <p><strong>4. Retenção e segurança.</strong> Conservamos os dados apenas pelo período necessário à execução da operação, histórico administrativo, faturação, auditoria e cumprimento legal. São adotadas medidas técnicas e organizacionais razoáveis para reduzir riscos de perda, uso indevido ou acesso não autorizado.</p>
+        <p><strong>5. Direitos do utilizador.</strong> O utilizador pode solicitar atualização de dados, correção de informação incorreta e esclarecimentos sobre o tratamento realizado, sem prejuízo de obrigações legais de conservação de determinados registos.</p>
+        <p><strong>6. Comunicação eletrónica.</strong> Ao usar a plataforma, o utilizador aceita receber comunicações operacionais, documentais e financeiras relacionadas com o serviço, incluindo notificações de pendências, envio de faturas, recibos e atualizações de processo.</p>
       `);
     }
 
@@ -2673,6 +2732,7 @@
       document.getElementById("client-processos").classList.toggle("hidden", tab !== "processos");
       document.getElementById("client-cotacao").classList.toggle("hidden", tab !== "cotacao");
       document.getElementById("client-historico").classList.toggle("hidden", tab !== "historico");
+      document.getElementById("client-faturas").classList.toggle("hidden", tab !== "faturas");
       document.getElementById("client-frete").classList.toggle("hidden", tab !== "frete");
       document.getElementById("client-meus-fretes").classList.toggle("hidden", tab !== "meus-fretes");
       document.getElementById("client-mensagens").classList.toggle("hidden", tab !== "mensagens");
@@ -2680,6 +2740,7 @@
 
       if (tab === "processos") loadClientProcessos();
       if (tab === "historico") loadClientCotacoes();
+      if (tab === "faturas") loadClientFinanceDocs();
       if (tab === "meus-fretes") loadClientFretes();
       if (tab === "mensagens") {
         loadClientMessages();
@@ -2916,6 +2977,7 @@
 
         await loadClientCotacoes();
         await loadClientMessages();
+        await loadClientFinanceDocs();
         await refreshClientDashboard();
       } catch (_) {
         document.getElementById("welcome").textContent = "Cliente • portal";
@@ -3230,12 +3292,27 @@
       if (!confirm("Apagar esta cotação?")) return;
 
       try {
-        if (facturaPath) {
+        const docsToRemove = (cotacaoDocsCache || []).filter(x => String(x.pedido_id) === String(cotacaoId));
+        const storagePaths = [];
+
+        if (facturaPath) storagePaths.push(facturaPath);
+        docsToRemove.forEach(d => {
+          const p = String(d?.ficheiro_path || "").trim();
+          if (p) storagePaths.push(p);
+        });
+
+        const uniquePaths = [...new Set(storagePaths.filter(Boolean))];
+        if (uniquePaths.length) {
           await withTimeout(
-            supabaseClient.storage.from("cotacoes").remove([facturaPath]),
+            supabaseClient.storage.from("cotacoes").remove(uniquePaths),
             10000
           );
         }
+
+        await withTimeout(
+          supabaseClient.from("pedidos_cotacao_documentos").delete().eq("pedido_id", cotacaoId),
+          10000
+        );
 
         const { error } = await withTimeout(
           supabaseClient.from("pedidos_cotacao").delete().eq("id", cotacaoId),
@@ -3246,6 +3323,10 @@
           alert(error.message);
           return;
         }
+
+        cotacaoDocsCache = (cotacaoDocsCache || []).filter(x => String(x.pedido_id) !== String(cotacaoId));
+        cotacoesCache = (cotacoesCache || []).filter(x => String(x.id) !== String(cotacaoId));
+        clientCotacoesCache = (clientCotacoesCache || []).filter(x => String(x.id) !== String(cotacaoId));
 
         alert("Cotação apagada com sucesso.");
 
@@ -4260,7 +4341,10 @@
       const ftbody = document.getElementById("financeiroTable");
       ftbody.innerHTML = "";
 
-      getFinanceFilteredProcessos().forEach(p => {
+      const filteredRows = getFinanceFilteredProcessos();
+      renderFinanceInsights(filteredRows);
+
+      filteredRows.forEach(p => {
         const margem = Number(p.margem_lucro || 0);
         const margemBadge = margem > 0
           ? `<span class="badge green">${formatMoney(margem)}</span>`
@@ -5346,6 +5430,78 @@
       }
     }
 
+
+    function getInvoicePaymentBadge(f) {
+      const pago = String(f.status_pagamento || '').toLowerCase() === 'pago';
+      return pago ? `<span class="badge green">Pago</span>` : `<span class="badge amber">Pendente</span>`;
+    }
+
+    function findLinkedInvoice(cotacao, processoId = null) {
+      return (clientFaturasCache || []).find(f =>
+        (cotacao?.id && String(f.cotacao_id || '') === String(cotacao.id)) ||
+        (processoId && String(f.processo_id || '') === String(processoId)) ||
+        (cotacao?.numero_factura && String(f.referencia || f.numero_fatura || '').includes(String(cotacao.numero_factura)))
+      );
+    }
+
+    function getClientInvoiceButtonsHtml(cotacao, processoId = null) {
+      const f = findLinkedInvoice(cotacao, processoId);
+      if (!f) return '';
+      return `
+        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn-mini info" onclick="previewClientInvoice('${f.id}')">Ver fatura</button>
+          <button class="btn-mini secondary" onclick="downloadClientInvoice('${f.id}')">Baixar fatura</button>
+          ${String(f.status_pagamento || '').toLowerCase() === 'pago' ? `<button class="btn-mini green" onclick="downloadClientReceipt('${f.id}')">Baixar recibo</button>` : ''}
+        </div>
+      `;
+    }
+
+    async function loadClientFinanceDocs() {
+      const tbody = document.getElementById('clientFaturasTable');
+      try {
+        const { data: userData } = await withTimeout(supabaseClient.auth.getUser(), 8000);
+        const user = userData?.user;
+        if (!user?.email) {
+          clientFaturasCache = [];
+          if (tbody) tbody.innerHTML = `<tr><td colspan="6">Não foi possível identificar o utilizador.</td></tr>`;
+          return;
+        }
+        const { data, error } = await withTimeout(
+          supabaseClient.from('faturas').select('*').eq('cliente_email', user.email).order('created_at', { ascending: false }),
+          10000
+        );
+        if (error) throw error;
+        clientFaturasCache = data || [];
+        if (tbody) renderClientFinanceDocs();
+      } catch (e) {
+        clientFaturasCache = [];
+        if (tbody) tbody.innerHTML = `<tr><td colspan="6">${escapeHtml(e.message || 'Erro ao carregar faturas.')}</td></tr>`;
+      }
+    }
+
+    function renderClientFinanceDocs() {
+      const tbody = document.getElementById('clientFaturasTable');
+      if (!tbody) return;
+      if (!clientFaturasCache.length) {
+        tbody.innerHTML = `<tr><td colspan="6">Ainda não existem faturas emitidas para a sua conta.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = clientFaturasCache.map(f => `
+        <tr>
+          <td>${formatDate(f.data_fatura || f.created_at || '')}</td>
+          <td><strong>${escapeHtml(f.numero_fatura || 'Fatura')}</strong><div class="small">${String(f.status_pagamento || '').toLowerCase() === 'pago' ? 'Recibo disponível' : 'Aguardando pagamento'}</div></td>
+          <td>${escapeHtml(f.referencia || f.numero_fatura || '-')}</td>
+          <td>${formatMoney(f.total_mt || 0)}</td>
+          <td>${getInvoicePaymentBadge(f)}</td>
+          <td>
+            <button class="btn-mini info" onclick="previewClientInvoice('${f.id}')">Ver fatura</button>
+            <button class="btn-mini secondary" onclick="downloadClientInvoice('${f.id}')">Baixar fatura</button>
+            ${String(f.status_pagamento || '').toLowerCase() === 'pago' ? `<button class="btn-mini green" onclick="downloadClientReceipt('${f.id}')">Baixar recibo</button>` : ''}
+          </td>
+        </tr>
+      `).join('');
+    }
+
     async function loadClientCotacoes() {
       const tbody = document.getElementById("clientCotacoesTable");
       if (!tbody) return;
@@ -5405,7 +5561,7 @@
               ${Number(c.valor_proposto || 0) ? `<div class="small" style="margin-top:6px;">Valor: ${formatQuoteMoney(c)}</div>` : ``}
               ${c.detalhe_resposta ? `<div class="small" style="margin-top:6px;">${escapeHtml(c.detalhe_resposta)}</div>` : ``}
             </td>
-            <td>${getCotacaoActionsHtml(c, true)}</td>
+            <td>${getCotacaoActionsHtml(c, true)}${getClientInvoiceButtonsHtml(c, c.processo_id || null)}</td>
           `;
           tbody.appendChild(tr);
         });
@@ -5471,6 +5627,7 @@
           <div class="client-actions">
             <button class="btn-mini info" onclick="openClientProcessDetail('${processo.id}')">Abrir detalhe</button>
             ${docsPendentes ? `<button class="btn-mini" onclick="focusClientPendingUpload('${processo.id}')">Carregar documentos em falta</button>` : ``}
+            ${getClientInvoiceButtonsHtml(null, processo.id)}
           </div>
 
           ${docsPendentes ? `
@@ -5535,6 +5692,16 @@
       document.getElementById("pcCobrado").textContent = formatMoney(processo.valor_cobrado || 0);
       document.getElementById("pcDocs").textContent = processo.documentos_em_falta || "Sem pendências";
       document.getElementById("pcHistorico").textContent = getVisibleHistorico(processo);
+
+      const financeList = document.getElementById("pcFinanceDocs");
+      if (financeList) {
+        const linked = findLinkedInvoice(null, processo.id);
+        financeList.innerHTML = linked ? `
+          <span class="doc-chip"><span>${escapeHtml(linked.numero_fatura || 'Fatura')}</span><button class="btn-mini secondary" style="margin:0;padding:4px 8px;" onclick="previewClientInvoice('${linked.id}')">Ver</button></span>
+          <span class="doc-chip"><span>Baixar fatura</span><button class="btn-mini secondary" style="margin:0;padding:4px 8px;" onclick="downloadClientInvoice('${linked.id}')">Baixar</button></span>
+          ${String(linked.status_pagamento || '').toLowerCase() === 'pago' ? `<span class="doc-chip"><span>${escapeHtml(linked.recibo_numero || 'Recibo')}</span><button class="btn-mini secondary" style="margin:0;padding:4px 8px;" onclick="downloadClientReceipt('${linked.id}')">Baixar</button></span>` : `<span class="small">Recibo disponível após confirmação do pagamento.</span>`}
+        ` : `<span class="small">Sem fatura emitida ainda para este processo.</span>`;
+      }
 
       const list = document.getElementById("pcDocsList");
       list.innerHTML = "";
@@ -5658,20 +5825,51 @@
       }
       const processo = processosCache.find(p => String(p.id) === String(processoId));
       const ref = processo?.numero_processo || processo?.numero_factura || "este processo";
-      if (!confirm(`Apagar ${ref}? Esta ação remove o processo, tarefas e documentos associados.`)) return;
+      const apagarCotacaoLigada = confirm(`Apagar ${ref}?\n\nOK = apagar também a cotação/histórico ligado(s).\nCancelar = manter a cotação no histórico.`);
+      const confirmarApagarProcesso = apagarCotacaoLigada
+        ? true
+        : confirm(`Confirmar remoção apenas do processo ${ref}, mantendo a cotação no histórico?`);
+      if (!confirmarApagarProcesso) return;
 
       try {
+        const linkedCotacoes = (cotacoesCache || []).filter(c => String(c.processo_id || "") === String(processoId));
+        const linkedCotacaoIds = linkedCotacoes.map(c => c.id);
+
         await withTimeout(supabaseClient.from("processos_documentos").delete().eq("processo_id", processoId), 10000);
         await withTimeout(supabaseClient.from("processos_tarefas").delete().eq("processo_id", processoId), 10000);
-        await withTimeout(
-          supabaseClient.from("pedidos_cotacao").update({ convertido_em_processo: false, processo_id: null, estado: "recebido" }).eq("processo_id", processoId),
-          10000
-        );
+
+        if (apagarCotacaoLigada && linkedCotacaoIds.length) {
+          const storagePaths = [];
+          linkedCotacoes.forEach(c => {
+            const fp = String(c?.factura_path || "").trim();
+            if (fp) storagePaths.push(fp);
+          });
+          (cotacaoDocsCache || [])
+            .filter(d => linkedCotacaoIds.includes(d.pedido_id))
+            .forEach(d => {
+              const p = String(d?.ficheiro_path || "").trim();
+              if (p) storagePaths.push(p);
+            });
+
+          const uniquePaths = [...new Set(storagePaths.filter(Boolean))];
+          if (uniquePaths.length) {
+            await withTimeout(supabaseClient.storage.from("cotacoes").remove(uniquePaths), 10000);
+          }
+
+          await withTimeout(supabaseClient.from("pedidos_cotacao_documentos").delete().in("pedido_id", linkedCotacaoIds), 10000);
+          await withTimeout(supabaseClient.from("pedidos_cotacao").delete().in("id", linkedCotacaoIds), 10000);
+        } else {
+          await withTimeout(
+            supabaseClient.from("pedidos_cotacao").update({ convertido_em_processo: false, processo_id: null, estado: "recebido" }).eq("processo_id", processoId),
+            10000
+          );
+        }
+
         await withTimeout(supabaseClient.from("faturas").update({ processo_id: null }).eq("processo_id", processoId), 10000);
         const { error } = await withTimeout(supabaseClient.from("processos").delete().eq("id", processoId), 10000);
         if (error) throw error;
         if (currentProcessModalId === processoId) closeProcessModal();
-        alert("Processo apagado com sucesso.");
+        alert(apagarCotacaoLigada ? "Processo e cotação ligada apagados com sucesso." : "Processo apagado com sucesso.");
         await loadInternal();
       } catch (e) {
         alert(e.message || "Erro ao apagar processo.");
@@ -6295,7 +6493,7 @@
     }
 
     function editInvoice(id) {
-      const f = faturasCache.find(x => x.id === id);
+      const f = [...faturasCache, ...clientFaturasCache].find(x => x.id === id);
       if (!f) return;
       initInvoiceForm();
       document.getElementById('fat_edit_id').value = f.id;
@@ -6426,10 +6624,11 @@
       if (!tbody) return;
       tbody.innerHTML = '';
       if (!faturasCache.length) {
-        tbody.innerHTML = '<tr><td colspan="6">Nenhuma fatura gerada ainda.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7">Nenhuma fatura gerada ainda.</td></tr>';
         return;
       }
       faturasCache.forEach(f => {
+        const pago = String(f.status_pagamento || '').toLowerCase() === 'pago';
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${escapeHtml(f.numero_fatura || '')}</strong></td>
@@ -6437,11 +6636,15 @@
           <td>${escapeHtml(f.cliente_nome || '')}</td>
           <td>${formatMoney(f.total_mt || 0)}</td>
           <td>${escapeHtml(f.cliente_email || '')}</td>
+          <td>${getInvoicePaymentBadge(f)}<div class="small" style="margin-top:6px;">${f.status_envio === 'enviado' ? 'Enviada' : 'Por enviar'}</div></td>
           <td>
             <button class="btn-mini" onclick="editInvoice('${f.id}')">Editar</button>
             <button class="btn-mini secondary" onclick="previewInvoice('${f.id}')">Ver</button>
             <button class="btn-mini info" onclick="downloadInvoicePdf('${f.id}')">Baixar</button>
             <button class="btn-mini green" onclick="sendInvoiceEmail('${f.id}')">Enviar</button>
+            <button class="btn-mini ${pago ? 'secondary' : 'green'}" onclick="markInvoicePaid('${f.id}')">${pago ? 'Atualizar pagamento' : 'Marcar pago'}</button>
+            ${pago ? `<button class="btn-mini info" onclick="downloadReceiptPdf('${f.id}')">Recibo</button>` : ``}
+            <button class="btn-mini danger" onclick="deleteInvoice('${f.id}')">Apagar</button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -6449,7 +6652,7 @@
     }
 
     function previewInvoice(id) {
-      const f = faturasCache.find(x => x.id === id);
+      const f = [...faturasCache, ...clientFaturasCache].find(x => x.id === id);
       if (!f) return;
       const w = window.open('', '_blank');
       w.document.write(`<html><head><title>${f.numero_fatura}</title></head><body style="margin:20px;">${invoiceHtmlFromRecord(f)}</body></html>`);
@@ -6457,7 +6660,7 @@
     }
 
     function downloadInvoicePdf(id) {
-      const f = faturasCache.find(x => x.id === id);
+      const f = [...faturasCache, ...clientFaturasCache].find(x => x.id === id);
       if (!f) return;
       const w = window.open('', '_blank');
       w.document.write(`<html><head><title>${f.numero_fatura}</title></head><body style="margin:20px;">${invoiceHtmlFromRecord(f)}<script>window.onload=()=>window.print();<\/script></body></html>`);
@@ -6481,6 +6684,137 @@
       } catch (_) {}
       alert('Fatura enviada ao cliente.');
       loadInternal();
+    }
+
+
+    function receiptHtmlFromInvoice(f) {
+      return `
+        <div style="font-family:Arial,sans-serif;color:#111;max-width:900px;margin:0 auto;">
+          <div style="display:flex;justify-content:space-between;gap:20px;align-items:flex-start;">
+            <div>
+              <h1 style="margin:0;color:#166534;">Recibo</h1>
+              <div style="margin-top:10px;font-size:14px;line-height:1.6;">
+                <strong>EF & ASSOCIADOS DESP ADUANEIROS LDA</strong><br>
+                Recebemos de <strong>${escapeHtml(f.cliente_nome || '')}</strong> o valor de <strong>${formatMoney(f.total_mt || 0)}</strong>.
+              </div>
+            </div>
+            <div style="text-align:right;font-size:14px;line-height:1.6;">
+              <strong>${escapeHtml(f.recibo_numero || ('RCB-' + (f.numero_fatura || '')))}</strong><br>
+              Data: ${escapeHtml((f.recibo_emitido_at || f.pago_at || new Date().toISOString()).slice(0,10))}<br>
+              Refª Fatura: ${escapeHtml(f.numero_fatura || '')}
+            </div>
+          </div>
+          <div style="margin-top:20px;border:1px solid #ddd;border-radius:12px;padding:16px;line-height:1.7;">
+            <div><strong>Cliente:</strong> ${escapeHtml(f.cliente_nome || '')}</div>
+            <div><strong>NUIT:</strong> ${escapeHtml(f.cliente_nuit || '-')}</div>
+            <div><strong>Valor recebido:</strong> ${formatMoney(f.total_mt || 0)}</div>
+            <div><strong>Referência:</strong> ${escapeHtml(f.referencia || f.numero_fatura || '-')}</div>
+            <div><strong>Observação:</strong> Liquidação da fatura ${escapeHtml(f.numero_fatura || '')}.</div>
+          </div>
+          <div style="margin-top:18px;font-size:12px;color:#444;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+            <div><strong>Powered by EF Cargo Clear</strong></div>
+            <div>Recibo emitido após confirmação de pagamento.</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function previewClientInvoice(id) { previewInvoice(id); }
+    function downloadClientInvoice(id) { downloadInvoicePdf(id); }
+    function downloadClientReceipt(id) { downloadReceiptPdf(id); }
+
+    function downloadReceiptPdf(id) {
+      const f = [...faturasCache, ...clientFaturasCache].find(x => x.id === id);
+      if (!f) return;
+      if (String(f.status_pagamento || '').toLowerCase() !== 'pago') {
+        alert('O recibo só fica disponível após marcar a fatura como paga.');
+        return;
+      }
+      const w = window.open('', '_blank');
+      w.document.write(`<html><head><title>${f.recibo_numero || ('Recibo-' + (f.numero_fatura || ''))}</title></head><body style="margin:20px;">${receiptHtmlFromInvoice(f)}<script>window.onload=()=>window.print();<\/script></body></html>`);
+      w.document.close();
+    }
+
+    async function deleteInvoice(id) {
+      const f = faturasCache.find(x => x.id === id);
+      if (!f) return;
+      if (!confirm(`Apagar a fatura ${f.numero_fatura || ''}?`)) return;
+      try {
+        const { error } = await withTimeout(supabaseClient.from('faturas').delete().eq('id', id), 10000);
+        if (error) throw error;
+        faturasCache = faturasCache.filter(x => x.id !== id);
+        clientFaturasCache = clientFaturasCache.filter(x => x.id !== id);
+        renderFaturasTable();
+        renderClientFinanceDocs();
+        alert('Fatura apagada com sucesso.');
+      } catch (e) {
+        alert(e.message || 'Erro ao apagar fatura.');
+      }
+    }
+
+    async function markInvoicePaid(id) {
+      const f = faturasCache.find(x => x.id === id);
+      if (!f) return;
+      const nota = prompt('Observação do pagamento / referência bancária (opcional):', f.payment_notes || '') ?? '';
+      const stamp = new Date().toISOString();
+      const reciboNumero = f.recibo_numero || `RCB/${new Date().getFullYear()}/${String((faturasCache.findIndex(x => x.id === id) + 1)).padStart(3,'0')}`;
+      try {
+        const { data, error } = await withTimeout(
+          supabaseClient.from('faturas').update({
+            status_pagamento: 'pago',
+            pago_at: stamp,
+            recibo_numero: reciboNumero,
+            recibo_emitido_at: stamp,
+            payment_notes: nota
+          }).eq('id', id).select('*').single(),
+          12000
+        );
+        if (error) throw error;
+        const idx = faturasCache.findIndex(x => x.id === id);
+        if (idx >= 0) faturasCache[idx] = data;
+        const cidx = clientFaturasCache.findIndex(x => x.id === id);
+        if (cidx >= 0) clientFaturasCache[cidx] = data;
+        renderFaturasTable();
+        renderClientFinanceDocs();
+        alert('Pagamento confirmado e recibo preparado.');
+      } catch (e) {
+        alert((e.message || 'Erro ao marcar pagamento.') + '\n\nSe a base ainda não tiver os campos de recibo/pagamento, execute o SQL que vou te passar.');
+      }
+    }
+
+    function renderFinanceInsights(rows) {
+      const box = document.getElementById('financeInsights');
+      if (!box) return;
+      const totalCobrado = rows.reduce((s,p)=>s+Number(p.valor_cobrado||0),0);
+      const totalCustos = rows.reduce((s,p)=>s+Number(p.custos_processo||0),0);
+      const totalMargem = rows.reduce((s,p)=>s+Number(p.margem_lucro||0),0);
+      const clientes = [...new Set(rows.map(p => String(p.importador_exportador || '').trim()).filter(Boolean))];
+      const procIds = new Set(rows.map(p => String(p.id)));
+      const breakdown = {};
+      (faturasCache || []).forEach(f => {
+        if (f.processo_id && !procIds.has(String(f.processo_id))) return;
+        const lines = [...(Array.isArray(f.encargos_json) ? f.encargos_json : []), ...(Array.isArray(f.servicos_json) ? f.servicos_json : [])];
+        lines.forEach(line => {
+          const key = line.nome || 'Outros';
+          breakdown[key] = (breakdown[key] || 0) + Number(line.valor || 0);
+        });
+      });
+      const top = Object.entries(breakdown).sort((a,b)=>b[1]-a[1]).slice(0,6);
+      box.innerHTML = `
+        <div class="progress-card">
+          <div class="kpi-title">Resumo filtrado</div>
+          <div class="grid grid-3">
+            <div><strong>Cobrado</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:#BE001A;">${formatMoney(totalCobrado)}</div></div>
+            <div><strong>Custos</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:#111827;">${formatMoney(totalCustos)}</div></div>
+            <div><strong>Margem</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:${totalMargem >= 0 ? '#166534' : '#b91c1c'};">${formatMoney(totalMargem)}</div></div>
+          </div>
+          <div class="small" style="margin-top:12px;">Clientes no filtro: ${clientes.length} • Processos: ${rows.length}</div>
+        </div>
+        <div class="progress-card">
+          <div class="kpi-title">Em que foi gasto / cobrado</div>
+          ${top.length ? top.map(([nome,valor]) => `<div style="display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #eee;"><span>${escapeHtml(nome)}</span><strong>${formatMoney(valor)}</strong></div>`).join('') : `<div class="small">Sem linhas detalhadas de faturas para o filtro atual.</div>`}
+        </div>
+      `;
     }
 
     window.addEventListener("load", async () => {
