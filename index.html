@@ -883,6 +883,8 @@
 
 
     .quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+    .kpi.clickable,.highlight-pill.clickable,.progress-card.clickable{cursor:pointer;transition:transform .15s, box-shadow .15s, border-color .15s}
+    .kpi.clickable:hover,.highlight-pill.clickable:hover,.progress-card.clickable:hover{transform:translateY(-2px);box-shadow:0 16px 28px rgba(15,23,42,.08);border-color:rgba(190,0,26,.24)}
     .quick-btn{border:1px solid var(--line);background:#fff;border-radius:18px;padding:16px;cursor:pointer;text-align:left;box-shadow:var(--shadow-soft);font-weight:700;color:#111827}
     .quick-btn:hover{border-color:rgba(190,0,26,.28);background:#fff8f8}
     .quick-btn small{display:block;color:var(--muted);font-weight:400;margin-top:6px;line-height:1.4}
@@ -1079,11 +1081,11 @@
 
           <div>
             <div class="grid grid-5">
-              <div class="kpi"><div class="kpi-title">Clientes</div><div class="kpi-value" id="clientesCount">0</div></div>
-              <div class="kpi"><div class="kpi-title">Processos</div><div class="kpi-value" id="processosCount">0</div></div>
-              <div class="kpi"><div class="kpi-title">Liberados</div><div class="kpi-value" id="liberadosCount">0</div></div>
-              <div class="kpi"><div class="kpi-title">Pendências</div><div class="kpi-value" id="pendenciasCount">0</div></div>
-              <div class="kpi"><div class="kpi-title">Pedidos de cotação</div><div class="kpi-value" id="cotacoesCount">0</div></div>
+              <div class="kpi clickable" onclick="goToInternalSection('clientes')"><div class="kpi-title">Clientes</div><div class="kpi-value" id="clientesCount">0</div></div>
+              <div class="kpi clickable" onclick="goToInternalSection('processos')"><div class="kpi-title">Processos</div><div class="kpi-value" id="processosCount">0</div></div>
+              <div class="kpi clickable" onclick="goToInternalSection('liberados')"><div class="kpi-title">Liberados</div><div class="kpi-value" id="liberadosCount">0</div></div>
+              <div class="kpi clickable" onclick="goToInternalSection('pendencias')"><div class="kpi-title">Pendências</div><div class="kpi-value" id="pendenciasCount">0</div></div>
+              <div class="kpi clickable" onclick="goToInternalSection('cotacoes')"><div class="kpi-title">Pedidos de cotação</div><div class="kpi-value" id="cotacoesCount">0</div></div>
             </div>
 
             <div class="stat-row" id="adminFinanceSummaryRow" style="margin-top:18px;">
@@ -1551,10 +1553,10 @@
             </div>
           </div>
           <div class="dash-grid">
-            <div class="kpi"><div class="kpi-title">Minhas cotações</div><div class="kpi-value" id="clientDashCotacoes">0</div></div>
-            <div class="kpi"><div class="kpi-title">Mensagens não lidas</div><div class="kpi-value" id="clientDashUnread">0</div></div>
-            <div class="kpi"><div class="kpi-title">Docs visíveis</div><div class="kpi-value" id="clientDashDocs">0</div></div>
-            <div class="kpi"><div class="kpi-title">Último estado</div><div class="kpi-value" id="clientDashEstado" style="font-size:20px;">-</div></div>
+            <div class="kpi clickable" onclick="activateClientTab('historico')"><div class="kpi-title">Minhas cotações</div><div class="kpi-value" id="clientDashCotacoes">0</div></div>
+            <div class="kpi clickable" onclick="activateClientTab('mensagens')"><div class="kpi-title">Mensagens não lidas</div><div class="kpi-value" id="clientDashUnread">0</div></div>
+            <div class="kpi clickable" onclick="activateClientTab('processos')"><div class="kpi-title">Docs visíveis</div><div class="kpi-value" id="clientDashDocs">0</div></div>
+            <div class="kpi clickable" onclick="goToLatestClientProcess()"><div class="kpi-title">Último estado</div><div class="kpi-value" id="clientDashEstado" style="font-size:20px;">-</div></div>
           </div>
 
           <div class="quick-actions no-print">
@@ -1573,7 +1575,7 @@
           </div>
 
           <div class="client-highlight-grid">
-            <div class="progress-card">
+            <div class="progress-card clickable" onclick="goToLatestClientProcess()">
               <div class="kpi-title">Progresso do último processo</div>
               <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;">
                 <strong id="clientProcessRef">Sem processo recente</strong>
@@ -1587,7 +1589,7 @@
             </div>
 
             <div class="client-highlight-list">
-              <div class="highlight-pill">
+              <div class="highlight-pill clickable" onclick="goToPendingClientDocs()">
                 <div class="kpi-title">Documentos em falta</div>
                 <div id="clientDashDocsMissing" style="font-weight:700;">Sem pendências</div>
               </div>
@@ -1604,13 +1606,14 @@
         </div>
 
         <div class="tabs no-print">
-          <button class="tab-btn active" onclick="showClientTab('consulta', this)">Consultar processo</button>
-          <button class="tab-btn" onclick="showClientTab('cotacao', this)">Solicitar cotação</button>
-          <button class="tab-btn" onclick="showClientTab('historico', this)">Minhas cotações</button>
-          <button class="tab-btn" onclick="showClientTab('mensagens', this)">
+          <button class="tab-btn active" data-client-tab="consulta" onclick="showClientTab('consulta', this)">Consultar processo</button>
+          <button class="tab-btn" data-client-tab="processos" onclick="showClientTab('processos', this)">Processos</button>
+          <button class="tab-btn" data-client-tab="cotacao" onclick="showClientTab('cotacao', this)">Solicitar cotação</button>
+          <button class="tab-btn" data-client-tab="historico" onclick="showClientTab('historico', this)">Minhas cotações</button>
+          <button class="tab-btn" data-client-tab="mensagens" onclick="showClientTab('mensagens', this)">
             Mensagens <span id="clientUnreadBadge" class="unread-dot hidden">0</span>
           </button>
-          <button class="tab-btn" onclick="showClientTab('contactos', this)">Contactos</button>
+          <button class="tab-btn" data-client-tab="contactos" onclick="showClientTab('contactos', this)">Contactos</button>
         </div>
 
         <div id="client-consulta" class="tab-content">
@@ -1651,6 +1654,19 @@
             <hr style="margin:22px 0;" />
             <strong>Documentos do processo</strong>
             <div id="pcDocsList" class="doc-list" style="margin-top:10px"></div>
+          </div>
+        </div>
+
+        <div id="client-processos" class="tab-content hidden">
+          <div class="card">
+            <div class="panel-head">
+              <div>
+                <h2 class="section-title">Meus processos</h2>
+                <div class="section-sub">Veja todos os seus processos sem precisar pesquisar e carregue documentos pendentes quando necessário.</div>
+              </div>
+            </div>
+
+            <div id="clientProcessosGrid" class="grid"></div>
           </div>
         </div>
 
@@ -2130,6 +2146,7 @@
     let cotacoesCache = [];
     let docsCache = [];
     let clientCotacoesCache = [];
+    let clientProcessosCache = [];
     let clientesCache = [];
     let equipaCache = [];
     let tarefasCache = [];
@@ -2137,6 +2154,7 @@
     let cotacaoDocsCache = [];
     let currentProcessModalId = null;
     let currentUserRole = "client";
+    let processosQuickFilter = "";
     let currentUserEmail = "";
     let currentUserName = "";
     let currentSelectedThread = "";
@@ -2456,16 +2474,60 @@
       }
     }
 
+    function activateClientTab(tab) {
+      const btn = document.querySelector(`#clientView .tab-btn[data-client-tab="${tab}"]`);
+      showClientTab(tab, btn || null);
+    }
+
+    function goToInternalSection(target) {
+      processosQuickFilter = "";
+      if (target === "clientes") {
+        showInternalTab("clientes");
+        document.getElementById("internal-clientes")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      if (target === "cotacoes") {
+        showInternalTab("cotacoes");
+        document.getElementById("internal-cotacoes")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      if (target === "processos") {
+        document.getElementById("filterEstado").value = "";
+        applyFilters();
+        showInternalTab("processos");
+        document.getElementById("internal-processos")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      if (target === "pendencias") {
+        document.getElementById("filterEstado").value = "Documentos em falta";
+        processosQuickFilter = "";
+        applyFilters();
+        showInternalTab("processos");
+        document.getElementById("internal-processos")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      if (target === "liberados") {
+        document.getElementById("filterEstado").value = "";
+        processosQuickFilter = "liberados";
+        applyFilters();
+        showInternalTab("processos");
+        document.getElementById("internal-processos")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+
     function showClientTab(tab, btn) {
       document.querySelectorAll("#clientView .tab-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
+      const resolvedBtn = btn || document.querySelector(`#clientView .tab-btn[data-client-tab="${tab}"]`);
+      if (resolvedBtn) resolvedBtn.classList.add("active");
 
       document.getElementById("client-consulta").classList.toggle("hidden", tab !== "consulta");
+      document.getElementById("client-processos").classList.toggle("hidden", tab !== "processos");
       document.getElementById("client-cotacao").classList.toggle("hidden", tab !== "cotacao");
       document.getElementById("client-historico").classList.toggle("hidden", tab !== "historico");
       document.getElementById("client-mensagens").classList.toggle("hidden", tab !== "mensagens");
       document.getElementById("client-contactos").classList.toggle("hidden", tab !== "contactos");
 
+      if (tab === "processos") loadClientProcessos();
       if (tab === "historico") loadClientCotacoes();
       if (tab === "mensagens") {
         loadClientMessages();
@@ -3304,6 +3366,7 @@
     }
 
     function clearFilters() {
+      processosQuickFilter = "";
       document.getElementById("globalSearch").value = "";
       document.getElementById("filterCliente").value = "";
       document.getElementById("filterFactura").value = "";
@@ -3334,8 +3397,11 @@
         const okCliente = !cliente || String(p.importador_exportador || "").toLowerCase().includes(cliente);
         const okFactura = !factura || String(p.numero_factura || "").toLowerCase().includes(factura);
         const okEstado = !estado || String(p.estado || "").toLowerCase() === estado;
+        const okQuick = processosQuickFilter === "liberados"
+          ? ["liberado", "entregue"].includes(String(p.estado || "").toLowerCase())
+          : true;
 
-        return okGlobal && okCliente && okFactura && okEstado;
+        return okGlobal && okCliente && okFactura && okEstado && okQuick;
       });
     }
 
@@ -5117,6 +5183,236 @@
         await refreshClientDashboard();
       } catch (e) {
         tbody.innerHTML = `<tr><td colspan="8">${e.message}</td></tr>`;
+      }
+    }
+
+
+    async function getClientOwnedProcessos() {
+      const { data: userData } = await withTimeout(supabaseClient.auth.getUser(), 8000);
+      const user = userData?.user;
+      if (!user?.email) return [];
+      const email = String(user.email).toLowerCase();
+
+      const { data: byEmail } = await withTimeout(
+        supabaseClient.from("processos").select("*").eq("cliente_email", email).order("created_at", { ascending: false }),
+        10000
+      );
+
+      let rows = byEmail || [];
+      if (!rows.length) {
+        const { data: cliente } = await withTimeout(
+          supabaseClient.from("clientes").select("nome").eq("email", email).maybeSingle(),
+          8000
+        );
+        if (cliente?.nome) {
+          const { data: byNome } = await withTimeout(
+            supabaseClient.from("processos").select("*").eq("importador_exportador", cliente.nome).order("created_at", { ascending: false }),
+            10000
+          );
+          rows = byNome || [];
+        }
+      }
+      return rows;
+    }
+
+    async function renderClientProcessCard(processo) {
+      const docsPendentes = String(processo.documentos_em_falta || "").trim();
+      const cobrado = formatMoney(processo.valor_cobrado || 0);
+      const docsInfo = docsPendentes ? `<div class="small" style="margin-top:8px;"><strong>Documentos em falta:</strong> ${escapeHtml(docsPendentes)}</div>` : `<div class="small" style="margin-top:8px;">Sem documentos pendentes.</div>`;
+      return `
+        <div class="client-card" id="clientProcessCard_${processo.id}">
+          <div class="panel-head">
+            <div>
+              <div class="client-name">${escapeHtml(processo.numero_processo || "Sem número")} • Factura ${escapeHtml(processo.numero_factura || "-")}</div>
+              <div class="small">${escapeHtml(processo.importador_exportador || "")}</div>
+            </div>
+            <div>${badgeEstado(processo.estado || "Recebido")}</div>
+          </div>
+
+          <div class="client-meta">
+            <div><strong>Regime:</strong> ${escapeHtml(processo.regime || "-")}</div>
+            <div><strong>Origem:</strong> ${escapeHtml(processo.pais_origem || "-")}</div>
+            <div><strong>Destino:</strong> ${escapeHtml(processo.pais_destino || "-")}</div>
+            <div><strong>Valor cobrado:</strong> ${cobrado}</div>
+          </div>
+
+          ${docsInfo}
+
+          <div class="client-actions">
+            <button class="btn-mini info" onclick="openClientProcessDetail('${processo.id}')">Abrir detalhe</button>
+            ${docsPendentes ? `<button class="btn-mini" onclick="focusClientPendingUpload('${processo.id}')">Carregar documentos em falta</button>` : ``}
+          </div>
+
+          ${docsPendentes ? `
+          <div id="clientUploadBox_${processo.id}" class="muted-box" style="margin-top:14px;">
+            <label>Carregar documentos deste processo (até 5 ficheiros)</label>
+            <div class="grid grid-2">
+              <input id="client_procfile_${processo.id}_1" type="file" />
+              <input id="client_procfile_${processo.id}_2" type="file" />
+              <input id="client_procfile_${processo.id}_3" type="file" />
+              <input id="client_procfile_${processo.id}_4" type="file" />
+              <input id="client_procfile_${processo.id}_5" type="file" />
+            </div>
+            <div style="margin-top:10px;">
+              <button class="btn-mini green" onclick="uploadClientProcessoDocumento('${processo.id}')">Enviar documentos</button>
+            </div>
+          </div>
+          ` : ``}
+        </div>
+      `;
+    }
+
+    async function loadClientProcessos() {
+      const grid = document.getElementById("clientProcessosGrid");
+      if (!grid) return;
+      grid.innerHTML = `<div class="muted-box">A carregar processos...</div>`;
+
+      try {
+        clientProcessosCache = await getClientOwnedProcessos();
+
+        if (!clientProcessosCache.length) {
+          grid.innerHTML = `<div class="muted-box">Ainda não existem processos ligados à sua conta.</div>`;
+          await refreshClientDashboard();
+          return;
+        }
+
+        grid.innerHTML = (await Promise.all(clientProcessosCache.map(renderClientProcessCard))).join("");
+        await refreshClientDashboard();
+      } catch (e) {
+        grid.innerHTML = `<div class="muted-box">${escapeHtml(e.message || "Erro ao carregar processos.")}</div>`;
+      }
+    }
+
+    async function openClientProcessDetail(processoId) {
+      const processo = clientProcessosCache.find(p => String(p.id) === String(processoId));
+      if (!processo) return;
+
+      const { data: docs } = await withTimeout(
+        supabaseClient.from("processos_documentos").select("*").eq("processo_id", processoId).eq("visivel_cliente", true).order("created_at", { ascending: false }),
+        10000
+      );
+
+      document.getElementById("processoCard").classList.remove("hidden");
+      document.getElementById("pcTitulo").textContent = "Factura " + (processo.numero_factura || "");
+      document.getElementById("pcSub").textContent = (processo.numero_processo || "") + " • " + (processo.importador_exportador || "");
+      document.getElementById("pcEstado").innerHTML = badgeEstado(processo.estado || "");
+      document.getElementById("pcRegime").textContent = processo.regime || "";
+      document.getElementById("pcOrigem").textContent = processo.pais_origem || "";
+      document.getElementById("pcDestino").textContent = processo.pais_destino || "";
+      document.getElementById("pcPorto").textContent = processo.porto_fronteira || "";
+      document.getElementById("pcBl").textContent = processo.bl_awb_manifesto || "";
+      document.getElementById("pcPrazo").textContent = processo.prazo || "";
+      document.getElementById("pcCobrado").textContent = formatMoney(processo.valor_cobrado || 0);
+      document.getElementById("pcDocs").textContent = processo.documentos_em_falta || "Sem pendências";
+      document.getElementById("pcHistorico").textContent = getVisibleHistorico(processo);
+
+      const list = document.getElementById("pcDocsList");
+      list.innerHTML = "";
+      if (docs && docs.length) {
+        docs.forEach(d => {
+          const chip = document.createElement("span");
+          chip.className = "doc-chip";
+          chip.innerHTML = `
+            <span>${d.nome_ficheiro || "Documento"}</span>
+            <button class="btn-mini secondary" style="margin:0;padding:4px 8px;" onclick="openProcessoDocumento('${String(d.ficheiro_path).replace(/'/g, "\'")}')">Abrir</button>
+          `;
+          list.appendChild(chip);
+        });
+      } else {
+        list.innerHTML = `<span class="small">Sem documentos visíveis para o cliente.</span>`;
+      }
+
+      activateClientTab("consulta");
+      document.getElementById("processoCard")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    async function goToLatestClientProcess() {
+      if (!clientProcessosCache.length) await loadClientProcessos();
+      if (clientProcessosCache.length) {
+        await openClientProcessDetail(clientProcessosCache[0].id);
+      } else {
+        activateClientTab("processos");
+      }
+    }
+
+    async function goToPendingClientDocs() {
+      if (!clientProcessosCache.length) await loadClientProcessos();
+      const pendente = clientProcessosCache.find(p => String(p.documentos_em_falta || "").trim());
+      if (pendente) {
+        activateClientTab("processos");
+        setTimeout(() => focusClientPendingUpload(pendente.id), 120);
+      } else {
+        activateClientTab("processos");
+      }
+    }
+
+    function focusClientPendingUpload(processoId) {
+      activateClientTab("processos");
+      const box = document.getElementById(`clientUploadBox_${processoId}`);
+      if (box) {
+        box.scrollIntoView({ behavior: "smooth", block: "center" });
+        const firstInput = box.querySelector("input[type=file]");
+        if (firstInput) firstInput.focus();
+      }
+    }
+
+    async function uploadClientProcessoDocumento(processoId) {
+      const files = [1,2,3,4,5]
+        .map(i => document.getElementById(`client_procfile_${processoId}_${i}`)?.files?.[0])
+        .filter(Boolean);
+
+      if (!files.length) {
+        alert("Escolha pelo menos um ficheiro.");
+        return;
+      }
+
+      try {
+        for (const file of files) {
+          const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+          const path = `${processoId}/cliente_${Date.now()}_${safeName}`;
+
+          const { error: uploadError } = await withTimeout(
+            supabaseClient.storage.from("processos").upload(path, file, {
+              cacheControl: "3600",
+              upsert: false,
+              contentType: file.type || "application/octet-stream"
+            }),
+            15000
+          );
+          if (uploadError) throw uploadError;
+
+          const { error: insertError } = await withTimeout(
+            supabaseClient.from("processos_documentos").insert({
+              processo_id: processoId,
+              nome_ficheiro: file.name,
+              ficheiro_path: path,
+              visivel_cliente: true,
+              uploaded_by: "cliente"
+            }),
+            10000
+          );
+          if (insertError) throw insertError;
+        }
+
+        const { data: processo } = await withTimeout(
+          supabaseClient.from("processos").select("historico").eq("id", processoId).single(),
+          8000
+        );
+        const historicoAtual = processo?.historico || "";
+        const agora = new Date().toLocaleString("pt-PT");
+        await withTimeout(
+          supabaseClient.from("processos")
+            .update({ historico: `${historicoAtual}
+• ${agora} - Cliente anexou ${files.length} documento(s) pendente(s).`.trim() })
+            .eq("id", processoId),
+          10000
+        );
+
+        alert("Documentos enviados com sucesso.");
+        await loadClientProcessos();
+        await openClientProcessDetail(processoId);
+      } catch (e) {
+        alert(e.message || "Erro ao enviar documentos.");
       }
     }
 
