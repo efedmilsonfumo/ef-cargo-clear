@@ -897,6 +897,38 @@
 
     hr{border:none;border-top:1px solid var(--line)}
 
+
+    .lang-switcher{
+      position:fixed;
+      top:14px;
+      right:14px;
+      z-index:2000;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 12px;
+      border-radius:14px;
+      background:rgba(255,255,255,.96);
+      border:1px solid rgba(229,231,235,.95);
+      box-shadow:0 10px 24px rgba(15,23,42,.08);
+      backdrop-filter:blur(8px);
+    }
+    .lang-switcher label{
+      margin:0;
+      font-size:12px;
+      color:var(--muted);
+      font-weight:800;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+    }
+    .lang-switcher select{
+      min-width:148px;
+      padding:10px 12px;
+      border-radius:12px;
+      font-size:14px;
+      background:#fff;
+    }
+
     @media (max-width:1180px){
       .admin-shell{grid-template-columns:1fr}
       .sidebar{position:static}
@@ -2765,6 +2797,8 @@
       if (adminFinanceSummaryRow) adminFinanceSummaryRow.style.display = isAdmin ? "grid" : "none";
       if (dashMargemCard) dashMargemCard.style.display = isAdmin ? "block" : "none";
       if (financeiroChartCard) financeiroChartCard.style.display = isAdmin ? "block" : "none";
+      const financeInsights = document.getElementById("financeInsights");
+      if (financeInsights) financeInsights.style.display = isAdmin ? "grid" : "none";
 
       if (isEmployee) {
         document.getElementById("internal-financeiro").classList.add("hidden");
@@ -2902,6 +2936,7 @@
     }
 
     async function logout() {
+      teardownRealtime();
       await supabaseClient.auth.signOut();
       location.reload();
     }
@@ -2925,6 +2960,7 @@
         setTimeout(async () => {
           await loadInternal();
           await loadInternalMessages();
+          setupRealtime();
         }, 100);
         return;
       }
@@ -2946,6 +2982,7 @@
           setTimeout(async () => {
             await loadInternal();
             await loadInternalMessages();
+            setupRealtime();
           }, 100);
           return;
         }
@@ -2979,6 +3016,7 @@
         await loadClientMessages();
         await loadClientFinanceDocs();
         await refreshClientDashboard();
+        setupRealtime();
       } catch (_) {
         document.getElementById("welcome").textContent = "Cliente • portal";
       }
@@ -4342,7 +4380,7 @@
       ftbody.innerHTML = "";
 
       const filteredRows = getFinanceFilteredProcessos();
-      renderFinanceInsights(filteredRows);
+      if (currentUserRole === "admin") renderFinanceInsights(filteredRows);
 
       filteredRows.forEach(p => {
         const margem = Number(p.margem_lucro || 0);
@@ -6688,143 +6726,35 @@
 
 
     function receiptHtmlFromInvoice(f) {
-      const reciboNumero = escapeHtml(f.recibo_numero || f.numero_recibo || ('RCB-' + (f.numero_fatura || '')));
-      const dataPagamento = escapeHtml((f.recibo_emitido_at || f.pago_at || new Date().toISOString()).slice(0, 10));
-      const clienteNome = escapeHtml(f.cliente_nome || '-');
-      const clienteEmail = escapeHtml(f.cliente_email || f.email_cliente || '-');
-      const clienteNuit = escapeHtml(f.cliente_nuit || f.nuit || '-');
-      const referencia = escapeHtml(f.referencia || f.numero_fatura || '-');
-      const valor = formatMoney(f.total_mt || 0);
-      const valorExtenso = escapeHtml(numberToWordsPt(Math.round(Number(f.total_mt || 0))) + ' meticais');
-      const formaPagamento = escapeHtml(f.payment_notes || 'Pagamento confirmado no sistema');
-      const processoRef = escapeHtml(f.processo_numero || f.numero_processo || f.fatura_processo || '-');
-      const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=' + encodeURIComponent('https://ef-cargo-clear.vercel.app/validar-recibo.html?ref=' + (f.recibo_numero || f.numero_recibo || ('RCB-' + (f.numero_fatura || ''))));
-
       return `
-        <div style="font-family:Arial,sans-serif;color:#111;max-width:980px;margin:0 auto;background:#ffffff;">
-          <div style="border:1px solid #e5e7eb;border-radius:24px;overflow:hidden;box-shadow:0 16px 40px rgba(15,23,42,.08);">
-            <div style="background:linear-gradient(135deg,#7f0012 0%,#be001a 55%,#e24a5d 100%);padding:30px 34px;color:#fff;">
-              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;">
-                <div>
-                  <div style="font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.92;">EF & Associados, Lda</div>
-                  <div style="font-size:30px;font-weight:800;margin-top:8px;">RECIBO</div>
-                  <div style="font-size:14px;opacity:.92;margin-top:8px;line-height:1.6;">
-                    Despachantes Aduaneiros<br>
-                    Documento emitido após confirmação de pagamento
-                  </div>
-                </div>
-                <div style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:16px 18px;border-radius:18px;min-width:250px;text-align:right;">
-                  <div style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;opacity:.9;">Número do recibo</div>
-                  <div style="font-size:24px;font-weight:800;margin-top:6px;">${reciboNumero}</div>
-                  <div style="margin-top:10px;font-size:13px;line-height:1.6;">
-                    <strong>Data:</strong> ${dataPagamento}<br>
-                    <strong>Ref. fatura:</strong> ${escapeHtml(f.numero_fatura || '-')}
-                  </div>
-                </div>
+        <div style="font-family:Arial,sans-serif;color:#111;max-width:900px;margin:0 auto;">
+          <div style="display:flex;justify-content:space-between;gap:20px;align-items:flex-start;">
+            <div>
+              <h1 style="margin:0;color:#166534;">Recibo</h1>
+              <div style="margin-top:10px;font-size:14px;line-height:1.6;">
+                <strong>EF & ASSOCIADOS DESP ADUANEIROS LDA</strong><br>
+                Recebemos de <strong>${escapeHtml(f.cliente_nome || '')}</strong> o valor de <strong>${formatMoney(f.total_mt || 0)}</strong>.
               </div>
             </div>
-
-            <div style="padding:30px 34px 18px;">
-              <div style="display:grid;grid-template-columns:1.2fr .8fr;gap:18px;">
-                <div style="border:1px solid #e5e7eb;border-radius:18px;padding:18px 20px;background:#fff;">
-                  <div style="font-size:12px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Recebemos de</div>
-                  <div style="font-size:22px;font-weight:800;color:#111827;">${clienteNome}</div>
-                  <div style="margin-top:12px;font-size:14px;line-height:1.7;color:#374151;">
-                    <strong>NUIT:</strong> ${clienteNuit}<br>
-                    <strong>Email:</strong> ${clienteEmail}
-                  </div>
-                </div>
-                <div style="border:1px solid #e5e7eb;border-radius:18px;padding:18px 20px;background:#fff;">
-                  <div style="font-size:12px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Valor recebido</div>
-                  <div style="font-size:32px;font-weight:800;color:#166534;line-height:1;">${valor}</div>
-                  <div style="margin-top:10px;font-size:13px;line-height:1.6;color:#4b5563;">${valorExtenso}</div>
-                </div>
-              </div>
-
-              <div style="margin-top:18px;border:1px solid #e5e7eb;border-radius:18px;padding:20px;background:#fcfcfd;">
-                <div style="font-size:15px;line-height:1.85;color:#1f2937;">
-                  Declaramos que recebemos de <strong>${clienteNome}</strong> o montante de <strong>${valor}</strong>,
-                  referente à liquidação da fatura <strong>${escapeHtml(f.numero_fatura || '-')}</strong>, emitida por
-                  <strong>EF & Associados – Despachantes Aduaneiros, Lda</strong>.
-                </div>
-              </div>
-
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px;">
-                <div style="border:1px solid #e5e7eb;border-radius:18px;padding:18px 20px;background:#fff;">
-                  <div style="font-size:12px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Detalhes do pagamento</div>
-                  <div style="font-size:14px;line-height:1.8;color:#374151;">
-                    <strong>Forma de pagamento:</strong> ${formaPagamento}<br>
-                    <strong>Data de pagamento:</strong> ${dataPagamento}<br>
-                    <strong>Referência:</strong> ${referencia}<br>
-                    <strong>Processo:</strong> ${processoRef}
-                  </div>
-                </div>
-                <div style="border:1px solid #e5e7eb;border-radius:18px;padding:18px 20px;background:#fff;display:flex;justify-content:space-between;gap:16px;align-items:flex-start;">
-                  <div>
-                    <div style="font-size:12px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Validação digital</div>
-                    <div style="font-size:13px;line-height:1.7;color:#4b5563;">
-                      Este recibo possui código de validação digital para conferência da autenticidade.
-                    </div>
-                  </div>
-                  <img src="${qrUrl}" alt="QR Code de validação" style="width:130px;height:130px;border:1px solid #e5e7eb;border-radius:12px;padding:8px;background:#fff;" />
-                </div>
-              </div>
-
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px;">
-                <div style="border-top:1px solid #d1d5db;padding-top:14px;font-size:13px;color:#374151;">
-                  <strong>Observação:</strong><br>
-                  Liquidação integral da fatura ${escapeHtml(f.numero_fatura || '-')}.
-                </div>
-                <div style="border-top:1px solid #d1d5db;padding-top:14px;font-size:13px;color:#374151;text-align:right;">
-                  <strong>Validação interna:</strong><br>
-                  Documento gerado automaticamente pelo sistema EF Cargo Clear.
-                </div>
-              </div>
+            <div style="text-align:right;font-size:14px;line-height:1.6;">
+              <strong>${escapeHtml(f.recibo_numero || f.numero_recibo || ('RCB-' + (f.numero_fatura || '')))}</strong><br>
+              Data: ${escapeHtml((f.recibo_emitido_at || f.pago_at || new Date().toISOString()).slice(0,10))}<br>
+              Refª Fatura: ${escapeHtml(f.numero_fatura || '')}
             </div>
-
-            <div style="padding:18px 34px 26px;background:#fafafa;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:flex-end;">
-              <div style="font-size:12px;line-height:1.7;color:#6b7280;">
-                EF & Associados – Despachantes Aduaneiros, Lda<br>
-                Recibo emitido após confirmação de pagamento
-              </div>
-              <div style="text-align:right;">
-                <div style="width:220px;border-top:1px solid #9ca3af;margin-bottom:8px;"></div>
-                <div style="font-size:12px;color:#6b7280;">Autorização EF Cargo Clear</div>
-              </div>
-            </div>
+          </div>
+          <div style="margin-top:20px;border:1px solid #ddd;border-radius:12px;padding:16px;line-height:1.7;">
+            <div><strong>Cliente:</strong> ${escapeHtml(f.cliente_nome || '')}</div>
+            <div><strong>NUIT:</strong> ${escapeHtml(f.cliente_nuit || '-')}</div>
+            <div><strong>Valor recebido:</strong> ${formatMoney(f.total_mt || 0)}</div>
+            <div><strong>Referência:</strong> ${escapeHtml(f.referencia || f.numero_fatura || '-')}</div>
+            <div><strong>Observação:</strong> Liquidação da fatura ${escapeHtml(f.numero_fatura || '')}.</div>
+          </div>
+          <div style="margin-top:18px;font-size:12px;color:#444;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+            <div><strong>Powered by EF Cargo Clear</strong></div>
+            <div>Recibo emitido após confirmação de pagamento.</div>
           </div>
         </div>
       `;
-    }
-
-    function numberToWordsPt(n) {
-      const unidades = ['zero','um','dois','três','quatro','cinco','seis','sete','oito','nove','dez','onze','doze','treze','catorze','quinze','dezasseis','dezassete','dezoito','dezanove'];
-      const dezenas = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
-      const centenas = ['', 'cem', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
-
-      function abaixoDeMil(x) {
-        x = Number(x || 0);
-        if (x < 20) return unidades[x];
-        if (x < 100) {
-          const d = Math.floor(x / 10), r = x % 10;
-          return dezenas[d] + (r ? ' e ' + unidades[r] : '');
-        }
-        if (x === 100) return 'cem';
-        const c = Math.floor(x / 100), r = x % 100;
-        return (c === 1 ? 'cento' : centenas[c]) + (r ? ' e ' + abaixoDeMil(r) : '');
-      }
-
-      n = Math.max(0, parseInt(n || 0, 10));
-      if (n < 1000) return abaixoDeMil(n);
-      if (n < 1000000) {
-        const mil = Math.floor(n / 1000), r = n % 1000;
-        const milTxt = mil === 1 ? 'mil' : abaixoDeMil(mil) + ' mil';
-        return milTxt + (r ? (r < 100 ? ' e ' : ', ') + abaixoDeMil(r) : '');
-      }
-      const milhoes = Math.floor(n / 1000000), r = n % 1000000;
-      const milhaoTxt = milhoes === 1 ? 'um milhão' : abaixoDeMil(milhoes) + ' milhões';
-      if (!r) return milhaoTxt;
-      return milhaoTxt + (r < 100 ? ' e ' : ', ') + numberToWordsPt(r);
     }
 
     function previewClientInvoice(id) { previewInvoice(id); }
@@ -6839,33 +6769,8 @@
         return;
       }
       const w = window.open('', '_blank');
-      if (!w) {
-        alert('O navegador bloqueou a abertura da janela do recibo.');
-        return;
-      }
-      const docHtml = `<!DOCTYPE html>
-<html lang="pt">
-<head>
-  <meta charset="UTF-8">
-  <title>${escapeHtml(f.recibo_numero || f.numero_recibo || ('Recibo-' + (f.numero_fatura || '')))}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body{margin:0;padding:24px;background:#f4f6f8;}
-    @media print{
-      body{background:#fff;padding:0;}
-    }
-  </style>
-</head>
-<body>
-  ${receiptHtmlFromInvoice(f)}
-</body>
-</html>`;
-      w.document.open();
-      w.document.write(docHtml);
+      w.document.write(`<html><head><title>${f.recibo_numero || ('Recibo-' + (f.numero_fatura || ''))}</title></head><body style="margin:20px;">${receiptHtmlFromInvoice(f)}<script>window.onload=()=>window.print();<\/script></body></html>`);
       w.document.close();
-      setTimeout(() => {
-        try { w.focus(); w.print(); } catch (e) {}
-      }, 400);
     }
 
     async function deleteInvoice(id) {
@@ -6989,7 +6894,424 @@
       `;
     }
 
+
+    let realtimeChannels = [];
+    let realtimeRefreshTimer = null;
+    const currentLangStorageKey = "ef-cargo-clear-lang";
+    let currentLang = localStorage.getItem(currentLangStorageKey) || "pt";
+
+    const I18N = {
+      pt: {
+        langLabel: "Idioma",
+        welcomeTitle: "Bem-vindo",
+        welcomeSub: "Portal interno e do cliente para gestão de processos, cotações e faturação.",
+        loginTitle: "Entrar no sistema",
+        loginSub: "Painel interno e portal do cliente para acompanhamento de despachos e pedidos de cotação.",
+        email: "Email",
+        password: "Password",
+        enterBtn: "Entrar",
+        createAccount: "Criar conta",
+        forgotPassword: "Esqueci a password",
+        internalPanel: "Painel Interno",
+        dashboard: "Dashboard",
+        processos: "Processos",
+        quotes: "Pedidos de cotação",
+        freightRequests: "Pedidos de frete",
+        financeiro: "Financeiro",
+        invoices: "Faturas",
+        clients: "Clientes",
+        employees: "Funcionários",
+        messages: "Mensagens",
+        clientPortal: "Portal do Cliente",
+        clientPortalSub: "Consulte o estado do seu processo, veja documentos do processo, envie pedidos de cotação e frete, acompanhe o histórico e fale connosco.",
+        clientDashboard: "Dashboard Premium do Cliente",
+        myQuotes: "Minhas cotações",
+        unreadMessages: "Mensagens não lidas",
+        visibleDocs: "Docs visíveis",
+        lastStatus: "Último estado",
+        newQuote: "Nova cotação",
+        requestFreight: "Solicitar frete",
+        askUpdate: "Pedir atualização",
+        askContact: "Solicitar contacto",
+        consultProcess: "Consultar processo",
+        processesTab: "Processos",
+        requestQuoteTab: "Solicitar cotação",
+        myQuotesTab: "Minhas cotações",
+        invoicesReceipts: "Faturas & Recibos",
+        requestFreightTab: "Solicitar frete",
+        myFreights: "Meus fretes",
+        contacts: "Contactos",
+        processMgmt: "Gestão de Processos",
+        processMgmtSub: "Atualize estado, documentos em falta, financeiro e documentos do processo.",
+        globalSearch: "Pesquisa global",
+        client: "Cliente",
+        invoiceNo: "Factura",
+        status: "Estado",
+        all: "Todos",
+        summaryFiltered: "Resumo filtrado",
+        spentCharged: "Em que foi gasto / cobrado",
+        charged: "Cobrado",
+        costs: "Custos",
+        margin: "Margem",
+        searchAllPlaceholder: "Pesquisar tudo...",
+        clientPlaceholder: "Nome do cliente",
+        invoicePlaceholder: "Número da factura",
+        logout: "Sair"
+      },
+      en: {
+        langLabel: "Language",
+        welcomeTitle: "Welcome",
+        welcomeSub: "Internal and client portal for process management, quotations and invoicing.",
+        loginTitle: "Sign in",
+        loginSub: "Internal dashboard and client portal for following customs clearance and quote requests.",
+        email: "Email",
+        password: "Password",
+        enterBtn: "Sign in",
+        createAccount: "Create account",
+        forgotPassword: "Forgot password",
+        internalPanel: "Internal Panel",
+        dashboard: "Dashboard",
+        processos: "Processes",
+        quotes: "Quote requests",
+        freightRequests: "Freight requests",
+        financeiro: "Finance",
+        invoices: "Invoices",
+        clients: "Clients",
+        employees: "Employees",
+        messages: "Messages",
+        clientPortal: "Client Portal",
+        clientPortalSub: "Check your process status, view process documents, send quote and freight requests, follow your history and talk to us.",
+        clientDashboard: "Premium Client Dashboard",
+        myQuotes: "My quotes",
+        unreadMessages: "Unread messages",
+        visibleDocs: "Visible docs",
+        lastStatus: "Latest status",
+        newQuote: "New quote",
+        requestFreight: "Request freight",
+        askUpdate: "Ask for update",
+        askContact: "Request contact",
+        consultProcess: "Search process",
+        processesTab: "Processes",
+        requestQuoteTab: "Request quote",
+        myQuotesTab: "My quotes",
+        invoicesReceipts: "Invoices & Receipts",
+        requestFreightTab: "Request freight",
+        myFreights: "My freights",
+        contacts: "Contacts",
+        processMgmt: "Process Management",
+        processMgmtSub: "Update status, missing documents, finance and process documents.",
+        globalSearch: "Global search",
+        client: "Client",
+        invoiceNo: "Invoice",
+        status: "Status",
+        all: "All",
+        summaryFiltered: "Filtered summary",
+        spentCharged: "Where it was spent / charged",
+        charged: "Charged",
+        costs: "Costs",
+        margin: "Margin",
+        searchAllPlaceholder: "Search everything...",
+        clientPlaceholder: "Client name",
+        invoicePlaceholder: "Invoice number",
+        logout: "Logout"
+      },
+      fr: {
+        langLabel: "Langue",
+        welcomeTitle: "Bienvenue",
+        welcomeSub: "Portail interne et client pour la gestion des processus, devis et facturation.",
+        loginTitle: "Se connecter",
+        loginSub: "Tableau interne et portail client pour suivre les dédouanements et demandes de devis.",
+        email: "Email",
+        password: "Mot de passe",
+        enterBtn: "Entrer",
+        createAccount: "Créer un compte",
+        forgotPassword: "Mot de passe oublié",
+        internalPanel: "Panneau interne",
+        dashboard: "Tableau de bord",
+        processos: "Processus",
+        quotes: "Demandes de devis",
+        freightRequests: "Demandes de fret",
+        financeiro: "Finance",
+        invoices: "Factures",
+        clients: "Clients",
+        employees: "Employés",
+        messages: "Messages",
+        clientPortal: "Portail client",
+        clientPortalSub: "Consultez l'état de votre dossier, voyez les documents, envoyez des demandes de devis et de fret, suivez l'historique et contactez-nous.",
+        clientDashboard: "Tableau client premium",
+        myQuotes: "Mes devis",
+        unreadMessages: "Messages non lus",
+        visibleDocs: "Docs visibles",
+        lastStatus: "Dernier statut",
+        newQuote: "Nouveau devis",
+        requestFreight: "Demander un fret",
+        askUpdate: "Demander une mise à jour",
+        askContact: "Demander un contact",
+        consultProcess: "Consulter le dossier",
+        processesTab: "Processus",
+        requestQuoteTab: "Demander un devis",
+        myQuotesTab: "Mes devis",
+        invoicesReceipts: "Factures & Reçus",
+        requestFreightTab: "Demander un fret",
+        myFreights: "Mes frets",
+        contacts: "Contacts",
+        processMgmt: "Gestion des Processus",
+        processMgmtSub: "Mettez à jour le statut, les documents manquants, la finance et les documents du dossier.",
+        globalSearch: "Recherche globale",
+        client: "Client",
+        invoiceNo: "Facture",
+        status: "Statut",
+        all: "Tous",
+        summaryFiltered: "Résumé filtré",
+        spentCharged: "Où cela a été dépensé / facturé",
+        charged: "Facturé",
+        costs: "Coûts",
+        margin: "Marge",
+        searchAllPlaceholder: "Tout rechercher...",
+        clientPlaceholder: "Nom du client",
+        invoicePlaceholder: "Numéro de facture",
+        logout: "Quitter"
+      },
+      zh: {
+        langLabel: "语言",
+        welcomeTitle: "欢迎",
+        welcomeSub: "用于流程管理、报价和开票的内部与客户门户。",
+        loginTitle: "登录系统",
+        loginSub: "用于跟进清关和报价请求的内部面板与客户门户。",
+        email: "邮箱",
+        password: "密码",
+        enterBtn: "进入",
+        createAccount: "创建账户",
+        forgotPassword: "忘记密码",
+        internalPanel: "内部面板",
+        dashboard: "仪表板",
+        processos: "流程",
+        quotes: "报价请求",
+        freightRequests: "运输请求",
+        financeiro: "财务",
+        invoices: "发票",
+        clients: "客户",
+        employees: "员工",
+        messages: "消息",
+        clientPortal: "客户门户",
+        clientPortalSub: "查看流程状态、文件、发送报价和运输请求、跟踪历史并与我们沟通。",
+        clientDashboard: "高级客户仪表板",
+        myQuotes: "我的报价",
+        unreadMessages: "未读消息",
+        visibleDocs: "可见文件",
+        lastStatus: "最新状态",
+        newQuote: "新报价",
+        requestFreight: "申请运输",
+        askUpdate: "请求更新",
+        askContact: "请求联系",
+        consultProcess: "查询流程",
+        processesTab: "流程",
+        requestQuoteTab: "申请报价",
+        myQuotesTab: "我的报价",
+        invoicesReceipts: "发票和收据",
+        requestFreightTab: "申请运输",
+        myFreights: "我的运输",
+        contacts: "联系方式",
+        processMgmt: "流程管理",
+        processMgmtSub: "更新状态、缺失文件、财务和流程文件。",
+        globalSearch: "全局搜索",
+        client: "客户",
+        invoiceNo: "发票",
+        status: "状态",
+        all: "全部",
+        summaryFiltered: "筛选摘要",
+        spentCharged: "支出 / 收费明细",
+        charged: "已收费",
+        costs: "成本",
+        margin: "利润",
+        searchAllPlaceholder: "搜索全部...",
+        clientPlaceholder: "客户名称",
+        invoicePlaceholder: "发票号码",
+        logout: "退出"
+      }
+    };
+
+    function t(key) {
+      return (I18N[currentLang] && I18N[currentLang][key]) || (I18N.pt && I18N.pt[key]) || key;
+    }
+
+    function setNodeText(selector, value) {
+      const el = document.querySelector(selector);
+      if (el) el.textContent = value;
+    }
+
+    function setNodePlaceholder(selector, value) {
+      const el = document.querySelector(selector);
+      if (el) el.placeholder = value;
+    }
+
+    function applyLanguage() {
+      document.documentElement.lang = currentLang === "zh" ? "zh" : currentLang;
+      document.title = currentLang === "pt" ? "EF Cargo Clear" : ("EF Cargo Clear • " + t("langLabel"));
+
+      setNodeText(".login-welcome h1", t("welcomeTitle"));
+      setNodeText(".login-welcome p", t("welcomeSub"));
+      setNodeText("#loginMode .login-title", t("loginTitle"));
+      setNodeText("#loginMode .login-sub", t("loginSub"));
+      setNodeText("#loginMode label[for], #loginMode label", document.querySelectorAll("#loginMode label")[0]?.textContent || t("email"));
+      const loginLabels = document.querySelectorAll("#loginMode label");
+      if (loginLabels[0]) loginLabels[0].textContent = t("email");
+      if (loginLabels[1]) loginLabels[1].textContent = t("password");
+      const loginBtn = document.querySelector('#loginMode .btn');
+      if (loginBtn) loginBtn.textContent = t("enterBtn");
+      const loginLinks = document.querySelectorAll('#loginMode .link-btn');
+      if (loginLinks[0]) loginLinks[0].textContent = t("createAccount");
+      if (loginLinks[1]) loginLinks[1].textContent = t("forgotPassword");
+      setNodePlaceholder("#email", t("email"));
+      setNodePlaceholder("#password", t("password"));
+
+      setNodeText(".sidebar-title", t("internalPanel"));
+      setNodeText("#side-dashboard", "📊 " + t("dashboard"));
+      setNodeText("#side-processos", t("processos"));
+      setNodeText("#side-cotacoes", t("quotes"));
+      setNodeText("#side-fretes", t("freightRequests"));
+      setNodeText("#side-financeiro", t("financeiro"));
+      setNodeText("#side-faturas", t("invoices"));
+      setNodeText("#side-clientes", t("clients"));
+      setNodeText("#side-equipa", t("employees"));
+      const sideMensagens = document.getElementById("side-mensagens");
+      if (sideMensagens) {
+        const badge = sideMensagens.querySelector(".unread-dot");
+        sideMensagens.childNodes[0].nodeValue = t("messages") + " ";
+        if (badge) sideMensagens.appendChild(badge);
+      }
+
+      setNodeText("#clientView .hero-card h2", t("clientPortal"));
+      setNodeText("#clientView .hero-card .section-sub", t("clientPortalSub"));
+      setNodeText("#client-dashboard .section-title", t("clientDashboard"));
+
+      const dashTitles = document.querySelectorAll("#client-dashboard .dash-grid .kpi-title");
+      if (dashTitles[0]) dashTitles[0].textContent = t("myQuotes");
+      if (dashTitles[1]) dashTitles[1].textContent = t("unreadMessages");
+      if (dashTitles[2]) dashTitles[2].textContent = t("visibleDocs");
+      if (dashTitles[3]) dashTitles[3].textContent = t("lastStatus");
+
+      const quickBtns = document.querySelectorAll("#client-dashboard .quick-btn");
+      if (quickBtns[0]) quickBtns[0].childNodes[0].nodeValue = "📥 " + t("newQuote") + "\n              ";
+      if (quickBtns[1]) quickBtns[1].childNodes[0].nodeValue = "🚚 " + t("requestFreight") + "\n              ";
+      if (quickBtns[2]) quickBtns[2].childNodes[0].nodeValue = "🔔 " + t("askUpdate") + "\n              ";
+      if (quickBtns[3]) quickBtns[3].childNodes[0].nodeValue = "📞 " + t("askContact") + "\n              ";
+
+      const clientTabs = document.querySelectorAll("#clientView .tabs .tab-btn");
+      if (clientTabs[0]) clientTabs[0].childNodes[0].nodeValue = t("consultProcess");
+      if (clientTabs[1]) clientTabs[1].childNodes[0].nodeValue = t("processesTab");
+      if (clientTabs[2]) clientTabs[2].childNodes[0].nodeValue = t("requestQuoteTab");
+      if (clientTabs[3]) clientTabs[3].childNodes[0].nodeValue = t("myQuotesTab");
+      if (clientTabs[4]) clientTabs[4].childNodes[0].nodeValue = t("invoicesReceipts");
+      if (clientTabs[5]) clientTabs[5].childNodes[0].nodeValue = t("requestFreightTab");
+      if (clientTabs[6]) clientTabs[6].childNodes[0].nodeValue = t("myFreights");
+      if (clientTabs[7]) {
+        const badge = clientTabs[7].querySelector(".unread-dot");
+        clientTabs[7].childNodes[0].nodeValue = t("messages") + " ";
+        if (badge) clientTabs[7].appendChild(badge);
+      }
+      if (clientTabs[8]) clientTabs[8].childNodes[0].nodeValue = t("contacts");
+
+      setNodeText("#internal-processos .section-title", t("processMgmt"));
+      setNodeText("#internal-processos .section-sub", t("processMgmtSub"));
+      const procLabels = document.querySelectorAll("#internal-processos .toolbar label");
+      if (procLabels[0]) procLabels[0].textContent = t("globalSearch");
+      if (procLabels[1]) procLabels[1].textContent = t("client");
+      if (procLabels[2]) procLabels[2].textContent = t("invoiceNo");
+      if (procLabels[3]) procLabels[3].textContent = t("status");
+      setNodePlaceholder("#globalSearch", t("searchAllPlaceholder"));
+      setNodePlaceholder("#filterCliente", t("clientPlaceholder"));
+      setNodePlaceholder("#filterFactura", t("invoicePlaceholder"));
+      const filterEstado = document.getElementById("filterEstado");
+      if (filterEstado && filterEstado.options[0]) filterEstado.options[0].text = t("all");
+
+      const logoutBtn = document.querySelector('.topbar .btn-outline');
+      if (logoutBtn) logoutBtn.textContent = t("logout");
+
+      if (currentUserRole !== "admin") {
+        const financeInsights = document.getElementById("financeInsights");
+        if (financeInsights) financeInsights.style.display = "none";
+      }
+    }
+
+    function initLanguageSwitcher() {
+      if (document.getElementById("langSwitcher")) return;
+      const box = document.createElement("div");
+      box.className = "lang-switcher";
+      box.id = "langSwitcher";
+      box.innerHTML = `
+        <label id="langSwitcherLabel" for="langSelect">${t("langLabel")}</label>
+        <select id="langSelect">
+          <option value="pt">Português</option>
+          <option value="en">English</option>
+          <option value="fr">Français</option>
+          <option value="zh">中文</option>
+        </select>
+      `;
+      document.body.appendChild(box);
+      const select = box.querySelector("#langSelect");
+      select.value = currentLang;
+      select.addEventListener("change", () => {
+        currentLang = select.value;
+        localStorage.setItem(currentLangStorageKey, currentLang);
+        document.getElementById("langSwitcherLabel").textContent = t("langLabel");
+        applyLanguage();
+      });
+      applyLanguage();
+    }
+
+    function teardownRealtime() {
+      realtimeChannels.forEach(ch => {
+        try { supabaseClient.removeChannel(ch); } catch (_) {}
+      });
+      realtimeChannels = [];
+      if (realtimeRefreshTimer) {
+        clearTimeout(realtimeRefreshTimer);
+        realtimeRefreshTimer = null;
+      }
+    }
+
+    function queueRealtimeRefresh(tableName) {
+      if (realtimeRefreshTimer) clearTimeout(realtimeRefreshTimer);
+      realtimeRefreshTimer = setTimeout(async () => {
+        try {
+          if (currentUserRole === "admin" || currentUserRole === "employee") {
+            await loadInternal();
+            if (tableName === "mensagens") await loadInternalMessages();
+          } else if (currentUserRole === "client") {
+            const activeClientTab = document.querySelector('#clientView .tab-btn.active')?.getAttribute('data-client-tab') || "";
+            await loadClientCotacoes();
+            await loadClientFinanceDocs();
+            await refreshClientDashboard();
+            if (tableName === "mensagens" || activeClientTab === "mensagens") {
+              await loadClientMessages();
+            }
+            if (activeClientTab === "processos") await loadClientProcessos();
+            if (activeClientTab === "meus-fretes") await loadClientFretes();
+          }
+          applyLanguage();
+        } catch (e) {
+          console.log("Realtime refresh error:", e);
+        }
+      }, 500);
+    }
+
+    function setupRealtime() {
+      teardownRealtime();
+      if (!supabaseClient || !supabaseClient.channel) return;
+      const tables = ["mensagens", "processos", "pedidos_cotacao", "faturas", "pedidos_frete"];
+      tables.forEach((tableName) => {
+        const ch = supabaseClient
+          .channel("rt-" + tableName + "-" + currentUserRole + "-" + Date.now() + "-" + Math.random().toString(36).slice(2))
+          .on("postgres_changes", { event: "*", schema: "public", table: tableName }, () => queueRealtimeRefresh(tableName))
+          .subscribe();
+        realtimeChannels.push(ch);
+      });
+    }
+
     window.addEventListener("load", async () => {
+      initLanguageSwitcher();
+      applyLanguage();
       try {
         const { data } = await withTimeout(supabaseClient.auth.getSession(), 8000);
         if (data.session?.user) {
