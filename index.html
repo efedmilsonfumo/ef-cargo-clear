@@ -1069,6 +1069,7 @@
               <button class="sidebar-btn active" id="side-dashboard" onclick="showInternalTab('dashboard')">📊 Dashboard</button>
               <button class="sidebar-btn" id="side-processos" onclick="showInternalTab('processos')">Processos</button>
               <button class="sidebar-btn" id="side-cotacoes" onclick="showInternalTab('cotacoes')">Pedidos de cotação</button>
+              <button class="sidebar-btn" id="side-fretes" onclick="showInternalTab('fretes')">Pedidos de frete</button>
               <button class="sidebar-btn" id="side-financeiro" onclick="showInternalTab('financeiro')">Financeiro</button>
               <button class="sidebar-btn" id="side-faturas" onclick="showInternalTab('faturas')">Faturas</button>
               <button class="sidebar-btn" id="side-clientes" onclick="showInternalTab('clientes')">Clientes</button>
@@ -1227,6 +1228,37 @@
                       </tr>
                     </thead>
                     <tbody id="cotacoesTable"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div id="internal-fretes" class="tab-content hidden" style="margin-top:18px;">
+              <div class="card">
+                <div class="panel-head">
+                  <div>
+                    <h2 class="section-title">Pedidos de Frete / Transporte</h2>
+                    <div class="section-sub">Receba pedidos de transporte, responda com valor e acompanhe o estado de cada frete.</div>
+                  </div>
+                  <div class="panel-actions no-print">
+                    <button class="btn-mini green" onclick="exportFretesCSV()">Excel/CSV</button>
+                  </div>
+                </div>
+
+                <div class="table-scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Cliente</th>
+                        <th>Rota</th>
+                        <th>Carga</th>
+                        <th>Nec. desembaraço</th>
+                        <th>Estado</th>
+                        <th>Valor cotado</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="fretesTable"></tbody>
                   </table>
                 </div>
               </div>
@@ -1542,7 +1574,7 @@
       <div id="clientView" class="hidden">
         <div class="card hero-card">
           <h2 class="section-title">Portal do Cliente</h2>
-          <div class="section-sub">Consulte o estado do seu processo, veja documentos do processo, envie pedidos de cotação, acompanhe o histórico e fale connosco.</div>
+          <div class="section-sub">Consulte o estado do seu processo, veja documentos do processo, envie pedidos de cotação e frete, acompanhe o histórico e fale connosco.</div>
         </div>
 
         <div id="client-dashboard" class="card">
@@ -1560,9 +1592,13 @@
           </div>
 
           <div class="quick-actions no-print">
-            <button class="quick-btn" onclick="showClientTab('cotacao', document.querySelectorAll('#clientView .tab-btn')[1])">
+            <button class="quick-btn" onclick="activateClientTab('cotacao')">
               📥 Nova cotação
               <small>Envie um novo pedido com os documentos necessários.</small>
+            </button>
+            <button class="quick-btn" onclick="activateClientTab('frete')">
+              🚚 Solicitar frete
+              <small>Peça transporte para a sua carga e acompanhe a resposta.</small>
             </button>
             <button class="quick-btn" onclick="requestClientUpdate()">
               🔔 Pedir atualização
@@ -1610,6 +1646,8 @@
           <button class="tab-btn" data-client-tab="processos" onclick="showClientTab('processos', this)">Processos</button>
           <button class="tab-btn" data-client-tab="cotacao" onclick="showClientTab('cotacao', this)">Solicitar cotação</button>
           <button class="tab-btn" data-client-tab="historico" onclick="showClientTab('historico', this)">Minhas cotações</button>
+          <button class="tab-btn" data-client-tab="frete" onclick="showClientTab('frete', this)">Solicitar frete</button>
+          <button class="tab-btn" data-client-tab="meus-fretes" onclick="showClientTab('meus-fretes', this)">Meus fretes</button>
           <button class="tab-btn" data-client-tab="mensagens" onclick="showClientTab('mensagens', this)">
             Mensagens <span id="clientUnreadBadge" class="unread-dot hidden">0</span>
           </button>
@@ -1796,6 +1834,110 @@
           </div>
         </div>
 
+        <div id="client-frete" class="tab-content hidden">
+          <div class="card">
+            <h2 class="section-title">Solicitar frete / transporte</h2>
+            <div class="muted-box" style="margin-bottom:18px;">Preencha a rota e os dados da carga. A equipa irá responder com valor e estado do pedido.</div>
+
+            <div class="grid">
+              <div class="row">
+                <div>
+                  <label>Nome do cliente</label>
+                  <input id="frete_nome" placeholder="Nome da empresa" />
+                </div>
+                <div>
+                  <label>Email</label>
+                  <input id="frete_email" placeholder="Email" />
+                </div>
+              </div>
+
+              <div class="row">
+                <div>
+                  <label>Contacto</label>
+                  <input id="frete_contacto" placeholder="Telefone" />
+                </div>
+                <div>
+                  <label>NUIT</label>
+                  <input id="frete_nuit" placeholder="NUIT" />
+                </div>
+              </div>
+
+              <div class="row">
+                <div>
+                  <label>Origem</label>
+                  <input id="frete_origem" placeholder="Ex: Porto de Maputo" />
+                </div>
+                <div>
+                  <label>Destino</label>
+                  <input id="frete_destino" placeholder="Ex: Tete / Ressano / Joburg" />
+                </div>
+              </div>
+
+              <div class="row">
+                <div>
+                  <label>Tipo de carga</label>
+                  <input id="frete_tipo_carga" placeholder="Ex: contentor, carga solta, cimento" />
+                </div>
+                <div>
+                  <label>Quantidade / peso</label>
+                  <input id="frete_quantidade" placeholder="Ex: 1x40HC / 28 toneladas" />
+                </div>
+              </div>
+
+              <div class="row">
+                <div>
+                  <label>Data desejada</label>
+                  <input id="frete_data" type="date" />
+                </div>
+                <div>
+                  <label>Precisa de desembaraço também?</label>
+                  <select id="frete_desembaraco">
+                    <option value="sim">Sim</option>
+                    <option value="nao">Não</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label>Observações</label>
+                <textarea id="frete_obs" placeholder="Informações adicionais do pedido"></textarea>
+              </div>
+
+              <div style="max-width:260px;">
+                <button class="btn" onclick="submeterPedidoFrete()">Enviar pedido de frete</button>
+              </div>
+
+              <p id="freteMsg" class="small"></p>
+            </div>
+          </div>
+        </div>
+
+        <div id="client-meus-fretes" class="tab-content hidden">
+          <div class="card">
+            <div class="panel-head">
+              <div>
+                <h2 class="section-title">Meus pedidos de frete</h2>
+                <div class="section-sub">Acompanhe aqui os pedidos de transporte já enviados.</div>
+              </div>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Origem</th>
+                    <th>Destino</th>
+                    <th>Carga</th>
+                    <th>Estado</th>
+                    <th>Valor</th>
+                  </tr>
+                </thead>
+                <tbody id="clientFretesTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
         <div id="client-mensagens" class="tab-content hidden">
           <div class="card">
             <div class="panel-head">
@@ -1863,7 +2005,10 @@
           <h2 id="processModalTitle" class="section-title" style="margin-bottom:4px;">Detalhe do processo</h2>
           <div id="processModalSub" class="small">Visualização completa do processo</div>
         </div>
-        <button class="btn-mini secondary" onclick="closeProcessModal()">Fechar</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button id="processDeleteBtn" class="btn-mini danger hidden" onclick="deleteCurrentModalProcess()">Apagar processo</button>
+          <button class="btn-mini secondary" onclick="closeProcessModal()">Fechar</button>
+        </div>
       </div>
       <div id="processModalContent"></div>
     </div>
@@ -2160,6 +2305,8 @@
     let currentSelectedThread = "";
     let companyConfig = null;
     let faturasCache = [];
+    let fretesCache = [];
+    let clientFretesCache = [];
     let currentInvoiceExtraCounter = 0;
     let estadoDonutChart = null;
     let processosMesChart = null;
@@ -2454,6 +2601,7 @@
       if (tab === "dashboard") document.getElementById("side-dashboard")?.classList.add("active");
       if (tab === "processos") document.getElementById("side-processos")?.classList.add("active");
       if (tab === "cotacoes") document.getElementById("side-cotacoes")?.classList.add("active");
+      if (tab === "fretes") document.getElementById("side-fretes")?.classList.add("active");
       if (tab === "financeiro") document.getElementById("side-financeiro")?.classList.add("active");
       if (tab === "faturas") document.getElementById("side-faturas")?.classList.add("active");
       if (tab === "clientes") document.getElementById("side-clientes")?.classList.add("active");
@@ -2463,6 +2611,7 @@
       document.getElementById("internal-dashboard").classList.toggle("hidden", tab !== "dashboard");
       document.getElementById("internal-processos").classList.toggle("hidden", tab !== "processos");
       document.getElementById("internal-cotacoes").classList.toggle("hidden", tab !== "cotacoes");
+      document.getElementById("internal-fretes").classList.toggle("hidden", tab !== "fretes");
       document.getElementById("internal-financeiro").classList.toggle("hidden", tab !== "financeiro");
       document.getElementById("internal-faturas").classList.toggle("hidden", tab !== "faturas");
       document.getElementById("internal-clientes").classList.toggle("hidden", tab !== "clientes");
@@ -2524,11 +2673,14 @@
       document.getElementById("client-processos").classList.toggle("hidden", tab !== "processos");
       document.getElementById("client-cotacao").classList.toggle("hidden", tab !== "cotacao");
       document.getElementById("client-historico").classList.toggle("hidden", tab !== "historico");
+      document.getElementById("client-frete").classList.toggle("hidden", tab !== "frete");
+      document.getElementById("client-meus-fretes").classList.toggle("hidden", tab !== "meus-fretes");
       document.getElementById("client-mensagens").classList.toggle("hidden", tab !== "mensagens");
       document.getElementById("client-contactos").classList.toggle("hidden", tab !== "contactos");
 
       if (tab === "processos") loadClientProcessos();
       if (tab === "historico") loadClientCotacoes();
+      if (tab === "meus-fretes") loadClientFretes();
       if (tab === "mensagens") {
         loadClientMessages();
         markClientMessagesRead();
@@ -3985,7 +4137,7 @@
           <td>${p.regime || ""}</td>
           <td>${p.responsavel_nome || "Sem responsável"}</td>
           <td>${badgeEstado(p.estado || "Recebido")}</td>
-          <td><button class="btn-mini" onclick="openProcessModal('${p.id}')">Abrir</button></td>
+          <td><button class="btn-mini" onclick="openProcessModal('${p.id}')">Abrir</button>${currentUserRole === "admin" ? ` <button class="btn-mini danger" onclick="deleteProcesso('${p.id}')">Apagar</button>` : ``}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -4014,6 +4166,41 @@
           <td>${badgeEstado(c.estado || "recebido")}</td>
         `;
         ctbody.appendChild(tr);
+      });
+    }
+
+    function renderFretesTable() {
+      const tbody = document.getElementById("fretesTable");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+
+      if (!fretesCache.length) {
+        tbody.innerHTML = `<tr><td colspan="7">Sem pedidos de frete.</td></tr>`;
+        return;
+      }
+
+      fretesCache.forEach(f => {
+        const tr = document.createElement("tr");
+        const isAdmin = currentUserRole === "admin";
+        tr.innerHTML = `
+          <td><strong>${f.cliente_nome || ""}</strong><div class="small">${f.email || ""}</div></td>
+          <td>${f.origem || ""}<br><span class="small">→ ${f.destino || ""}</span></td>
+          <td>${f.tipo_carga || "-"}<div class="small">${f.quantidade_peso || ""}</div></td>
+          <td>${(f.precisa_desembaraco || "nao") === "sim" ? "Sim" : "Não"}</td>
+          <td>
+            <select id="frete_estado_${f.id}">
+              ${["recebido","em analise","cotado","aprovado","em transporte","concluido","cancelado"].map(op => `<option value="${op}" ${String(f.estado||"").toLowerCase()===op ? "selected" : ""}>${op}</option>`).join("")}
+            </select>
+          </td>
+          <td>
+            <input id="frete_valor_${f.id}" type="number" step="0.01" value="${Number(f.valor_cotado || 0) || ""}" placeholder="Valor" />
+            ${isAdmin ? `<div style="margin-top:6px;"><input id="frete_custo_${f.id}" type="number" step="0.01" value="${Number(f.custo_estimado || 0) || ""}" placeholder="Custo interno" /></div>` : ``}
+          </td>
+          <td>
+            <button class="btn-mini info" onclick="saveFreteUpdate('${f.id}')">Guardar</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
       });
     }
 
@@ -5064,6 +5251,22 @@
       );
     }
 
+    function exportFretesCSV() {
+      const rows = (fretesCache || []).map(f => [
+        formatDate(f.created_at),
+        f.cliente_nome || "",
+        f.origem || "",
+        f.destino || "",
+        f.tipo_carga || "",
+        f.estado || "",
+        Number(f.valor_cotado || 0) || 0
+      ]);
+      downloadCSV("fretes.csv",
+        ["Data","Cliente","Origem","Destino","Carga","Estado","Valor cotado"],
+        rows
+      );
+    }
+
     function exportClientCotacoesCSV() {
       const rows = clientCotacoesCache.map(c => [
         formatDate(c.created_at),
@@ -5092,6 +5295,16 @@
           withTimeout(supabaseClient.from("faturas").select("*").order("created_at", { ascending: false }), 8000)
         ]);
 
+        try {
+          const { data: fretes } = await withTimeout(
+            supabaseClient.from("pedidos_frete").select("*").order("created_at", { ascending: false }),
+            8000
+          );
+          fretesCache = fretes || [];
+        } catch (freteLoadError) {
+          fretesCache = [];
+        }
+
         clientesCache = clientes || [];
         processosCache = processos || [];
         cotacoesCache = cotacoes || [];
@@ -5119,6 +5332,7 @@
         renderInternalDashboard();
         renderProcessosTable();
         renderCotacoesTable();
+        renderFretesTable();
         renderFinanceiroTable();
         renderClientesGrid();
         renderEquipaGrid();
@@ -5429,6 +5643,129 @@
         await openClientProcessDetail(processoId);
       } catch (e) {
         alert(e.message || "Erro ao enviar documentos.");
+      }
+    }
+
+    async function deleteCurrentModalProcess() {
+      if (!currentProcessModalId) return;
+      await deleteProcesso(currentProcessModalId);
+    }
+
+    async function deleteProcesso(processoId) {
+      if (currentUserRole !== "admin") {
+        alert("Apenas o administrador pode apagar processos.");
+        return;
+      }
+      const processo = processosCache.find(p => String(p.id) === String(processoId));
+      const ref = processo?.numero_processo || processo?.numero_factura || "este processo";
+      if (!confirm(`Apagar ${ref}? Esta ação remove o processo, tarefas e documentos associados.`)) return;
+
+      try {
+        await withTimeout(supabaseClient.from("processos_documentos").delete().eq("processo_id", processoId), 10000);
+        await withTimeout(supabaseClient.from("processos_tarefas").delete().eq("processo_id", processoId), 10000);
+        await withTimeout(
+          supabaseClient.from("pedidos_cotacao").update({ convertido_em_processo: false, processo_id: null, estado: "recebido" }).eq("processo_id", processoId),
+          10000
+        );
+        await withTimeout(supabaseClient.from("faturas").update({ processo_id: null }).eq("processo_id", processoId), 10000);
+        const { error } = await withTimeout(supabaseClient.from("processos").delete().eq("id", processoId), 10000);
+        if (error) throw error;
+        if (currentProcessModalId === processoId) closeProcessModal();
+        alert("Processo apagado com sucesso.");
+        await loadInternal();
+      } catch (e) {
+        alert(e.message || "Erro ao apagar processo.");
+      }
+    }
+
+    async function submeterPedidoFrete() {
+      const msg = document.getElementById("freteMsg");
+      const payload = {
+        cliente_nome: document.getElementById("frete_nome").value.trim(),
+        email: document.getElementById("frete_email").value.trim(),
+        contacto: document.getElementById("frete_contacto").value.trim(),
+        nuit: document.getElementById("frete_nuit").value.trim(),
+        origem: document.getElementById("frete_origem").value.trim(),
+        destino: document.getElementById("frete_destino").value.trim(),
+        tipo_carga: document.getElementById("frete_tipo_carga").value.trim(),
+        quantidade_peso: document.getElementById("frete_quantidade").value.trim(),
+        data_desejada: document.getElementById("frete_data").value || null,
+        precisa_desembaraco: document.getElementById("frete_desembaraco").value,
+        observacoes: document.getElementById("frete_obs").value.trim(),
+        estado: "recebido"
+      };
+
+      if (!payload.cliente_nome || !payload.origem || !payload.destino || !payload.tipo_carga) {
+        msg.textContent = "Preencha os campos obrigatórios do frete.";
+        msg.className = "message-err";
+        return;
+      }
+
+      msg.textContent = "A enviar pedido...";
+      msg.className = "small";
+      try {
+        const { error } = await withTimeout(supabaseClient.from("pedidos_frete").insert(payload), 10000);
+        if (error) throw error;
+        msg.textContent = "Pedido de frete enviado com sucesso.";
+        msg.className = "message-ok";
+        ["frete_nome","frete_email","frete_contacto","frete_nuit","frete_origem","frete_destino","frete_tipo_carga","frete_quantidade","frete_data","frete_obs"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+        const desemb = document.getElementById("frete_desembaraco"); if (desemb) desemb.value = "sim";
+        await loadClientFretes();
+      } catch (e) {
+        msg.textContent = e.message || "Erro ao enviar pedido de frete.";
+        msg.className = "message-err";
+      }
+    }
+
+    async function loadClientFretes() {
+      const tbody = document.getElementById("clientFretesTable");
+      if (!tbody) return;
+      tbody.innerHTML = `<tr><td colspan="6">A carregar...</td></tr>`;
+      try {
+        const { data: userData } = await withTimeout(supabaseClient.auth.getUser(), 8000);
+        const user = userData?.user;
+        if (!user?.email) {
+          tbody.innerHTML = `<tr><td colspan="6">Não foi possível identificar o utilizador.</td></tr>`;
+          return;
+        }
+        const { data, error } = await withTimeout(supabaseClient.from("pedidos_frete").select("*").eq("email", user.email).order("created_at", { ascending: false }), 10000);
+        if (error) throw error;
+        clientFretesCache = data || [];
+        if (!clientFretesCache.length) {
+          tbody.innerHTML = `<tr><td colspan="6">Ainda não enviou nenhum pedido de frete.</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = clientFretesCache.map(f => `
+          <tr>
+            <td>${formatDate(f.created_at)}</td>
+            <td>${f.origem || ""}</td>
+            <td>${f.destino || ""}</td>
+            <td>${f.tipo_carga || ""}<div class="small">${f.quantidade_peso || ""}</div></td>
+            <td>${badgeEstado(f.estado || "recebido")}</td>
+            <td>${Number(f.valor_cotado || 0) ? formatMoney(f.valor_cotado) : "-"}</td>
+          </tr>
+        `).join("");
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="6">${escapeHtml(e.message || "Erro ao carregar fretes.")}</td></tr>`;
+      }
+    }
+
+    async function saveFreteUpdate(freteId) {
+      const payload = {
+        estado: document.getElementById(`frete_estado_${freteId}`)?.value || "recebido",
+        valor_cotado: Number(document.getElementById(`frete_valor_${freteId}`)?.value || 0) || 0
+      };
+      if (currentUserRole === "admin") {
+        payload.custo_estimado = Number(document.getElementById(`frete_custo_${freteId}`)?.value || 0) || 0;
+        payload.margem_lucro = Number(payload.valor_cotado || 0) - Number(payload.custo_estimado || 0);
+      }
+      try {
+        const { error } = await withTimeout(supabaseClient.from("pedidos_frete").update(payload).eq("id", freteId), 10000);
+        if (error) throw error;
+        alert("Pedido de frete atualizado.");
+        await loadInternal();
+      } catch (e) {
+        alert(e.message || "Erro ao atualizar frete.");
       }
     }
 
