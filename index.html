@@ -2345,6 +2345,7 @@
     let currentUserEmail = "";
     let currentUserName = "";
     let currentSelectedThread = "";
+    let mensagensRealtimeChannel = null;
     let companyConfig = null;
     let faturasCache = [];
     let clientFaturasCache = [];
@@ -2912,6 +2913,7 @@
     }
 
     async function logout() {
+      await stopMensagensRealtime();
       await supabaseClient.auth.signOut();
       location.reload();
     }
@@ -2935,6 +2937,7 @@
         setTimeout(async () => {
           await loadInternal();
           await loadInternalMessages();
+          startMensagensRealtime();
         }, 100);
         return;
       }
@@ -2956,6 +2959,7 @@
           setTimeout(async () => {
             await loadInternal();
             await loadInternalMessages();
+            startMensagensRealtime();
           }, 100);
           return;
         }
@@ -4471,7 +4475,47 @@
       });
     }
 
-    async function loadInternalMessages() {
+    
+    async function refreshMensagensRealtime() {
+      try {
+        if (currentUserRole === "admin" || currentUserRole === "employee") {
+          await loadInternalMessages();
+        } else if (currentUserRole === "client") {
+          await loadClientMessages();
+          await refreshClientDashboard();
+        }
+      } catch (e) {
+        console.log("Erro ao atualizar mensagens em realtime:", e);
+      }
+    }
+
+    function startMensagensRealtime() {
+      if (mensagensRealtimeChannel || !supabaseClient) return;
+
+      mensagensRealtimeChannel = supabaseClient
+        .channel("realtime-mensagens")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "mensagens" },
+          async () => {
+            await refreshMensagensRealtime();
+          }
+        )
+        .subscribe((status) => {
+          console.log("Realtime mensagens:", status);
+        });
+    }
+
+    async function stopMensagensRealtime() {
+      try {
+        if (mensagensRealtimeChannel) {
+          await supabaseClient.removeChannel(mensagensRealtimeChannel);
+        }
+      } catch (_) {}
+      mensagensRealtimeChannel = null;
+    }
+
+async function loadInternalMessages() {
       const { data, error } = await withTimeout(
         supabaseClient.from("mensagens").select("*").order("created_at", { ascending: true }),
         10000
@@ -4485,6 +4529,7 @@
       mensagensCache = data || [];
       renderInternalThreadList();
       updateUnreadBadges();
+
     }
 
     function renderInternalThreadList() {
@@ -4530,18 +4575,15 @@
       renderInternalThreadList();
 
       try {
-        const unread = mensagensCache.filter(m => m.cliente_email === email && m.remetente === "cliente" && !m.lido_interno);
-        if (unread.length) {
-          const ids = unread.map(x => x.id);
-          await withTimeout(
-            supabaseClient.from("mensagens").update({ lido_interno: true }).in("id", ids),
-            10000
-          );
+        const ids = (mensagensCache || [])
+          .filter(m => m.cliente_email === email && m.remetente === "cliente" && !m.lido_interno)
+          .map(m => m.id);
+
+        if (ids.length) {
+          await supabaseClient.from("mensagens").update({ lido_interno: true }).in("id", ids);
           await loadInternalMessages();
         }
-      } catch (e) {
-        console.log("Erro ao marcar mensagens internas como lidas:", e);
-      }
+      } catch (_) {}
     }
 
     function renderInternalMessages() {
@@ -4604,13 +4646,11 @@
             `<div style="font-family:Arial,sans-serif;line-height:1.6;">
               <h2>Nova mensagem da EF Cargo Clear</h2>
               <p>Recebeu uma nova mensagem da nossa equipa dentro da plataforma.</p>
-              <p><strong>Mensagem:</strong> ${escapeHtml(text)}</p>
+              <p><b>Mensagem:</b> ${escapeHtml(text)}</p>
               <p>Entre na plataforma para ver a conversa completa.</p>
             </div>`
           );
-        } catch (mailErr) {
-          console.log("Erro ao notificar cliente por email:", mailErr);
-        }
+        } catch (_) {}
 
         document.getElementById("adminMessageText").value = "";
         await loadInternalMessages();
@@ -4704,15 +4744,13 @@
             "Nova mensagem de cliente",
             `<div style="font-family:Arial,sans-serif;line-height:1.6;">
               <h2>Nova mensagem de cliente</h2>
-              <p><strong>Cliente:</strong> ${escapeHtml(currentUserName || currentUserEmail || "-")}</p>
-              <p><strong>Email:</strong> ${escapeHtml(currentUserEmail || "-")}</p>
-              <p><strong>Mensagem:</strong> ${escapeHtml(text)}</p>
+              <p><b>Cliente:</b> ${escapeHtml(currentUserName || currentUserEmail || "-")}</p>
+              <p><b>Email:</b> ${escapeHtml(currentUserEmail || "-")}</p>
+              <p><b>Mensagem:</b> ${escapeHtml(text)}</p>
               <p>Abra a plataforma para responder.</p>
             </div>`
           );
-        } catch (mailErr) {
-          console.log("Erro ao notificar admin por email:", mailErr);
-        }
+        } catch (_) {}
 
         document.getElementById("clientMessageText").value = "";
         await loadClientMessages();
