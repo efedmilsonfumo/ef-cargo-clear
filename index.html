@@ -6700,7 +6700,7 @@
             </div>
             <div style="text-align:right;font-size:14px;line-height:1.6;">
               <strong>${escapeHtml(f.recibo_numero || f.numero_recibo || ('RCB-' + (f.numero_fatura || '')))}</strong><br>
-              Data: ${escapeHtml((f.recibo_emitido_at || f.pago_at || f.data_pagamento || new Date().toISOString()).slice(0,10))}<br>
+              Data: ${escapeHtml((f.recibo_emitido_at || f.pago_at || new Date().toISOString()).slice(0,10))}<br>
               Refª Fatura: ${escapeHtml(f.numero_fatura || '')}
             </div>
           </div>
@@ -6785,13 +6785,13 @@
             msg.includes('pago_at') ||
             msg.includes('recibo_numero') ||
             msg.includes('numero_recibo') ||
-            msg.includes('data_pagamento');
+            false;
 
           if (maybeSchemaMismatch) {
             result = await tryUpdate({
               status_pagamento: 'pago',
               pago: true,
-              data_pagamento: stamp,
+              pago_at: stamp,
               numero_recibo: reciboNumero
             });
           }
@@ -6804,8 +6804,7 @@
           ...(result.data || {}),
           status_pagamento: (result.data && result.data.status_pagamento) || 'pago',
           pago: true,
-          pago_at: (result.data && (result.data.pago_at || result.data.data_pagamento)) || stamp,
-          data_pagamento: (result.data && (result.data.data_pagamento || result.data.pago_at)) || stamp,
+          pago_at: (result.data && result.data.pago_at) || stamp,
           recibo_numero: (result.data && (result.data.recibo_numero || result.data.numero_recibo)) || reciboNumero,
           numero_recibo: (result.data && (result.data.numero_recibo || result.data.recibo_numero)) || reciboNumero,
           recibo_emitido_at: (result.data && result.data.recibo_emitido_at) || stamp,
