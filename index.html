@@ -5432,7 +5432,7 @@
 
 
     function getInvoicePaymentBadge(f) {
-      const pago = String(f.status_pagamento || '').toLowerCase() === 'pago';
+      const pago = !!f.pago;
       return pago ? `<span class="badge green">Pago</span>` : `<span class="badge amber">Pendente</span>`;
     }
 
@@ -5451,7 +5451,7 @@
         <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
           <button class="btn-mini info" onclick="previewClientInvoice('${f.id}')">Ver fatura</button>
           <button class="btn-mini secondary" onclick="downloadClientInvoice('${f.id}')">Baixar fatura</button>
-          ${String(f.status_pagamento || '').toLowerCase() === 'pago' ? `<button class="btn-mini green" onclick="downloadClientReceipt('${f.id}')">Baixar recibo</button>` : ''}
+          ${!!f.pago ? `<button class="btn-mini green" onclick="downloadClientReceipt('${f.id}')">Baixar recibo</button>` : ''}
         </div>
       `;
     }
@@ -5489,14 +5489,14 @@
       tbody.innerHTML = clientFaturasCache.map(f => `
         <tr>
           <td>${formatDate(f.data_fatura || f.created_at || '')}</td>
-          <td><strong>${escapeHtml(f.numero_fatura || 'Fatura')}</strong><div class="small">${String(f.status_pagamento || '').toLowerCase() === 'pago' ? 'Recibo disponível' : 'Aguardando pagamento'}</div></td>
+          <td><strong>${escapeHtml(f.numero_fatura || 'Fatura')}</strong><div class="small">${!!f.pago ? 'Recibo disponível' : 'Aguardando pagamento'}</div></td>
           <td>${escapeHtml(f.referencia || f.numero_fatura || '-')}</td>
           <td>${formatMoney(f.total_mt || 0)}</td>
           <td>${getInvoicePaymentBadge(f)}</td>
           <td>
             <button class="btn-mini info" onclick="previewClientInvoice('${f.id}')">Ver fatura</button>
             <button class="btn-mini secondary" onclick="downloadClientInvoice('${f.id}')">Baixar fatura</button>
-            ${String(f.status_pagamento || '').toLowerCase() === 'pago' ? `<button class="btn-mini green" onclick="downloadClientReceipt('${f.id}')">Baixar recibo</button>` : ''}
+            ${!!f.pago ? `<button class="btn-mini green" onclick="downloadClientReceipt('${f.id}')">Baixar recibo</button>` : ''}
           </td>
         </tr>
       `).join('');
@@ -5699,7 +5699,7 @@
         financeList.innerHTML = linked ? `
           <span class="doc-chip"><span>${escapeHtml(linked.numero_fatura || 'Fatura')}</span><button class="btn-mini secondary" style="margin:0;padding:4px 8px;" onclick="previewClientInvoice('${linked.id}')">Ver</button></span>
           <span class="doc-chip"><span>Baixar fatura</span><button class="btn-mini secondary" style="margin:0;padding:4px 8px;" onclick="downloadClientInvoice('${linked.id}')">Baixar</button></span>
-          ${String(linked.status_pagamento || '').toLowerCase() === 'pago' ? `<span class="doc-chip"><span>${escapeHtml(linked.recibo_numero || 'Recibo')}</span><button class="btn-mini secondary" style="margin:0;padding:4px 8px;" onclick="downloadClientReceipt('${linked.id}')">Baixar</button></span>` : `<span class="small">Recibo disponível após confirmação do pagamento.</span>`}
+          ${linked.pago ? `<span class="doc-chip"><span>${escapeHtml(linked.recibo_numero || 'Recibo')}</span><button class="btn-mini secondary" style="margin:0;padding:4px 8px;" onclick="downloadClientReceipt('${linked.id}')">Baixar</button></span>` : `<span class="small">Recibo disponível após confirmação do pagamento.</span>`}
         ` : `<span class="small">Sem fatura emitida ainda para este processo.</span>`;
       }
 
@@ -6628,7 +6628,7 @@
         return;
       }
       faturasCache.forEach(f => {
-        const pago = String(f.status_pagamento || '').toLowerCase() === 'pago';
+        const pago = !!f.pago;
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${escapeHtml(f.numero_fatura || '')}</strong></td>
@@ -6726,7 +6726,7 @@
     function downloadReceiptPdf(id) {
       const f = [...faturasCache, ...clientFaturasCache].find(x => x.id === id);
       if (!f) return;
-      if (String(f.status_pagamento || '').toLowerCase() !== 'pago') {
+      if (!f.pago) {
         alert('O recibo só fica disponível após marcar a fatura como paga.');
         return;
       }
@@ -6768,7 +6768,6 @@
 
       try {
         let result = await tryUpdate({
-          status_pagamento: 'pago',
           pago: true,
           pago_at: stamp,
           recibo_numero: reciboNumero,
@@ -6789,7 +6788,6 @@
 
           if (maybeSchemaMismatch) {
             result = await tryUpdate({
-              status_pagamento: 'pago',
               pago: true,
               pago_at: stamp,
               numero_recibo: reciboNumero
@@ -6802,7 +6800,6 @@
         const merged = {
           ...(f || {}),
           ...(result.data || {}),
-          status_pagamento: (result.data && result.data.status_pagamento) || 'pago',
           pago: true,
           pago_at: (result.data && result.data.pago_at) || stamp,
           recibo_numero: (result.data && (result.data.recibo_numero || result.data.numero_recibo)) || reciboNumero,
