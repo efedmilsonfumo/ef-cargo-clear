@@ -3201,13 +3201,18 @@
       }
 
       try {
-        const { data: equipaExistente } = await withTimeout(
-          supabaseClient.from("equipa").select("id").eq("email", email).maybeSingle(),
+        const { data: equipaExistente, error: equipaExistenteError } = await withTimeout(
+          supabaseClient.from("equipa").select("id, email").eq("email", email).maybeSingle(),
           8000
         );
 
+        if (equipaExistenteError) {
+          alert("Erro ao verificar funcionário existente: " + equipaExistenteError.message);
+          return;
+        }
+
         if (equipaExistente?.id) {
-          alert("Já existe um funcionário com este email.");
+          alert("Já existe um funcionário com este email na tabela equipa.");
           return;
         }
 
@@ -3215,7 +3220,8 @@
           auth: {
             persistSession: false,
             autoRefreshToken: false,
-            detectSessionInUrl: false
+            detectSessionInUrl: false,
+            storageKey: "ef-cargo-clear-employee-create"
           }
         });
 
@@ -3235,28 +3241,39 @@
         );
 
         if (authError) {
-          alert(authError.message);
+          alert("Erro ao criar acesso de login: " + authError.message);
           return;
         }
 
         const authUserId = authData?.user?.id || null;
-
-        const { error } = await withTimeout(
-          supabaseClient.from("equipa").insert({
-            nome,
-            email,
-            nivel,
-            activo
-          }),
-          10000
-        );
-
-        if (error) {
-          alert(error.message);
+        if (!authUserId) {
+          alert("O acesso no Auth não devolveu utilizador. Verifique se o email já existe ou se o Auth exige confirmação por email.");
           return;
         }
 
-        alert("Funcionário criado com sucesso");
+        const { data: insertedMember, error: insertError } = await withTimeout(
+          supabaseClient
+            .from("equipa")
+            .insert({
+              nome,
+              email,
+              nivel,
+              activo,
+              auth_user_id: authUserId
+            })
+            .select("*")
+            .single(),
+          10000
+        );
+
+        if (insertError) {
+          alert("O acesso foi criado no Auth, mas falhou ao gravar na equipa: " + insertError.message);
+          return;
+        }
+
+        equipaCache.unshift(insertedMember);
+        renderEquipaGrid();
+
         document.getElementById("eq_nome").value = "";
         document.getElementById("eq_email").value = "";
         document.getElementById("eq_password").value = "";
@@ -3265,8 +3282,9 @@
         document.getElementById("eq_activo").value = "true";
 
         await loadInternal();
+        alert("Funcionário criado com sucesso. Se o login não entrar de imediato, confirme no Supabase Auth se a confirmação de email está desativada.");
       } catch (e) {
-        alert(e.message);
+        alert(e.message || "Erro ao criar funcionário.");
       }
     }
 
