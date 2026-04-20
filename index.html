@@ -1640,6 +1640,7 @@
               <div class="detail-item"><strong>Porto / Fronteira</strong><div id="pcPorto"></div></div>
               <div class="detail-item"><strong>BL / AWB</strong><div id="pcBl"></div></div>
               <div class="detail-item"><strong>Prazo</strong><div id="pcPrazo"></div></div>
+              <div class="detail-item"><strong>Valor cobrado</strong><div id="pcCobrado"></div></div>
               <div class="detail-item"><strong>Docs em falta</strong><div id="pcDocs"></div></div>
             </div>
 
@@ -3740,6 +3741,34 @@
       if (modal) modal.style.display = "none";
     }
 
+
+    function getVisibleHistorico(processo) {
+      const historico = String(processo?.historico || "").trim();
+      if (!historico) return "Sem histórico";
+
+      if (currentUserRole === "admin") return historico;
+
+      const linhas = historico.split("\n").map(l => l.trim()).filter(Boolean);
+
+      const tratadas = linhas.map(linha => {
+        if (!/Financeiro atualizado/i.test(linha)) return linha;
+
+        const prefixo = linha.split("Financeiro atualizado")[0] || "";
+        const matchCobrado = linha.match(/Cobrado:\s*([0-9.,]+)/i);
+
+        if (currentUserRole === "client") {
+          if (matchCobrado && matchCobrado[1]) {
+            return `${prefixo}Financeiro atualizado. Cobrado: ${matchCobrado[1]}`;
+          }
+          return `${prefixo}Financeiro atualizado.`;
+        }
+
+        return "";
+      }).filter(Boolean);
+
+      return tratadas.length ? tratadas.join("\n") : "Sem histórico";
+    }
+
     function openProcessModal(processoId) {
       currentProcessModalId = processoId;
       const processo = processosCache.find(x => String(x.id) === String(processoId));
@@ -3752,7 +3781,7 @@
 
       const procTasks = getProcessTasks(processoId);
       const procDocs = getProcessDocs(processoId);
-      const historicoHtml = (processo.historico || "Sem histórico").replace(/\n/g, "<br>");
+      const historicoHtml = getVisibleHistorico(processo).replace(/\n/g, "<br>");
 
       title.textContent = `Processo ${processo.numero_processo || '-'}`;
       sub.textContent = `${processo.importador_exportador || '-'} • Factura ${processo.numero_factura || '-'}`;
@@ -3840,10 +3869,12 @@
             <div style="margin-top:10px;">${taskHtml}</div>
           </div>
 
+          ${currentUserRole === "admin" ? `
           <div class="process-panel">
             <h3 style="margin-top:0;">Financeiro</h3>
             ${financeiroHtml}
           </div>
+          ` : ``}
         </div>
 
         <div class="process-panel">
@@ -5125,8 +5156,9 @@
         document.getElementById("pcPorto").textContent = p.porto_fronteira || "";
         document.getElementById("pcBl").textContent = p.bl_awb_manifesto || "";
         document.getElementById("pcPrazo").textContent = p.prazo || "";
+        document.getElementById("pcCobrado").textContent = formatMoney(p.valor_cobrado || 0);
         document.getElementById("pcDocs").textContent = p.documentos_em_falta || "Sem pendências";
-        document.getElementById("pcHistorico").textContent = p.historico || "Sem histórico";
+        document.getElementById("pcHistorico").textContent = getVisibleHistorico(p);
 
         const list = document.getElementById("pcDocsList");
         list.innerHTML = "";
