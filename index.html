@@ -4485,12 +4485,6 @@
       mensagensCache = data || [];
       renderInternalThreadList();
       updateUnreadBadges();
-
-      const unread = mensagensCache.filter(m => m.remetente === "cliente" && !m.lido_interno);
-      if (unread.length) {
-        const ids = unread.map(x => x.id);
-        await supabaseClient.from("mensagens").update({ lido_interno: true }).in("id", ids);
-      }
     }
 
     function renderInternalThreadList() {
@@ -4531,9 +4525,23 @@
       renderInternalMessages();
     }
 
-    function selectInternalThread(email) {
+    async function selectInternalThread(email) {
       currentSelectedThread = email;
       renderInternalThreadList();
+
+      try {
+        const unread = mensagensCache.filter(m => m.cliente_email === email && m.remetente === "cliente" && !m.lido_interno);
+        if (unread.length) {
+          const ids = unread.map(x => x.id);
+          await withTimeout(
+            supabaseClient.from("mensagens").update({ lido_interno: true }).in("id", ids),
+            10000
+          );
+          await loadInternalMessages();
+        }
+      } catch (e) {
+        console.log("Erro ao marcar mensagens internas como lidas:", e);
+      }
     }
 
     function renderInternalMessages() {
@@ -4589,8 +4597,6 @@
           return;
         }
 
-        document.getElementById("adminMessageText").value = "";
-
         try {
           await sendEmail(
             currentSelectedThread,
@@ -4598,12 +4604,15 @@
             `<div style="font-family:Arial,sans-serif;line-height:1.6;">
               <h2>Nova mensagem da EF Cargo Clear</h2>
               <p>Recebeu uma nova mensagem da nossa equipa dentro da plataforma.</p>
-              <p><b>Mensagem:</b> ${escapeHtml(text)}</p>
+              <p><strong>Mensagem:</strong> ${escapeHtml(text)}</p>
               <p>Entre na plataforma para ver a conversa completa.</p>
             </div>`
           );
-        } catch (_) {}
+        } catch (mailErr) {
+          console.log("Erro ao notificar cliente por email:", mailErr);
+        }
 
+        document.getElementById("adminMessageText").value = "";
         await loadInternalMessages();
       } catch (e) {
         alert(e.message || "Erro ao enviar mensagem.");
@@ -4689,22 +4698,23 @@
           return;
         }
 
-        document.getElementById("clientMessageText").value = "";
-
         try {
           await sendEmail(
             ADMIN_EMAIL,
             "Nova mensagem de cliente",
             `<div style="font-family:Arial,sans-serif;line-height:1.6;">
               <h2>Nova mensagem de cliente</h2>
-              <p><b>Cliente:</b> ${escapeHtml(currentUserName || currentUserEmail || "-")}</p>
-              <p><b>Email:</b> ${escapeHtml(currentUserEmail || "-")}</p>
-              <p><b>Mensagem:</b> ${escapeHtml(text)}</p>
+              <p><strong>Cliente:</strong> ${escapeHtml(currentUserName || currentUserEmail || "-")}</p>
+              <p><strong>Email:</strong> ${escapeHtml(currentUserEmail || "-")}</p>
+              <p><strong>Mensagem:</strong> ${escapeHtml(text)}</p>
               <p>Abra a plataforma para responder.</p>
             </div>`
           );
-        } catch (_) {}
+        } catch (mailErr) {
+          console.log("Erro ao notificar admin por email:", mailErr);
+        }
 
+        document.getElementById("clientMessageText").value = "";
         await loadClientMessages();
       } catch (e) {
         alert(e.message || "Erro ao enviar mensagem.");
@@ -5947,39 +5957,6 @@
         msg.className = "message-ok";
         ["frete_nome","frete_email","frete_contacto","frete_nuit","frete_origem","frete_destino","frete_tipo_carga","frete_quantidade","frete_data","frete_obs"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
         const desemb = document.getElementById("frete_desembaraco"); if (desemb) desemb.value = "sim";
-
-        try {
-          await sendEmail(
-            ADMIN_EMAIL,
-            "Novo pedido de frete recebido",
-            `<div style="font-family:Arial,sans-serif;line-height:1.6;">
-              <h2>Novo pedido de frete</h2>
-              <p><b>Cliente:</b> ${escapeHtml(payload.cliente_nome || "-")}</p>
-              <p><b>Email:</b> ${escapeHtml(payload.email || "-")}</p>
-              <p><b>Contacto:</b> ${escapeHtml(payload.contacto || "-")}</p>
-              <p><b>Origem:</b> ${escapeHtml(payload.origem || "-")}</p>
-              <p><b>Destino:</b> ${escapeHtml(payload.destino || "-")}</p>
-              <p><b>Tipo de carga:</b> ${escapeHtml(payload.tipo_carga || "-")}</p>
-              <p><b>Quantidade / peso:</b> ${escapeHtml(payload.quantidade_peso || "-")}</p>
-              <p><b>Precisa de desembaraço:</b> ${escapeHtml(payload.precisa_desembaraco || "-")}</p>
-              <p><b>Observações:</b> ${escapeHtml(payload.observacoes || "-")}</p>
-            </div>`
-          );
-          if (payload.email) {
-            await sendEmail(
-              payload.email,
-              "Recebemos o seu pedido de frete",
-              `<div style="font-family:Arial,sans-serif;line-height:1.6;">
-                <h2>Pedido de frete recebido</h2>
-                <p>Olá <b>${escapeHtml(payload.cliente_nome || "Cliente")}</b>,</p>
-                <p>Recebemos o seu pedido de frete com o seguinte percurso:</p>
-                <p><b>${escapeHtml(payload.origem || "-")}</b> → <b>${escapeHtml(payload.destino || "-")}</b></p>
-                <p>A nossa equipa vai analisar e responder em breve.</p>
-                <p>EF Cargo Clear</p>
-              </div>`
-            );
-          }
-        } catch (_) {}
         await loadClientFretes();
       } catch (e) {
         msg.textContent = e.message || "Erro ao enviar pedido de frete.";
