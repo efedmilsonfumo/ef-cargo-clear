@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Validar Recibo | EF Cargo Clear</title>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <style>
+    :root{
+      --bg:#f4f6f8;
+      --card:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --primary:#BE001A;
+      --primary-dark:#980015;
+      --success:#166534;
+      --success-bg:#dcfce7;
+      --danger:#b91c1c;
+      --danger-bg:#fee2e2;
+      --warn:#92400e;
+      --warn-bg:#fff7ed;
+      --shadow:0 18px 40px rgba(15,23,42,.08);
+      --radius:24px;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(190,0,26,.12), transparent 26%),
+        radial-gradient(circle at bottom right, rgba(190,0,26,.08), transparent 22%),
+        linear-gradient(180deg,#fafafa 0%, #f2f4f7 100%);
+      min-height:100vh;
+    }
+
+    .wrap{
+      max-width:980px;
+      margin:0 auto;
+      padding:22px;
+    }
+
+    .hero{
+      background:linear-gradient(135deg,#0f172a 0%, #1e293b 48%, #111827 100%);
+      color:#fff;
+      border-radius:28px;
+      padding:28px;
+      box-shadow:var(--shadow);
+      position:relative;
+      overflow:hidden;
+      margin-bottom:18px;
+    }
+
+    .hero::before{
+      content:"";
+      position:absolute;
+      inset:0 0 auto 0;
+      height:6px;
+      background:linear-gradient(90deg,var(--primary) 0%, #d91b35 45%, #f0b7bf 100%);
+    }
+
+    .badge{
+      display:inline-block;
+      padding:8px 14px;
+      border-radius:999px;
+      background:rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.18);
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+      margin-bottom:14px;
+    }
+
+    .hero h1{
+      margin:0 0 8px;
+      font-size:40px;
+      line-height:1;
+      letter-spacing:-.03em;
+    }
+
+    .hero p{
+      margin:0;
+      color:rgba(255,255,255,.82);
+      font-size:16px;
+      line-height:1.5;
+      max-width:720px;
+    }
+
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:24px;
+      border:1px solid rgba(229,231,235,.95);
+      margin-bottom:18px;
+    }
+
+    .search-box{
+      display:grid;
+      grid-template-columns:1fr 180px;
+      gap:12px;
+      align-items:end;
+    }
+
+    label{
+      display:block;
+      font-size:13px;
+      color:var(--muted);
+      margin:0 0 8px;
+      font-weight:700;
+    }
+
+    input{
+      width:100%;
+      border:1px solid #d7dee8;
+      background:#fff;
+      border-radius:14px;
+      padding:14px 15px;
+      font-size:15px;
+      outline:none;
+    }
+
+    input:focus{
+      border-color:rgba(190,0,26,.45);
+      box-shadow:0 0 0 4px rgba(190,0,26,.08);
+    }
+
+    .btn{
+      border:none;
+      background:linear-gradient(180deg,var(--primary) 0%, var(--primary-dark) 100%);
+      color:#fff;
+      padding:14px 18px;
+      border-radius:16px;
+      cursor:pointer;
+      font-size:15px;
+      min-height:50px;
+      font-weight:700;
+      width:100%;
+    }
+
+    .btn:hover{filter:brightness(.98)}
+
+    .status{
+      padding:16px 18px;
+      border-radius:18px;
+      font-weight:700;
+      margin-bottom:18px;
+      border:1px solid transparent;
+    }
+
+    .status.ok{
+      background:var(--success-bg);
+      color:var(--success);
+      border-color:#bbf7d0;
+    }
+
+    .status.err{
+      background:var(--danger-bg);
+      color:var(--danger);
+      border-color:#fecaca;
+    }
+
+    .status.warn{
+      background:var(--warn-bg);
+      color:var(--warn);
+      border-color:#fed7aa;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:16px;
+    }
+
+    .item{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+      background:#fff;
+    }
+
+    .item .k{
+      font-size:12px;
+      text-transform:uppercase;
+      color:var(--muted);
+      letter-spacing:.05em;
+      margin-bottom:8px;
+      font-weight:800;
+    }
+
+    .item .v{
+      font-size:16px;
+      color:#111827;
+      font-weight:700;
+      line-height:1.45;
+      word-break:break-word;
+    }
+
+    .muted{
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.5;
+    }
+
+    .footer{
+      text-align:center;
+      color:var(--muted);
+      font-size:13px;
+      padding:8px 0 20px;
+    }
+
+    @media (max-width:720px){
+      .search-box,
+      .grid{grid-template-columns:1fr}
+      .hero h1{font-size:32px}
+      .wrap{padding:14px}
+      .card,.hero{padding:18px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div class="badge">EF Cargo Clear</div>
+      <h1>Validar recibo</h1>
+      <p>Confirme se o recibo apresentado corresponde a um pagamento registado no sistema EF Cargo Clear.</p>
+    </div>
+
+    <div class="card">
+      <div class="search-box">
+        <div>
+          <label>Referência do recibo</label>
+          <input id="refInput" placeholder="Ex: RCB/2026/004" />
+        </div>
+        <button class="btn" id="validateBtn">Validar</button>
+      </div>
+      <p class="muted" style="margin-top:12px;">Pode abrir esta página pelo QR Code ou introduzir manualmente a referência do recibo.</p>
+    </div>
+
+    <div class="card" id="resultCard" style="display:none;">
+      <div id="statusBox" class="status warn">A validar...</div>
+      <div class="grid" id="resultGrid"></div>
+      <div id="extraBox" class="muted" style="margin-top:16px;"></div>
+    </div>
+
+    <div class="footer">EF &amp; Associados • Despachantes Aduaneiros</div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://fefkyzutcouoklbiwybs.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_uOowmqEhVdq8h0uzagYPEA_DXXpGOgA";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function formatMoney(value) {
+      const n = Number(value || 0);
+      return n.toLocaleString("pt-PT", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " MT";
+    }
+
+    function formatDate(value) {
+      if (!value) return "-";
+      const d = new Date(value);
+      if (isNaN(d.getTime())) return String(value);
+      return d.toLocaleDateString("pt-PT", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }) + " " + d.toLocaleTimeString("pt-PT", {
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function setStatus(type, text) {
+      const box = document.getElementById("statusBox");
+      box.className = "status " + type;
+      box.textContent = text;
+    }
+
+    function showResult(fields, extraText = "") {
+      document.getElementById("resultCard").style.display = "block";
+      const grid = document.getElementById("resultGrid");
+      grid.innerHTML = fields.map(f => `
+        <div class="item">
+          <div class="k">${escapeHtml(f.label)}</div>
+          <div class="v">${escapeHtml(f.value)}</div>
+        </div>
+      `).join("");
+      document.getElementById("extraBox").textContent = extraText;
+    }
+
+    async function findReceipt(ref) {
+      const cleanRef = String(ref || "").trim();
+      if (!cleanRef) return { data: null, error: new Error("Informe a referência do recibo.") };
+
+      const selectCols = [
+        "id",
+        "numero_fatura",
+        "cliente_nome",
+        "cliente_email",
+        "total_mt",
+        "pago",
+        "pago_at",
+        "numero_recibo",
+        "recibo_numero",
+        "recibo_emitido_at",
+        "payment_notes",
+        "status_envio",
+        "data_fatura",
+        "referencia"
+      ].join(",");
+
+      let result = await supabaseClient
+        .from("faturas")
+        .select(selectCols)
+        .eq("numero_recibo", cleanRef)
+        .maybeSingle();
+
+      if (!result.data && !result.error) {
+        result = await supabaseClient
+          .from("faturas")
+          .select(selectCols)
+          .eq("recibo_numero", cleanRef)
+          .maybeSingle();
+      }
+
+      return result;
+    }
+
+    async function validateReceipt() {
+      const ref = document.getElementById("refInput").value.trim();
+      document.getElementById("resultCard").style.display = "block";
+      setStatus("warn", "A validar recibo...");
+      showResult([], "");
+
+      const { data, error } = await findReceipt(ref);
+
+      if (error) {
+        setStatus("err", "Não foi possível validar o recibo.");
+        showResult(
+          [
+            { label: "Referência pesquisada", value: ref || "-" },
+            { label: "Motivo", value: error.message || "Erro ao consultar a base de dados." }
+          ],
+          "Se esta página estiver pública e a consulta falhar por permissões, será necessário permitir leitura pública controlada dos campos do recibo."
+        );
+        return;
+      }
+
+      if (!data) {
+        setStatus("err", "Recibo não encontrado.");
+        showResult(
+          [
+            { label: "Referência pesquisada", value: ref || "-" },
+            { label: "Resultado", value: "Nenhum recibo encontrado com esta referência." }
+          ],
+          "Confirme se o QR Code e a referência do recibo estão corretos."
+        );
+        return;
+      }
+
+      const isPaid = !!data.pago || !!data.pago_at;
+      const reciboRef = data.numero_recibo || data.recibo_numero || ref;
+      const emitidoEm = data.recibo_emitido_at || data.pago_at || data.data_fatura;
+
+      if (isPaid) {
+        setStatus("ok", "Recibo válido e pagamento registado.");
+      } else {
+        setStatus("warn", "Documento encontrado, mas sem pagamento confirmado.");
+      }
+
+      showResult([
+        { label: "Referência do recibo", value: reciboRef || "-" },
+        { label: "Número da fatura", value: data.numero_fatura || "-" },
+        { label: "Cliente", value: data.cliente_nome || "-" },
+        { label: "Email", value: data.cliente_email || "-" },
+        { label: "Valor recebido", value: formatMoney(data.total_mt || 0) },
+        { label: "Data do pagamento", value: formatDate(data.pago_at) },
+        { label: "Data de emissão do recibo", value: formatDate(emitidoEm) },
+        { label: "Estado", value: isPaid ? "Pago / confirmado" : "Pendente de confirmação" },
+        { label: "Referência interna", value: data.referencia || "-" }
+      ], data.payment_notes ? "Observação: " + data.payment_notes : "");
+    }
+
+    document.getElementById("validateBtn").addEventListener("click", validateReceipt);
+    document.getElementById("refInput").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") validateReceipt();
+    });
+
+    (function initFromQuery() {
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get("ref") || "";
+      if (ref) {
+        document.getElementById("refInput").value = ref;
+        validateReceipt();
+      }
+    })();
+  </script>
+</body>
+</html>
