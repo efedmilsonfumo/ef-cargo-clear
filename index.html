@@ -2663,7 +2663,72 @@
       win.document.close();
     }
 
-    function showInternalTab(tab) {
+    
+    async function refreshMessagesRealtimeUI() {
+      try {
+        if (!currentUserRole) return;
+
+        if (currentUserRole === "client") {
+          const mensagensTabAtiva = !document.getElementById("client-mensagens")?.classList.contains("hidden");
+          await loadClientMessages();
+          if (mensagensTabAtiva) {
+            await markClientMessagesRead();
+          }
+          if (typeof refreshClientDashboard === "function") {
+            await refreshClientDashboard();
+          }
+          if (!document.getElementById("client-faturas")?.classList.contains("hidden") && typeof loadClientFinanceDocs === "function") {
+            await loadClientFinanceDocs();
+          }
+          return;
+        }
+
+        const internalMensagensAtiva = !document.getElementById("internal-mensagens")?.classList.contains("hidden");
+        await loadInternalMessages();
+        if (internalMensagensAtiva && currentSelectedThread) {
+          const unreadRows = (mensagensCache || []).filter(m => m.cliente_email === currentSelectedThread && m.remetente === "cliente" && !m.lido_interno);
+          if (unreadRows.length) {
+            await supabaseClient.from("mensagens").update({ lido_interno: true }).in("id", unreadRows.map(x => x.id));
+            await loadInternalMessages();
+          }
+        }
+      } catch (err) {
+        console.error("Erro ao refrescar mensagens em realtime:", err);
+      }
+    }
+
+    function startMensagensRealtime() {
+      if (mensagensRealtimeStarted || !supabaseClient) return;
+
+      mensagensRealtimeChannel = supabaseClient
+        .channel("mensagens-realtime")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "mensagens" },
+          async () => {
+            await refreshMessagesRealtimeUI();
+          }
+        )
+        .subscribe((status) => {
+          console.log("Status realtime mensagens:", status);
+        });
+
+      mensagensRealtimeStarted = true;
+    }
+
+    async function stopMensagensRealtime() {
+      try {
+        if (mensagensRealtimeChannel) {
+          await supabaseClient.removeChannel(mensagensRealtimeChannel);
+        }
+      } catch (err) {
+        console.error("Erro ao fechar realtime de mensagens:", err);
+      }
+      mensagensRealtimeChannel = null;
+      mensagensRealtimeStarted = false;
+    }
+
+function showInternalTab(tab) {
       document.querySelectorAll(".sidebar-btn").forEach(b => b.classList.remove("active"));
       if (tab === "dashboard") document.getElementById("side-dashboard")?.classList.add("active");
       if (tab === "processos") document.getElementById("side-processos")?.classList.add("active");
@@ -2912,6 +2977,7 @@
     }
 
     async function logout() {
+      await stopMensagensRealtime();
       await supabaseClient.auth.signOut();
       location.reload();
     }
@@ -2930,6 +2996,8 @@
         document.getElementById("welcome").textContent = "Edmilson Fumo • administrador";
         document.getElementById("internalView").classList.remove("hidden");
         document.getElementById("clientView").classList.add("hidden");
+        startMensagensRealtime();
+        startMensagensRealtime();
         applyInternalPermissions();
         setWelcomeMessage();
         setTimeout(async () => {
@@ -4531,9 +4599,19 @@
       renderInternalMessages();
     }
 
-    function selectInternalThread(email) {
+    async function selectInternalThread(email) {
       currentSelectedThread = email;
       renderInternalThreadList();
+      renderInternalMessages();
+      try {
+        const unreadRows = (mensagensCache || []).filter(m => m.cliente_email === email && m.remetente === "cliente" && !m.lido_interno);
+        if (unreadRows.length) {
+          await supabaseClient.from("mensagens").update({ lido_interno: true }).in("id", unreadRows.map(x => x.id));
+          await loadInternalMessages();
+        }
+      } catch (err) {
+        console.error("Erro ao marcar conversa interna como lida:", err);
+      }
     }
 
     function renderInternalMessages() {
