@@ -1057,31 +1057,23 @@
             </div>
             <div id="welcome" class="welcome-line">A carregar...</div>
           </div>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-            <select id="languageSwitcher" class="no-print" style="min-width:170px;padding:12px 14px;border:1px solid #d6d6d6;border-radius:14px;background:#fff;" onchange="setLanguage(this.value)">
-              <option value="pt">Português</option>
-              <option value="en">English</option>
-              <option value="fr">Français</option>
-              <option value="zh">中文（简体）</option>
-            </select>
-            <button class="btn btn-outline no-print" style="min-width:180px" onclick="logout()" data-i18n="logout">Sair</button>
-          </div>
+          <button class="btn btn-outline no-print" style="min-width:180px" onclick="logout()">Sair</button>
         </div>
       </div>
 
       <div id="internalView" class="hidden">
         <div class="admin-shell">
           <aside class="sidebar no-print">
-            <div class="sidebar-title" data-i18n="internal_panel">Painel Interno</div>
+            <div class="sidebar-title">Painel Interno</div>
             <div class="sidebar-menu">
               <button class="sidebar-btn active" id="side-dashboard" onclick="showInternalTab('dashboard')">📊 Dashboard</button>
-              <button class="sidebar-btn" id="side-processos" onclick="showInternalTab('processos')" data-i18n="menu_processos">Processos</button>
-              <button class="sidebar-btn" id="side-cotacoes" onclick="showInternalTab('cotacoes')" data-i18n="menu_quotes">Pedidos de cotação</button>
-              <button class="sidebar-btn" id="side-fretes" onclick="showInternalTab('fretes')" data-i18n="menu_freight">Pedidos de frete</button>
-              <button class="sidebar-btn" id="side-financeiro" onclick="showInternalTab('financeiro')" data-i18n="menu_finance">Financeiro</button>
-              <button class="sidebar-btn" id="side-faturas" onclick="showInternalTab('faturas')" data-i18n="menu_invoices">Faturas</button>
-              <button class="sidebar-btn" id="side-clientes" onclick="showInternalTab('clientes')" data-i18n="menu_clients">Clientes</button>
-              <button class="sidebar-btn" id="side-equipa" onclick="showInternalTab('equipa')" data-i18n="menu_staff">Funcionários</button>
+              <button class="sidebar-btn" id="side-processos" onclick="showInternalTab('processos')">Processos</button>
+              <button class="sidebar-btn" id="side-cotacoes" onclick="showInternalTab('cotacoes')">Pedidos de cotação</button>
+              <button class="sidebar-btn" id="side-fretes" onclick="showInternalTab('fretes')">Pedidos de frete</button>
+              <button class="sidebar-btn" id="side-financeiro" onclick="showInternalTab('financeiro')">Financeiro</button>
+              <button class="sidebar-btn" id="side-faturas" onclick="showInternalTab('faturas')">Faturas</button>
+              <button class="sidebar-btn" id="side-clientes" onclick="showInternalTab('clientes')">Clientes</button>
+              <button class="sidebar-btn" id="side-equipa" onclick="showInternalTab('equipa')">Funcionários</button>
               <button class="sidebar-btn" id="side-mensagens" onclick="showInternalTab('mensagens')">
                 Mensagens <span id="internalUnreadBadge" class="unread-dot hidden">0</span>
               </button>
@@ -1090,11 +1082,11 @@
 
           <div>
             <div class="grid grid-5">
-              <div class="kpi clickable" onclick="goToInternalSection('clientes')"><div class="kpi-title" data-i18n="menu_clients">Clientes</div><div class="kpi-value" id="clientesCount">0</div></div>
-              <div class="kpi clickable" onclick="goToInternalSection('processos')"><div class="kpi-title" data-i18n="menu_processos">Processos</div><div class="kpi-value" id="processosCount">0</div></div>
+              <div class="kpi clickable" onclick="goToInternalSection('clientes')"><div class="kpi-title">Clientes</div><div class="kpi-value" id="clientesCount">0</div></div>
+              <div class="kpi clickable" onclick="goToInternalSection('processos')"><div class="kpi-title">Processos</div><div class="kpi-value" id="processosCount">0</div></div>
               <div class="kpi clickable" onclick="goToInternalSection('liberados')"><div class="kpi-title">Liberados</div><div class="kpi-value" id="liberadosCount">0</div></div>
               <div class="kpi clickable" onclick="goToInternalSection('pendencias')"><div class="kpi-title">Pendências</div><div class="kpi-value" id="pendenciasCount">0</div></div>
-              <div class="kpi clickable" onclick="goToInternalSection('cotacoes')"><div class="kpi-title" data-i18n="menu_quotes">Pedidos de cotação</div><div class="kpi-value" id="cotacoesCount">0</div></div>
+              <div class="kpi clickable" onclick="goToInternalSection('cotacoes')"><div class="kpi-title">Pedidos de cotação</div><div class="kpi-value" id="cotacoesCount">0</div></div>
             </div>
 
             <div class="stat-row" id="adminFinanceSummaryRow" style="margin-top:18px;">
@@ -1107,8 +1099,8 @@
               <div class="card">
                 <div class="panel-head">
                   <div>
-                    <h2 class="section-title" data-i18n="dashboard_analytics">Dashboard Analytics</h2>
-                    <div class="section-sub" data-i18n="dashboard_analytics_sub">Visão geral do negócio com gráficos, alertas e atividade recente.</div>
+                    <h2 class="section-title">Dashboard Analytics</h2>
+                    <div class="section-sub">Visão geral do negócio com gráficos, alertas e atividade recente.</div>
                   </div>
                 </div>
 
@@ -1149,8 +1141,8 @@
               <div class="card">
                 <div class="panel-head">
                   <div>
-                    <h2 class="section-title" data-i18n="process_mgmt_title">Gestão de Processos</h2>
-                    <div class="section-sub" data-i18n="process_mgmt_sub">Atualize estado, documentos em falta, financeiro e documentos do processo.</div>
+                    <h2 class="section-title">Gestão de Processos</h2>
+                    <div class="section-sub">Atualize estado, documentos em falta, financeiro e documentos do processo.</div>
                   </div>
                   <div class="panel-actions no-print">
                     <button class="btn-mini green" onclick="exportProcessosCSV()">Excel/CSV</button>
@@ -1160,21 +1152,21 @@
 
                 <div class="toolbar no-print">
                   <div class="field">
-                    <label data-i18n="global_search">Pesquisa global</label>
-                    <input id="globalSearch" placeholder="Pesquisar tudo..." data-i18n-placeholder="search_all" oninput="applyFilters()" />
+                    <label>Pesquisa global</label>
+                    <input id="globalSearch" placeholder="Pesquisar tudo..." oninput="applyFilters()" />
                   </div>
                   <div class="field">
-                    <label data-i18n="client_label">Cliente</label>
-                    <input id="filterCliente" placeholder="Nome do cliente" data-i18n-placeholder="client_name" oninput="applyFilters()" />
+                    <label>Cliente</label>
+                    <input id="filterCliente" placeholder="Nome do cliente" oninput="applyFilters()" />
                   </div>
                   <div class="field">
-                    <label data-i18n="invoice_label">Factura</label>
-                    <input id="filterFactura" placeholder="Número da factura" data-i18n-placeholder="invoice_number" oninput="applyFilters()" />
+                    <label>Factura</label>
+                    <input id="filterFactura" placeholder="Número da factura" oninput="applyFilters()" />
                   </div>
                   <div class="field">
-                    <label data-i18n="status_label">Estado</label>
+                    <label>Estado</label>
                     <select id="filterEstado" onchange="applyFilters()">
-                      <option value="" data-i18n="all">Todos</option>
+                      <option value="">Todos</option>
                       <option>Recebido</option>
                       <option>Em análise</option>
                       <option>Documentos em falta</option>
@@ -1185,7 +1177,7 @@
                     </select>
                   </div>
                   <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <button class="btn-mini info" onclick="clearFilters()" data-i18n="clear">Limpar</button>
+                    <button class="btn-mini info" onclick="clearFilters()">Limpar</button>
                   </div>
                 </div>
 
@@ -1196,11 +1188,11 @@
                     <thead>
                       <tr>
                         <th>Processo</th>
-                        <th data-i18n="invoice_label">Factura</th>
-                        <th data-i18n="client_label">Cliente</th>
+                        <th>Factura</th>
+                        <th>Cliente</th>
                         <th>Regime</th>
                         <th>Responsável</th>
-                        <th data-i18n="status_label">Estado</th>
+                        <th>Estado</th>
                         <th>Ação</th>
                       </tr>
                     </thead>
@@ -1227,14 +1219,14 @@
                   <table>
                     <thead>
                       <tr>
-                        <th data-i18n="client_label">Cliente</th>
+                        <th>Cliente</th>
                         <th>Tipo</th>
-                        <th data-i18n="invoice_label">Factura</th>
+                        <th>Factura</th>
                         <th>Documento</th>
                         <th>Ações</th>
                         <th>Origem</th>
                         <th>Destino</th>
-                        <th data-i18n="status_label">Estado</th>
+                        <th>Estado</th>
                       </tr>
                     </thead>
                     <tbody id="cotacoesTable"></tbody>
@@ -1259,11 +1251,11 @@
                   <table>
                     <thead>
                       <tr>
-                        <th data-i18n="client_label">Cliente</th>
+                        <th>Cliente</th>
                         <th>Rota</th>
                         <th>Carga</th>
                         <th>Nec. desembaraço</th>
-                        <th data-i18n="status_label">Estado</th>
+                        <th>Estado</th>
                         <th>Valor cotado</th>
                         <th>Ações</th>
                       </tr>
@@ -1297,14 +1289,14 @@
                     <input id="financeTo" type="datetime-local" onchange="renderFinanceiroTable()" />
                   </div>
                   <div class="field">
-                    <label data-i18n="client_label">Cliente</label>
+                    <label>Cliente</label>
                     <input id="financeCliente" placeholder="Filtrar cliente" oninput="renderFinanceiroTable()" />
                   </div>
                   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
                     <button class="btn-mini info" onclick="setFinancePreset('today')">Hoje</button>
                     <button class="btn-mini info" onclick="setFinancePreset('7d')">7 dias</button>
                     <button class="btn-mini info" onclick="setFinancePreset('month')">Este mês</button>
-                    <button class="btn-mini secondary" onclick="clearFinanceFilters()" data-i18n="clear">Limpar</button>
+                    <button class="btn-mini secondary" onclick="clearFinanceFilters()">Limpar</button>
                   </div>
                 </div>
 
@@ -1314,8 +1306,8 @@
                       <tr>
                         <th>Data</th>
                         <th>Processo</th>
-                        <th data-i18n="client_label">Cliente</th>
-                        <th data-i18n="invoice_label">Factura</th>
+                        <th>Cliente</th>
+                        <th>Factura</th>
                         <th>Valor cobrado</th>
                         <th>Custos</th>
                         <th>Margem</th>
@@ -1352,7 +1344,7 @@
                       <input id="fat_referencia" placeholder="Ex: STH1256A2" />
                     </div>
                     <div>
-                      <label data-i18n="client_label">Cliente</label>
+                      <label>Cliente</label>
                       <select id="fat_cliente" onchange="applyInvoiceSourceData()"></select>
                     </div>
                     <div>
@@ -1441,10 +1433,10 @@
                         <tr>
                           <th>Número</th>
                           <th>Data</th>
-                          <th data-i18n="client_label">Cliente</th>
+                          <th>Cliente</th>
                           <th>Total</th>
                           <th>Email</th>
-                          <th data-i18n="status_label">Estado</th>
+                          <th>Estado</th>
                           <th>Ações</th>
                         </tr>
                       </thead>
@@ -1526,7 +1518,7 @@
                       </select>
                     </div>
                     <div>
-                      <label data-i18n="status_label">Estado</label>
+                      <label>Estado</label>
                       <select id="eq_activo">
                         <option value="true">Activo</option>
                         <option value="false">Inactivo</option>
@@ -1584,7 +1576,7 @@
 
       <div id="clientView" class="hidden">
         <div class="card hero-card">
-          <h2 class="section-title" data-i18n="client_portal">Portal do Cliente</h2>
+          <h2 class="section-title">Portal do Cliente</h2>
           <div class="section-sub">Consulte o estado do seu processo, veja documentos do processo, envie pedidos de cotação e frete, acompanhe o histórico e fale connosco.</div>
         </div>
 
@@ -1654,7 +1646,7 @@
 
         <div class="tabs no-print">
           <button class="tab-btn active" data-client-tab="consulta" onclick="showClientTab('consulta', this)">Consultar processo</button>
-          <button class="tab-btn" data-client-tab="processos" onclick="showClientTab('processos', this)" data-i18n="menu_processos">Processos</button>
+          <button class="tab-btn" data-client-tab="processos" onclick="showClientTab('processos', this)">Processos</button>
           <button class="tab-btn" data-client-tab="cotacao" onclick="showClientTab('cotacao', this)">Solicitar cotação</button>
           <button class="tab-btn" data-client-tab="historico" onclick="showClientTab('historico', this)">Minhas cotações</button>
           <button class="tab-btn" data-client-tab="faturas" onclick="showClientTab('faturas', this)">Faturas & Recibos</button>
@@ -1663,7 +1655,7 @@
           <button class="tab-btn" data-client-tab="mensagens" onclick="showClientTab('mensagens', this)">
             Mensagens <span id="clientUnreadBadge" class="unread-dot hidden">0</span>
           </button>
-          <button class="tab-btn" data-client-tab="contactos" onclick="showClientTab('contactos', this)" data-i18n="contacts">Contactos</button>
+          <button class="tab-btn" data-client-tab="contactos" onclick="showClientTab('contactos', this)">Contactos</button>
         </div>
 
         <div id="client-consulta" class="tab-content">
@@ -1771,7 +1763,7 @@
                 </div>
                 <div>
                   <label>Número da factura</label>
-                  <input id="cot_factura" placeholder="Número da factura" data-i18n-placeholder="invoice_number" />
+                  <input id="cot_factura" placeholder="Número da factura" />
                 </div>
               </div>
 
@@ -1835,12 +1827,12 @@
                 <thead>
                   <tr>
                     <th>Data</th>
-                    <th data-i18n="invoice_label">Factura</th>
+                    <th>Factura</th>
                     <th>Tipo</th>
                     <th>Origem</th>
                     <th>Destino</th>
                     <th>Documento</th>
-                    <th data-i18n="status_label">Estado</th>
+                    <th>Estado</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
@@ -1970,7 +1962,7 @@
                     <th>Origem</th>
                     <th>Destino</th>
                     <th>Carga</th>
-                    <th data-i18n="status_label">Estado</th>
+                    <th>Estado</th>
                     <th>Valor</th>
                   </tr>
                 </thead>
@@ -2123,7 +2115,7 @@
           </select>
         </div>
         <div>
-          <label data-i18n="status_label">Estado</label>
+          <label>Estado</label>
           <select id="edit_eq_activo">
             <option value="true">Activo</option>
             <option value="false">Inactivo</option>
@@ -2345,7 +2337,6 @@
     let currentUserEmail = "";
     let currentUserName = "";
     let currentSelectedThread = "";
-    let mensagensRealtimeChannel = null;
     let companyConfig = null;
     let faturasCache = [];
     let clientFaturasCache = [];
@@ -2770,12 +2761,10 @@
       const adminFinanceSummaryRow = document.getElementById("adminFinanceSummaryRow");
       const dashMargemCard = document.getElementById("dashMargemCard");
       const financeiroChartCard = document.getElementById("financeiroChartCard");
-      const financeInsights = document.getElementById("financeInsights");
 
       if (adminFinanceSummaryRow) adminFinanceSummaryRow.style.display = isAdmin ? "grid" : "none";
       if (dashMargemCard) dashMargemCard.style.display = isAdmin ? "block" : "none";
       if (financeiroChartCard) financeiroChartCard.style.display = isAdmin ? "block" : "none";
-      if (financeInsights) financeInsights.style.display = isAdmin ? "grid" : "none";
 
       if (isEmployee) {
         document.getElementById("internal-financeiro").classList.add("hidden");
@@ -2913,7 +2902,6 @@
     }
 
     async function logout() {
-      await stopMensagensRealtime();
       await supabaseClient.auth.signOut();
       location.reload();
     }
@@ -2937,7 +2925,6 @@
         setTimeout(async () => {
           await loadInternal();
           await loadInternalMessages();
-          startMensagensRealtime();
         }, 100);
         return;
       }
@@ -2959,7 +2946,6 @@
           setTimeout(async () => {
             await loadInternal();
             await loadInternalMessages();
-            startMensagensRealtime();
           }, 100);
           return;
         }
@@ -4132,8 +4118,8 @@
 
       content.innerHTML = `
         <div class="process-summary-grid">
-          <div class="process-panel"><strong data-i18n="invoice_label">Factura</strong><div style="margin-top:6px;">${processo.numero_factura || "-"}</div></div>
-          <div class="process-panel"><strong data-i18n="client_label">Cliente</strong><div style="margin-top:6px;">${processo.importador_exportador || "-"}</div></div>
+          <div class="process-panel"><strong>Factura</strong><div style="margin-top:6px;">${processo.numero_factura || "-"}</div></div>
+          <div class="process-panel"><strong>Cliente</strong><div style="margin-top:6px;">${processo.importador_exportador || "-"}</div></div>
           <div class="process-panel"><strong>Regime</strong><div style="margin-top:6px;">${processo.regime || "-"}</div></div>
         </div>
 
@@ -4147,7 +4133,7 @@
               <button class="btn-mini info" onclick="saveResponsavel('${processo.id}')">Guardar responsável</button>
             </div>
 
-            <label style="margin-top:14px;" data-i18n="status_label">Estado</label>
+            <label style="margin-top:14px;">Estado</label>
             <select id="estado_${processo.id}">
               <option ${processo.estado === "Recebido" ? "selected" : ""}>Recebido</option>
               <option ${processo.estado === "Em análise" ? "selected" : ""}>Em análise</option>
@@ -4184,7 +4170,7 @@
 
           ${currentUserRole === "admin" ? `
           <div class="process-panel">
-            <h3 style="margin-top:0;" data-i18n="menu_finance">Financeiro</h3>
+            <h3 style="margin-top:0;">Financeiro</h3>
             ${financeiroHtml}
           </div>
           ` : ``}
@@ -4475,47 +4461,7 @@
       });
     }
 
-    
-    async function refreshMensagensRealtime() {
-      try {
-        if (currentUserRole === "admin" || currentUserRole === "employee") {
-          await loadInternalMessages();
-        } else if (currentUserRole === "client") {
-          await loadClientMessages();
-          await refreshClientDashboard();
-        }
-      } catch (e) {
-        console.log("Erro ao atualizar mensagens em realtime:", e);
-      }
-    }
-
-    function startMensagensRealtime() {
-      if (mensagensRealtimeChannel || !supabaseClient) return;
-
-      mensagensRealtimeChannel = supabaseClient
-        .channel("realtime-mensagens")
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "mensagens" },
-          async () => {
-            await refreshMensagensRealtime();
-          }
-        )
-        .subscribe((status) => {
-          console.log("Realtime mensagens:", status);
-        });
-    }
-
-    async function stopMensagensRealtime() {
-      try {
-        if (mensagensRealtimeChannel) {
-          await supabaseClient.removeChannel(mensagensRealtimeChannel);
-        }
-      } catch (_) {}
-      mensagensRealtimeChannel = null;
-    }
-
-async function loadInternalMessages() {
+    async function loadInternalMessages() {
       const { data, error } = await withTimeout(
         supabaseClient.from("mensagens").select("*").order("created_at", { ascending: true }),
         10000
@@ -4530,6 +4476,11 @@ async function loadInternalMessages() {
       renderInternalThreadList();
       updateUnreadBadges();
 
+      const unread = mensagensCache.filter(m => m.remetente === "cliente" && !m.lido_interno);
+      if (unread.length) {
+        const ids = unread.map(x => x.id);
+        await supabaseClient.from("mensagens").update({ lido_interno: true }).in("id", ids);
+      }
     }
 
     function renderInternalThreadList() {
@@ -4570,20 +4521,9 @@ async function loadInternalMessages() {
       renderInternalMessages();
     }
 
-    async function selectInternalThread(email) {
+    function selectInternalThread(email) {
       currentSelectedThread = email;
       renderInternalThreadList();
-
-      try {
-        const ids = (mensagensCache || [])
-          .filter(m => m.cliente_email === email && m.remetente === "cliente" && !m.lido_interno)
-          .map(m => m.id);
-
-        if (ids.length) {
-          await supabaseClient.from("mensagens").update({ lido_interno: true }).in("id", ids);
-          await loadInternalMessages();
-        }
-      } catch (_) {}
     }
 
     function renderInternalMessages() {
@@ -4638,19 +4578,6 @@ async function loadInternalMessages() {
           alert(error.message);
           return;
         }
-
-        try {
-          await sendEmail(
-            currentSelectedThread,
-            "Nova mensagem da EF Cargo Clear",
-            `<div style="font-family:Arial,sans-serif;line-height:1.6;">
-              <h2>Nova mensagem da EF Cargo Clear</h2>
-              <p>Recebeu uma nova mensagem da nossa equipa dentro da plataforma.</p>
-              <p><b>Mensagem:</b> ${escapeHtml(text)}</p>
-              <p>Entre na plataforma para ver a conversa completa.</p>
-            </div>`
-          );
-        } catch (_) {}
 
         document.getElementById("adminMessageText").value = "";
         await loadInternalMessages();
@@ -4737,20 +4664,6 @@ async function loadInternalMessages() {
           alert(error.message);
           return;
         }
-
-        try {
-          await sendEmail(
-            ADMIN_EMAIL,
-            "Nova mensagem de cliente",
-            `<div style="font-family:Arial,sans-serif;line-height:1.6;">
-              <h2>Nova mensagem de cliente</h2>
-              <p><b>Cliente:</b> ${escapeHtml(currentUserName || currentUserEmail || "-")}</p>
-              <p><b>Email:</b> ${escapeHtml(currentUserEmail || "-")}</p>
-              <p><b>Mensagem:</b> ${escapeHtml(text)}</p>
-              <p>Abra a plataforma para responder.</p>
-            </div>`
-          );
-        } catch (_) {}
 
         document.getElementById("clientMessageText").value = "";
         await loadClientMessages();
@@ -6648,7 +6561,7 @@ async function loadInternalMessages() {
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px;">
             <div style="border:1px solid #ddd;border-radius:12px;padding:14px;">
-              <strong data-i18n="client_label">Cliente</strong><br>
+              <strong>Cliente</strong><br>
               ${escapeHtml(fatura.cliente_nome || '')}<br>
               NUIT: ${escapeHtml(fatura.cliente_nuit || '')}<br>
               Tipo Mercad.: ${escapeHtml(fatura.tipo_mercadoria || '')}<br>
@@ -6775,35 +6688,143 @@ async function loadInternalMessages() {
 
 
     function receiptHtmlFromInvoice(f) {
+      const reciboNumero = escapeHtml(f.recibo_numero || f.numero_recibo || ('RCB-' + (f.numero_fatura || '')));
+      const dataPagamento = escapeHtml((f.recibo_emitido_at || f.pago_at || new Date().toISOString()).slice(0, 10));
+      const clienteNome = escapeHtml(f.cliente_nome || '-');
+      const clienteEmail = escapeHtml(f.cliente_email || f.email_cliente || '-');
+      const clienteNuit = escapeHtml(f.cliente_nuit || f.nuit || '-');
+      const referencia = escapeHtml(f.referencia || f.numero_fatura || '-');
+      const valor = formatMoney(f.total_mt || 0);
+      const valorExtenso = escapeHtml(numberToWordsPt(Math.round(Number(f.total_mt || 0))) + ' meticais');
+      const formaPagamento = escapeHtml(f.payment_notes || 'Pagamento confirmado no sistema');
+      const processoRef = escapeHtml(f.processo_numero || f.numero_processo || f.fatura_processo || '-');
+      const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=' + encodeURIComponent('https://ef-cargo-clear.vercel.app/validar-recibo.html?ref=' + (f.recibo_numero || f.numero_recibo || ('RCB-' + (f.numero_fatura || ''))));
+
       return `
-        <div style="font-family:Arial,sans-serif;color:#111;max-width:900px;margin:0 auto;">
-          <div style="display:flex;justify-content:space-between;gap:20px;align-items:flex-start;">
-            <div>
-              <h1 style="margin:0;color:#166534;">Recibo</h1>
-              <div style="margin-top:10px;font-size:14px;line-height:1.6;">
-                <strong>EF & ASSOCIADOS DESP ADUANEIROS LDA</strong><br>
-                Recebemos de <strong>${escapeHtml(f.cliente_nome || '')}</strong> o valor de <strong>${formatMoney(f.total_mt || 0)}</strong>.
+        <div style="font-family:Arial,sans-serif;color:#111;max-width:980px;margin:0 auto;background:#ffffff;">
+          <div style="border:1px solid #e5e7eb;border-radius:24px;overflow:hidden;box-shadow:0 16px 40px rgba(15,23,42,.08);">
+            <div style="background:linear-gradient(135deg,#7f0012 0%,#be001a 55%,#e24a5d 100%);padding:30px 34px;color:#fff;">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;">
+                <div>
+                  <div style="font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.92;">EF & Associados, Lda</div>
+                  <div style="font-size:30px;font-weight:800;margin-top:8px;">RECIBO</div>
+                  <div style="font-size:14px;opacity:.92;margin-top:8px;line-height:1.6;">
+                    Despachantes Aduaneiros<br>
+                    Documento emitido após confirmação de pagamento
+                  </div>
+                </div>
+                <div style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:16px 18px;border-radius:18px;min-width:250px;text-align:right;">
+                  <div style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;opacity:.9;">Número do recibo</div>
+                  <div style="font-size:24px;font-weight:800;margin-top:6px;">${reciboNumero}</div>
+                  <div style="margin-top:10px;font-size:13px;line-height:1.6;">
+                    <strong>Data:</strong> ${dataPagamento}<br>
+                    <strong>Ref. fatura:</strong> ${escapeHtml(f.numero_fatura || '-')}
+                  </div>
+                </div>
               </div>
             </div>
-            <div style="text-align:right;font-size:14px;line-height:1.6;">
-              <strong>${escapeHtml(f.recibo_numero || f.numero_recibo || ('RCB-' + (f.numero_fatura || '')))}</strong><br>
-              Data: ${escapeHtml((f.recibo_emitido_at || f.pago_at || new Date().toISOString()).slice(0,10))}<br>
-              Refª Fatura: ${escapeHtml(f.numero_fatura || '')}
+
+            <div style="padding:30px 34px 18px;">
+              <div style="display:grid;grid-template-columns:1.2fr .8fr;gap:18px;">
+                <div style="border:1px solid #e5e7eb;border-radius:18px;padding:18px 20px;background:#fff;">
+                  <div style="font-size:12px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Recebemos de</div>
+                  <div style="font-size:22px;font-weight:800;color:#111827;">${clienteNome}</div>
+                  <div style="margin-top:12px;font-size:14px;line-height:1.7;color:#374151;">
+                    <strong>NUIT:</strong> ${clienteNuit}<br>
+                    <strong>Email:</strong> ${clienteEmail}
+                  </div>
+                </div>
+                <div style="border:1px solid #e5e7eb;border-radius:18px;padding:18px 20px;background:#fff;">
+                  <div style="font-size:12px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Valor recebido</div>
+                  <div style="font-size:32px;font-weight:800;color:#166534;line-height:1;">${valor}</div>
+                  <div style="margin-top:10px;font-size:13px;line-height:1.6;color:#4b5563;">${valorExtenso}</div>
+                </div>
+              </div>
+
+              <div style="margin-top:18px;border:1px solid #e5e7eb;border-radius:18px;padding:20px;background:#fcfcfd;">
+                <div style="font-size:15px;line-height:1.85;color:#1f2937;">
+                  Declaramos que recebemos de <strong>${clienteNome}</strong> o montante de <strong>${valor}</strong>,
+                  referente à liquidação da fatura <strong>${escapeHtml(f.numero_fatura || '-')}</strong>, emitida por
+                  <strong>EF & Associados – Despachantes Aduaneiros, Lda</strong>.
+                </div>
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px;">
+                <div style="border:1px solid #e5e7eb;border-radius:18px;padding:18px 20px;background:#fff;">
+                  <div style="font-size:12px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Detalhes do pagamento</div>
+                  <div style="font-size:14px;line-height:1.8;color:#374151;">
+                    <strong>Forma de pagamento:</strong> ${formaPagamento}<br>
+                    <strong>Data de pagamento:</strong> ${dataPagamento}<br>
+                    <strong>Referência:</strong> ${referencia}<br>
+                    <strong>Processo:</strong> ${processoRef}
+                  </div>
+                </div>
+                <div style="border:1px solid #e5e7eb;border-radius:18px;padding:18px 20px;background:#fff;display:flex;justify-content:space-between;gap:16px;align-items:flex-start;">
+                  <div>
+                    <div style="font-size:12px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Validação digital</div>
+                    <div style="font-size:13px;line-height:1.7;color:#4b5563;">
+                      Este recibo possui código de validação digital para conferência da autenticidade.
+                    </div>
+                  </div>
+                  <img src="${qrUrl}" alt="QR Code de validação" style="width:130px;height:130px;border:1px solid #e5e7eb;border-radius:12px;padding:8px;background:#fff;" />
+                </div>
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px;">
+                <div style="border-top:1px solid #d1d5db;padding-top:14px;font-size:13px;color:#374151;">
+                  <strong>Observação:</strong><br>
+                  Liquidação integral da fatura ${escapeHtml(f.numero_fatura || '-')}.
+                </div>
+                <div style="border-top:1px solid #d1d5db;padding-top:14px;font-size:13px;color:#374151;text-align:right;">
+                  <strong>Validação interna:</strong><br>
+                  Documento gerado automaticamente pelo sistema EF Cargo Clear.
+                </div>
+              </div>
             </div>
-          </div>
-          <div style="margin-top:20px;border:1px solid #ddd;border-radius:12px;padding:16px;line-height:1.7;">
-            <div><strong>Cliente:</strong> ${escapeHtml(f.cliente_nome || '')}</div>
-            <div><strong>NUIT:</strong> ${escapeHtml(f.cliente_nuit || '-')}</div>
-            <div><strong>Valor recebido:</strong> ${formatMoney(f.total_mt || 0)}</div>
-            <div><strong>Referência:</strong> ${escapeHtml(f.referencia || f.numero_fatura || '-')}</div>
-            <div><strong>Observação:</strong> Liquidação da fatura ${escapeHtml(f.numero_fatura || '')}.</div>
-          </div>
-          <div style="margin-top:18px;font-size:12px;color:#444;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-            <div><strong>Powered by EF Cargo Clear</strong></div>
-            <div>Recibo emitido após confirmação de pagamento.</div>
+
+            <div style="padding:18px 34px 26px;background:#fafafa;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:flex-end;">
+              <div style="font-size:12px;line-height:1.7;color:#6b7280;">
+                EF & Associados – Despachantes Aduaneiros, Lda<br>
+                Recibo emitido após confirmação de pagamento
+              </div>
+              <div style="text-align:right;">
+                <div style="width:220px;border-top:1px solid #9ca3af;margin-bottom:8px;"></div>
+                <div style="font-size:12px;color:#6b7280;">Autorização EF Cargo Clear</div>
+              </div>
+            </div>
           </div>
         </div>
       `;
+    }
+
+    function numberToWordsPt(n) {
+      const unidades = ['zero','um','dois','três','quatro','cinco','seis','sete','oito','nove','dez','onze','doze','treze','catorze','quinze','dezasseis','dezassete','dezoito','dezanove'];
+      const dezenas = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
+      const centenas = ['', 'cem', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
+
+      function abaixoDeMil(x) {
+        x = Number(x || 0);
+        if (x < 20) return unidades[x];
+        if (x < 100) {
+          const d = Math.floor(x / 10), r = x % 10;
+          return dezenas[d] + (r ? ' e ' + unidades[r] : '');
+        }
+        if (x === 100) return 'cem';
+        const c = Math.floor(x / 100), r = x % 100;
+        return (c === 1 ? 'cento' : centenas[c]) + (r ? ' e ' + abaixoDeMil(r) : '');
+      }
+
+      n = Math.max(0, parseInt(n || 0, 10));
+      if (n < 1000) return abaixoDeMil(n);
+      if (n < 1000000) {
+        const mil = Math.floor(n / 1000), r = n % 1000;
+        const milTxt = mil === 1 ? 'mil' : abaixoDeMil(mil) + ' mil';
+        return milTxt + (r ? (r < 100 ? ' e ' : ', ') + abaixoDeMil(r) : '');
+      }
+      const milhoes = Math.floor(n / 1000000), r = n % 1000000;
+      const milhaoTxt = milhoes === 1 ? 'um milhão' : abaixoDeMil(milhoes) + ' milhões';
+      if (!r) return milhaoTxt;
+      return milhaoTxt + (r < 100 ? ' e ' : ', ') + numberToWordsPt(r);
     }
 
     function previewClientInvoice(id) { previewInvoice(id); }
@@ -6818,8 +6839,33 @@ async function loadInternalMessages() {
         return;
       }
       const w = window.open('', '_blank');
-      w.document.write(`<html><head><title>${f.recibo_numero || ('Recibo-' + (f.numero_fatura || ''))}</title></head><body style="margin:20px;">${receiptHtmlFromInvoice(f)}<script>window.onload=()=>window.print();<\/script></body></html>`);
+      if (!w) {
+        alert('O navegador bloqueou a abertura da janela do recibo.');
+        return;
+      }
+      const docHtml = `<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>${escapeHtml(f.recibo_numero || f.numero_recibo || ('Recibo-' + (f.numero_fatura || '')))}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body{margin:0;padding:24px;background:#f4f6f8;}
+    @media print{
+      body{background:#fff;padding:0;}
+    }
+  </style>
+</head>
+<body>
+  ${receiptHtmlFromInvoice(f)}
+</body>
+</html>`;
+      w.document.open();
+      w.document.write(docHtml);
       w.document.close();
+      setTimeout(() => {
+        try { w.focus(); w.print(); } catch (e) {}
+      }, 400);
     }
 
     async function deleteInvoice(id) {
@@ -6911,7 +6957,6 @@ async function loadInternalMessages() {
     function renderFinanceInsights(rows) {
       const box = document.getElementById('financeInsights');
       if (!box) return;
-      if (currentUserRole !== "admin") { box.innerHTML = ""; box.style.display = "none"; return; }
       const totalCobrado = rows.reduce((s,p)=>s+Number(p.valor_cobrado||0),0);
       const totalCustos = rows.reduce((s,p)=>s+Number(p.custos_processo||0),0);
       const totalMargem = rows.reduce((s,p)=>s+Number(p.margem_lucro||0),0);
@@ -6952,563 +6997,6 @@ async function loadInternalMessages() {
         }
       } catch (_) {}
     });
-  
-    
-const I18N = {
-      pt: {
-        logout: 'Sair',
-        internal_panel: 'Painel Interno',
-        menu_processos: 'Processos',
-        menu_quotes: 'Pedidos de cotação',
-        menu_freight: 'Pedidos de frete',
-        menu_finance: 'Financeiro',
-        menu_invoices: 'Faturas',
-        menu_clients: 'Clientes',
-        menu_staff: 'Funcionários',
-        menu_messages: 'Mensagens',
-        process_mgmt_title: 'Gestão de Processos',
-        process_mgmt_sub: 'Atualize estado, documentos em falta, financeiro e documentos do processo.',
-        global_search: 'Pesquisa global',
-        search_all: 'Pesquisar tudo...',
-        client_label: 'Cliente',
-        client_name: 'Nome do cliente',
-        invoice_label: 'Factura',
-        invoice_number: 'Número da factura',
-        status_label: 'Estado',
-        all: 'Todos',
-        clear: 'Limpar',
-        dashboard_analytics: 'Dashboard Analytics',
-        dashboard_analytics_sub: 'Visão geral do negócio com gráficos, alertas e atividade recente.',
-        client_portal: 'Portal do Cliente',
-        contacts: 'Contactos'
-      },
-      en: {
-        logout: 'Log out',
-        internal_panel: 'Internal Panel',
-        menu_processos: 'Processes',
-        menu_quotes: 'Quote Requests',
-        menu_freight: 'Freight Requests',
-        menu_finance: 'Finance',
-        menu_invoices: 'Invoices',
-        menu_clients: 'Clients',
-        menu_staff: 'Employees',
-        menu_messages: 'Messages',
-        process_mgmt_title: 'Process Management',
-        process_mgmt_sub: 'Update status, missing documents, financials and process files.',
-        global_search: 'Global search',
-        search_all: 'Search everything...',
-        client_label: 'Client',
-        client_name: 'Client name',
-        invoice_label: 'Invoice',
-        invoice_number: 'Invoice number',
-        status_label: 'Status',
-        all: 'All',
-        clear: 'Clear',
-        dashboard_analytics: 'Analytics Dashboard',
-        dashboard_analytics_sub: 'Business overview with charts, alerts and recent activity.',
-        client_portal: 'Client Portal',
-        contacts: 'Contacts'
-      },
-      fr: {
-        logout: 'Déconnexion',
-        internal_panel: 'Panneau Interne',
-        menu_processos: 'Processus',
-        menu_quotes: 'Demandes de devis',
-        menu_freight: 'Demandes de transport',
-        menu_finance: 'Finance',
-        menu_invoices: 'Factures',
-        menu_clients: 'Clients',
-        menu_staff: 'Employés',
-        menu_messages: 'Messages',
-        process_mgmt_title: 'Gestion des Processus',
-        process_mgmt_sub: 'Mettez à jour le statut, les documents manquants, les finances et les documents du processus.',
-        global_search: 'Recherche globale',
-        search_all: 'Rechercher tout...',
-        client_label: 'Client',
-        client_name: 'Nom du client',
-        invoice_label: 'Facture',
-        invoice_number: 'Numéro de facture',
-        status_label: 'Statut',
-        all: 'Tous',
-        clear: 'Effacer',
-        dashboard_analytics: 'Tableau de bord analytique',
-        dashboard_analytics_sub: 'Vue d’ensemble de l’activité avec graphiques, alertes et activité récente.',
-        client_portal: 'Portail Client',
-        contacts: 'Contacts'
-      },
-      zh: {
-        logout: '退出',
-        internal_panel: '内部面板',
-        menu_processos: '流程',
-        menu_quotes: '报价请求',
-        menu_freight: '运输请求',
-        menu_finance: '财务',
-        menu_invoices: '发票',
-        menu_clients: '客户',
-        menu_staff: '员工',
-        menu_messages: '消息',
-        process_mgmt_title: '流程管理',
-        process_mgmt_sub: '更新状态、缺失文件、财务和流程文件。',
-        global_search: '全局搜索',
-        search_all: '搜索全部内容...',
-        client_label: '客户',
-        client_name: '客户名称',
-        invoice_label: '发票',
-        invoice_number: '发票编号',
-        status_label: '状态',
-        all: '全部',
-        clear: '清除',
-        dashboard_analytics: '分析仪表板',
-        dashboard_analytics_sub: '通过图表、提醒和最近活动查看业务概况。',
-        client_portal: '客户门户',
-        contacts: '联系方式'
-      }
-    };
-
-    const STATIC_TEXT_TRANSLATIONS = {
-      en: {
-        'Dashboard':'Dashboard','Clientes':'Clients','Processos':'Processes','Liberados':'Released','Pendências':'Pending',
-        'Pedidos de cotação':'Quote Requests','Pedidos de frete':'Freight Requests','Financeiro':'Finance','Faturas':'Invoices',
-        'Funcionários':'Employees','Mensagens':'Messages','Valor cobrado':'Charged amount','Custos do processo':'Process costs',
-        'Margem total':'Total margin','Total de processos':'Total processes','Liberados / Entregues':'Released / Delivered',
-        'Pendências de docs':'Pending documents','Alertas inteligentes':'Smart alerts','Distribuição por estado':'Distribution by status',
-        'Processos por mês':'Processes per month','Cobrado vs custos':'Charged vs costs','Atividade recente':'Recent activity',
-        'Gestão de Processos':'Process Management','Pesquisa global':'Global search','Cliente':'Client','Factura':'Invoice',
-        'Estado':'Status','Limpar':'Clear','Processo':'Process','Regime':'Regime','Responsável':'Responsible','Ação':'Action',
-        'Pedidos de Cotação':'Quote Requests','Tipo':'Type','Documento':'Document','Ações':'Actions','Origem':'Origin',
-        'Destino':'Destination','Pedidos de Frete / Transporte':'Freight / Transport Requests','Rota':'Route','Carga':'Cargo',
-        'Nec. desembaraço':'Needs customs clearance','Valor cotado':'Quoted amount','Painel Financeiro':'Financial Dashboard',
-        'De':'From','Até':'To','Hoje':'Today','7 dias':'7 days','Este mês':'This month','Data':'Date','Custos':'Costs',
-        'Margem':'Margin','Faturação':'Billing','Número da fatura':'Invoice number','Referência':'Reference',
-        'Email do cliente':'Client email','Ligado à cotação':'Linked to quotation','Ligado ao processo':'Linked to process',
-        'Tipo Mercadoria':'Cargo type','Valor':'Amount','Câmbio':'Exchange rate','Contravalor Mt':'Countervalue Mt',
-        'Encargos':'Charges','Prestação de Serviços':'Service provision','Adicionar linha extra':'Add extra line',
-        'Total Mt':'Total Mt','Extenso':'Amount in words','Nota':'Note','Guardar fatura':'Save invoice','Pré-visualizar':'Preview',
-        'Nova fatura':'New invoice','Faturas geradas':'Generated invoices','Número':'Number','Total':'Total',
-        'Gestão de Clientes':'Client Management','Novo cliente':'New client','Nome':'Name','Email':'Email','Contacto':'Contact',
-        'Criar cliente':'Create client','Pesquisar cliente':'Search client','Funcionários EF':'EF Employees',
-        'Novo funcionário':'New employee','Nível':'Level','Activo':'Active','Inactivo':'Inactive','Criar funcionário':'Create employee',
-        'Pesquisar funcionário':'Search employee','Selecione uma conversa.':'Select a conversation.','Mensagem':'Message',
-        'Enviar mensagem':'Send message','Portal do Cliente':'Client Portal','Dashboard Premium do Cliente':'Premium Client Dashboard',
-        'Minhas cotações':'My quotations','Mensagens não lidas':'Unread messages','Docs visíveis':'Visible docs',
-        'Último estado':'Latest status','Nova cotação':'New quotation','Solicitar frete':'Request freight',
-        'Pedir atualização':'Request update','Solicitar contacto':'Request contact','Progresso do último processo':'Latest process progress',
-        'Documentos em falta':'Missing documents','Sem pendências':'No pending items','Próximo passo':'Next step',
-        'Responsável atual':'Current responsible','Consultar processo':'Check process','Solicitar cotação':'Request quotation',
-        'Faturas & Recibos':'Invoices & Receipts','Meus fretes':'My freights','Contactos':'Contacts',
-        'Consultar por número da factura':'Search by invoice number','Pesquisar':'Search','Porto / Fronteira':'Port / Border',
-        'Prazo':'Deadline','Histórico':'History','Fatura e recibo':'Invoice and receipt','Documentos do processo':'Process documents',
-        'Meus processos':'My processes','Nome do cliente':'Client name','Tipo de operação':'Operation type',
-        'Descrição da mercadoria':'Cargo description','Observações':'Notes','Carregar documentos da cotação (até 5 ficheiros)':'Upload quotation documents (up to 5 files)',
-        'Enviar pedido':'Send request'
-      },
-      fr: {
-        'Dashboard':'Tableau de bord','Clientes':'Clients','Processos':'Processus','Liberados':'Libérés','Pendências':'En attente',
-        'Pedidos de cotação':'Demandes de devis','Pedidos de frete':'Demandes de transport','Financeiro':'Finance','Faturas':'Factures',
-        'Funcionários':'Employés','Mensagens':'Messages','Valor cobrado':'Montant facturé','Custos do processo':'Coûts du processus',
-        'Margem total':'Marge totale','Total de processos':'Total des processus','Liberados / Entregues':'Libérés / Livrés',
-        'Pendências de docs':'Documents en attente','Alertas inteligentes':'Alertes intelligentes','Distribuição por estado':'Répartition par statut',
-        'Processos por mês':'Processus par mois','Cobrado vs custos':'Facturé vs coûts','Atividade recente':'Activité récente',
-        'Gestão de Processos':'Gestion des Processus','Pesquisa global':'Recherche globale','Cliente':'Client','Factura':'Facture',
-        'Estado':'Statut','Limpar':'Effacer','Processo':'Processus','Regime':'Régime','Responsável':'Responsable','Ação':'Action',
-        'Pedidos de Cotação':'Demandes de devis','Tipo':'Type','Documento':'Document','Ações':'Actions','Origem':'Origine',
-        'Destino':'Destination','Pedidos de Frete / Transporte':'Demandes de fret / transport','Rota':'Itinéraire','Carga':'Marchandise',
-        'Nec. desembaraço':'Besoin de dédouanement','Valor cotado':'Valeur cotée','Painel Financeiro':'Panneau financier',
-        'De':'De','Até':'À','Hoje':'Aujourd’hui','7 dias':'7 jours','Este mês':'Ce mois-ci','Data':'Date','Custos':'Coûts',
-        'Margem':'Marge','Faturação':'Facturation','Número da fatura':'Numéro de facture','Referência':'Référence',
-        'Email do cliente':'Email du client','Ligado à cotação':'Lié au devis','Ligado ao processo':'Lié au processus',
-        'Tipo Mercadoria':'Type de marchandise','Valor':'Montant','Câmbio':'Taux de change','Contravalor Mt':'Contre-valeur Mt',
-        'Encargos':'Frais','Prestação de Serviços':'Prestation de services','Adicionar linha extra':'Ajouter une ligne',
-        'Total Mt':'Total Mt','Extenso':'Montant en toutes lettres','Nota':'Note','Guardar fatura':'Enregistrer la facture',
-        'Pré-visualizar':'Aperçu','Nova fatura':'Nouvelle facture','Faturas geradas':'Factures générées','Número':'Numéro',
-        'Total':'Total','Gestão de Clientes':'Gestion des Clients','Novo cliente':'Nouveau client','Nome':'Nom','Email':'Email',
-        'Contacto':'Contact','Criar cliente':'Créer un client','Pesquisar cliente':'Rechercher un client','Funcionários EF':'Employés EF',
-        'Novo funcionário':'Nouvel employé','Nível':'Niveau','Activo':'Actif','Inactivo':'Inactif','Criar funcionário':'Créer un employé',
-        'Pesquisar funcionário':'Rechercher un employé','Selecione uma conversa.':'Sélectionnez une conversation.','Mensagem':'Message',
-        'Enviar mensagem':'Envoyer le message','Portal do Cliente':'Portail Client','Dashboard Premium do Cliente':'Tableau de bord premium du client',
-        'Minhas cotações':'Mes devis','Mensagens não lidas':'Messages non lus','Docs visíveis':'Docs visibles',
-        'Último estado':'Dernier statut','Nova cotação':'Nouveau devis','Solicitar frete':'Demander un fret',
-        'Pedir atualização':'Demander une mise à jour','Solicitar contacto':'Demander un contact','Progresso do último processo':'Progression du dernier processus',
-        'Documentos em falta':'Documents manquants','Sem pendências':'Aucune attente','Próximo passo':'Prochaine étape',
-        'Responsável atual':'Responsable actuel','Consultar processo':'Consulter le processus','Solicitar cotação':'Demander un devis',
-        'Faturas & Recibos':'Factures & Reçus','Meus fretes':'Mes frets','Contactos':'Contacts',
-        'Consultar por número da factura':'Consulter par numéro de facture','Pesquisar':'Rechercher','Porto / Fronteira':'Port / Frontière',
-        'Prazo':'Délai','Histórico':'Historique','Fatura e recibo':'Facture et reçu','Documentos do processo':'Documents du processus',
-        'Meus processos':'Mes processus','Nome do cliente':'Nom du client','Tipo de operação':'Type d’opération',
-        'Descrição da mercadoria':'Description de la marchandise','Observações':'Observations',
-        'Carregar documentos da cotação (até 5 ficheiros)':'Télécharger les documents du devis (jusqu’à 5 fichiers)','Enviar pedido':'Envoyer la demande'
-      },
-      zh: {
-        'Dashboard':'仪表板','Clientes':'客户','Processos':'流程','Liberados':'已放行','Pendências':'待处理',
-        'Pedidos de cotação':'报价请求','Pedidos de frete':'运输请求','Financeiro':'财务','Faturas':'发票','Funcionários':'员工',
-        'Mensagens':'消息','Valor cobrado':'收取金额','Custos do processo':'流程成本','Margem total':'总利润',
-        'Total de processos':'流程总数','Liberados / Entregues':'已放行 / 已交付','Pendências de docs':'待补文件',
-        'Alertas inteligentes':'智能提醒','Distribuição por estado':'按状态分布','Processos por mês':'每月流程',
-        'Cobrado vs custos':'收费与成本','Atividade recente':'最近活动','Gestão de Processos':'流程管理','Pesquisa global':'全局搜索',
-        'Cliente':'客户','Factura':'发票','Estado':'状态','Limpar':'清除','Processo':'流程','Regime':'制度',
-        'Responsável':'负责人','Ação':'操作','Pedidos de Cotação':'报价请求','Tipo':'类型','Documento':'文件',
-        'Ações':'操作','Origem':'起点','Destino':'目的地','Pedidos de Frete / Transporte':'运输 / 物流请求','Rota':'路线',
-        'Carga':'货物','Nec. desembaraço':'需要清关','Valor cotado':'报价金额','Painel Financeiro':'财务面板',
-        'De':'从','Até':'到','Hoje':'今天','7 dias':'7天','Este mês':'本月','Data':'日期','Custos':'成本','Margem':'利润',
-        'Faturação':'开票','Número da fatura':'发票编号','Referência':'参考','Email do cliente':'客户邮箱','Ligado à cotação':'关联报价',
-        'Ligado ao processo':'关联流程','Tipo Mercadoria':'货物类型','Valor':'金额','Câmbio':'汇率','Contravalor Mt':'折算金额 Mt',
-        'Encargos':'费用','Prestação de Serviços':'服务费用','Adicionar linha extra':'新增一行','Total Mt':'总计 Mt','Extenso':'金额大写',
-        'Nota':'备注','Guardar fatura':'保存发票','Pré-visualizar':'预览','Nova fatura':'新发票','Faturas geradas':'已生成发票',
-        'Número':'编号','Total':'总计','Gestão de Clientes':'客户管理','Novo cliente':'新客户','Nome':'名称','Email':'邮箱',
-        'Contacto':'联系方式','Criar cliente':'创建客户','Pesquisar cliente':'搜索客户','Funcionários EF':'EF 员工',
-        'Novo funcionário':'新员工','Nível':'级别','Activo':'启用','Inactivo':'停用','Criar funcionário':'创建员工',
-        'Pesquisar funcionário':'搜索员工','Selecione uma conversa.':'请选择一个对话。','Mensagem':'消息','Enviar mensagem':'发送消息',
-        'Portal do Cliente':'客户门户','Dashboard Premium do Cliente':'高级客户仪表板','Minhas cotações':'我的报价',
-        'Mensagens não lidas':'未读消息','Docs visíveis':'可见文件','Último estado':'最新状态','Nova cotação':'新报价',
-        'Solicitar frete':'申请运输','Pedir atualização':'请求更新','Solicitar contacto':'请求联系','Progresso do último processo':'最近流程进度',
-        'Documentos em falta':'缺失文件','Sem pendências':'无待处理项','Próximo passo':'下一步','Responsável atual':'当前负责人',
-        'Consultar processo':'查询流程','Solicitar cotação':'请求报价','Faturas & Recibos':'发票与收据','Meus fretes':'我的运输',
-        'Contactos':'联系方式','Consultar por número da factura':'按发票编号查询','Pesquisar':'搜索','Porto / Fronteira':'港口 / 边境',
-        'Prazo':'期限','Histórico':'历史','Fatura e recibo':'发票与收据','Documentos do processo':'流程文件','Meus processos':'我的流程',
-        'Nome do cliente':'客户名称','Tipo de operação':'操作类型','Descrição da mercadoria':'货物描述','Observações':'备注',
-        'Carregar documentos da cotação (até 5 ficheiros)':'上传报价文件（最多 5 个）','Enviar pedido':'发送请求'
-      }
-    };
-
-    const OPTION_TRANSLATIONS = {
-      en: {'Todos':'All','Recebido':'Received','Em análise':'Under review','Documentos em falta':'Missing documents','Submetido':'Submitted','Em desembaraço':'In customs clearance','Liberado':'Released','Entregue':'Delivered','Importação':'Import','Exportação':'Export','Importação Temporária':'Temporary Import','Exportação Temporária':'Temporary Export','Cabotagem':'Cabotage','Re-importação':'Re-import','Re-exportação':'Re-export','Trânsito':'Transit','Operador':'Operator','Supervisor':'Supervisor','Activo':'Active','Inactivo':'Inactive','Selecione':'Select'},
-      fr: {'Todos':'Tous','Recebido':'Reçu','Em análise':'En analyse','Documentos em falta':'Documents manquants','Submetido':'Soumis','Em desembaraço':'En dédouanement','Liberado':'Libéré','Entregue':'Livré','Importação':'Importation','Exportação':'Exportation','Importação Temporária':'Importation Temporaire','Exportação Temporária':'Exportation Temporaire','Cabotagem':'Cabotage','Re-importação':'Réimportation','Re-exportação':'Réexportation','Trânsito':'Transit','Operador':'Opérateur','Supervisor':'Superviseur','Activo':'Actif','Inactivo':'Inactif','Selecione':'Sélectionner'},
-      zh: {'Todos':'全部','Recebido':'已接收','Em análise':'审核中','Documentos em falta':'缺失文件','Submetido':'已提交','Em desembaraço':'清关中','Liberado':'已放行','Entregue':'已交付','Importação':'进口','Exportação':'出口','Importação Temporária':'临时进口','Exportação Temporária':'临时出口','Cabotagem':'沿海运输','Re-importação':'再进口','Re-exportação':'再出口','Trânsito':'转运','Operador':'操作员','Supervisor':'主管','Activo':'启用','Inactivo':'停用','Selecione':'请选择'}
-    };
-
-
-    const EXTRA_STATIC_TEXT_TRANSLATIONS = {
-      en: {
-        'Bem-vindo':'Welcome',
-        'Portal interno e do cliente para gestão de processos, cotações e faturação.':'Internal and client portal for managing processes, quotations and billing.',
-        'Entrar no sistema':'Log in to the system',
-        'Painel interno e portal do cliente para acompanhamento de despachos e pedidos de cotação.':'Internal panel and client portal for tracking customs clearance and quotation requests.',
-        'Criar conta':'Create account',
-        'Esqueci a password':'Forgot password',
-        'Recuperar password':'Recover password',
-        'Digite o email da conta. Será enviado um link para redefinir a password.':'Enter the account email. A link will be sent to reset the password.',
-        'Enviar link':'Send link',
-        'Voltar ao login':'Back to login',
-        'Definir nova password':'Set new password',
-        'Introduza a nova password da conta.':'Enter the account new password.',
-        'Guardar nova password':'Save new password',
-        'Liberados':'Released',
-        'Pendências':'Pending',
-        'Atividade recente':'Recent activity',
-        'Mensagens':'Messages',
-        'Converse com clientes dentro da plataforma, sem email.':'Talk to clients within the platform, without email.',
-        'Selecione uma conversa.':'Select a conversation.',
-        'Solicitar frete / transporte':'Request freight / transport',
-        'Preencha a rota e os dados da carga. A equipa irá responder com valor e estado do pedido.':'Fill in the route and cargo details. The team will reply with the quote and request status.',
-        'Tipo de carga':'Cargo type',
-        'Quantidade / peso':'Quantity / weight',
-        'Data desejada':'Desired date',
-        'Precisa de desembaraço também?':'Do you also need customs clearance?',
-        'Sim':'Yes',
-        'Não':'No',
-        'Observações':'Notes',
-        'Enviar pedido de frete':'Send freight request',
-        'Meus pedidos de frete':'My freight requests',
-        'Acompanhe aqui os pedidos de transporte já enviados.':'Track transport requests already sent here.',
-        'Ainda não enviou nenhum pedido de frete.':'You have not sent any freight request yet.',
-        'Contactos e localização':'Contacts and location',
-        'Informações úteis da empresa.':'Useful company information.',
-        'Empresa':'Company',
-        'Telefone':'Phone',
-        'WhatsApp':'WhatsApp',
-        'Endereço':'Address',
-        'Horário':'Schedule',
-        'Solicitar contacto':'Request contact',
-        'Pede que a nossa equipa entre em contacto consigo.':'Ask our team to contact you.',
-        'Pedir atualização':'Request update',
-        'Solicita à equipa uma atualização rápida do seu processo.':'Ask the team for a quick update on your process.',
-        'Nova cotação':'New quote',
-        'Envie um novo pedido com os documentos necessários.':'Send a new request with the required documents.',
-        'Solicitar frete':'Request freight',
-        'Peça transporte para a sua carga e acompanhe a resposta.':'Request transport for your cargo and track the response.',
-        'Progresso do último processo':'Progress of the latest process',
-        'Sem processo recente':'No recent process',
-        'Etapa atual:':'Current stage:',
-        'Última atualização:':'Last update:',
-        'Sem pendências':'No pending items',
-        'Próximo passo':'Next step',
-        'Responsável atual':'Current responsible',
-        'Consultar processo':'Check process',
-        'Minhas cotações':'My quotations',
-        'Faturas & Recibos':'Invoices & Receipts',
-        'Meus fretes':'My freights',
-        'Contactos':'Contacts',
-        'Consultar por número da factura':'Search by invoice number',
-        'Digite o número da factura para localizar o processo correspondente.':'Enter the invoice number to locate the corresponding process.',
-        'Histórico':'History',
-        'Fatura e recibo':'Invoice and receipt',
-        'Documentos do processo':'Process documents',
-        'Meus processos':'My processes',
-        'Veja todos os seus processos sem precisar pesquisar e carregue documentos pendentes quando necessário.':'View all your processes without searching and upload pending documents when needed.',
-        'Abrir detalhe':'Open details',
-        'Carregar documentos em falta':'Upload missing documents',
-        'Ver fatura':'View invoice',
-        'Baixar fatura':'Download invoice',
-        'Baixar recibo':'Download receipt',
-        'Carregar documentos deste processo (até 5 ficheiros)':'Upload documents for this process (up to 5 files)',
-        'Enviar documentos':'Send documents',
-        'Fale connosco diretamente dentro da plataforma.':'Talk to us directly within the platform.',
-        'Sua mensagem':'Your message',
-        'Escreva aqui a sua mensagem':'Write your message here',
-        'Faturas e recibos':'Invoices and receipts',
-        'Baixe as faturas emitidas para a sua conta e, quando houver pagamento registado, o respetivo recibo.':'Download invoices issued to your account and, when payment is recorded, the respective receipt.',
-        'Pagamento':'Payment',
-        'Pago':'Paid',
-        'Recibo disponível':'Receipt available',
-        'Ainda não enviou nenhum pedido de cotação.':'You have not sent any quotation request yet.',
-        'Aqui pode acompanhar todos os pedidos de cotação já enviados pela sua empresa.':'Here you can track all quotation requests already sent by your company.'
-      },
-      fr: {
-        'Bem-vindo':'Bienvenue',
-        'Portal interno e do cliente para gestão de processos, cotações e faturação.':'Portail interne et client pour la gestion des processus, devis et facturation.',
-        'Entrar no sistema':'Se connecter au système',
-        'Painel interno e portal do cliente para acompanhamento de despachos e pedidos de cotação.':'Panneau interne et portail client pour le suivi des dédouanements et des demandes de devis.',
-        'Criar conta':'Créer un compte',
-        'Esqueci a password':'Mot de passe oublié',
-        'Recuperar password':'Récupérer le mot de passe',
-        'Digite o email da conta. Será enviado um link para redefinir a password.':'Saisissez l’email du compte. Un lien sera envoyé pour réinitialiser le mot de passe.',
-        'Enviar link':'Envoyer le lien',
-        'Voltar ao login':'Retour à la connexion',
-        'Definir nova password':'Définir un nouveau mot de passe',
-        'Introduza a nova password da conta.':'Saisissez le nouveau mot de passe du compte.',
-        'Guardar nova password':'Enregistrer le nouveau mot de passe',
-        'Liberados':'Libérés',
-        'Pendências':'En attente',
-        'Atividade recente':'Activité récente',
-        'Mensagens':'Messages',
-        'Converse com clientes dentro da plataforma, sem email.':'Discutez avec les clients dans la plateforme, sans email.',
-        'Selecione uma conversa.':'Sélectionnez une conversation.',
-        'Solicitar frete / transporte':'Demander un fret / transport',
-        'Preencha a rota e os dados da carga. A equipa irá responder com valor e estado do pedido.':'Renseignez l’itinéraire et les données de la cargaison. L’équipe répondra avec le montant et l’état de la demande.',
-        'Tipo de carga':'Type de cargaison',
-        'Quantidade / peso':'Quantité / poids',
-        'Data desejada':'Date souhaitée',
-        'Precisa de desembaraço também?':'Avez-vous aussi besoin du dédouanement ?',
-        'Sim':'Oui',
-        'Não':'Non',
-        'Observações':'Observations',
-        'Enviar pedido de frete':'Envoyer la demande de fret',
-        'Meus pedidos de frete':'Mes demandes de fret',
-        'Acompanhe aqui os pedidos de transporte já enviados.':'Suivez ici les demandes de transport déjà envoyées.',
-        'Ainda não enviou nenhum pedido de frete.':'Vous n’avez encore envoyé aucune demande de fret.',
-        'Contactos e localização':'Contacts et localisation',
-        'Informações úteis da empresa.':'Informations utiles sur l’entreprise.',
-        'Empresa':'Entreprise',
-        'Telefone':'Téléphone',
-        'WhatsApp':'WhatsApp',
-        'Endereço':'Adresse',
-        'Horário':'Horaires',
-        'Solicitar contacto':'Demander un contact',
-        'Pede que a nossa equipa entre em contacto consigo.':'Demandez à notre équipe de vous contacter.',
-        'Pedir atualização':'Demander une mise à jour',
-        'Solicita à equipa uma atualização rápida do seu processo.':'Demandez à l’équipe une mise à jour rapide de votre processus.',
-        'Nova cotação':'Nouveau devis',
-        'Envie um novo pedido com os documentos necessários.':'Envoyez une nouvelle demande avec les documents nécessaires.',
-        'Solicitar frete':'Demander un fret',
-        'Peça transporte para a sua carga e acompanhe a resposta.':'Demandez le transport de votre cargaison et suivez la réponse.',
-        'Progresso do último processo':'Progression du dernier processus',
-        'Sem processo recente':'Aucun processus récent',
-        'Etapa atual:':'Étape actuelle :',
-        'Última atualização:':'Dernière mise à jour :',
-        'Sem pendências':'Aucune attente',
-        'Próximo passo':'Prochaine étape',
-        'Responsável atual':'Responsable actuel',
-        'Consultar processo':'Consulter le processus',
-        'Minhas cotações':'Mes devis',
-        'Faturas & Recibos':'Factures & reçus',
-        'Meus fretes':'Mes frets',
-        'Contactos':'Contacts',
-        'Consultar por número da factura':'Rechercher par numéro de facture',
-        'Digite o número da factura para localizar o processo correspondente.':'Saisissez le numéro de facture pour localiser le processus correspondant.',
-        'Histórico':'Historique',
-        'Fatura e recibo':'Facture et reçu',
-        'Documentos do processo':'Documents du processus',
-        'Meus processos':'Mes processus',
-        'Veja todos os seus processos sem precisar pesquisar e carregue documentos pendentes quando necessário.':'Consultez tous vos processus sans rechercher et téléchargez les documents manquants si nécessaire.',
-        'Abrir detalhe':'Ouvrir le détail',
-        'Carregar documentos em falta':'Télécharger les documents manquants',
-        'Ver fatura':'Voir la facture',
-        'Baixar fatura':'Télécharger la facture',
-        'Baixar recibo':'Télécharger le reçu',
-        'Carregar documentos deste processo (até 5 ficheiros)':'Télécharger les documents de ce processus (jusqu’à 5 fichiers)',
-        'Enviar documentos':'Envoyer les documents',
-        'Fale connosco diretamente dentro da plataforma.':'Parlez-nous directement dans la plateforme.',
-        'Sua mensagem':'Votre message',
-        'Escreva aqui a sua mensagem':'Écrivez votre message ici',
-        'Faturas e recibos':'Factures et reçus',
-        'Baixe as faturas emitidas para a sua conta e, quando houver pagamento registado, o respetivo recibo.':'Téléchargez les factures émises pour votre compte et, lorsque le paiement est enregistré, le reçu correspondant.',
-        'Pagamento':'Paiement',
-        'Pago':'Payé',
-        'Recibo disponível':'Reçu disponible',
-        'Ainda não enviou nenhum pedido de cotação.':'Vous n’avez encore envoyé aucune demande de devis.',
-        'Aqui pode acompanhar todos os pedidos de cotação já enviados pela sua empresa.':'Ici, vous pouvez suivre toutes les demandes de devis déjà envoyées par votre entreprise.'
-      },
-      zh: {
-        'Etapa atual:':'当前阶段：',
-        'Última atualização:':'最后更新：',
-        'Pagamento':'付款',
-        'Pago':'已支付'
-      }
-    };
-    Object.keys(EXTRA_STATIC_TEXT_TRANSLATIONS).forEach(lang => {
-      Object.assign(STATIC_TEXT_TRANSLATIONS[lang], EXTRA_STATIC_TEXT_TRANSLATIONS[lang]);
-    });
-
-    const __nodeOriginalText = new WeakMap();
-
-    function translateDynamicTextNodes(lang, root = document.body) {
-      const dict = STATIC_TEXT_TRANSLATIONS[lang] || {};
-      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-        acceptNode(node) {
-          const parent = node.parentElement;
-          if (!parent) return NodeFilter.FILTER_REJECT;
-          const tag = parent.tagName;
-          if (['SCRIPT','STYLE','TEXTAREA','OPTION'].includes(tag)) return NodeFilter.FILTER_REJECT;
-          const txt = (node.nodeValue || '').trim();
-          if (!txt) return NodeFilter.FILTER_REJECT;
-          return NodeFilter.FILTER_ACCEPT;
-        }
-      });
-      let node;
-      while ((node = walker.nextNode())) {
-        if (!__nodeOriginalText.has(node)) __nodeOriginalText.set(node, node.nodeValue);
-        const original = __nodeOriginalText.get(node);
-        const trimmed = (original || '').trim();
-        if (!trimmed) continue;
-        if (lang === 'pt') {
-          node.nodeValue = original;
-          continue;
-        }
-        const translated = dict[trimmed];
-        if (translated) {
-          const replaced = original.replace(trimmed, translated);
-          node.nodeValue = replaced;
-        }
-      }
-    }
-
-    function scheduleRefreshTranslations() {
-      clearTimeout(window.__efLangTimer);
-      window.__efLangTimer = setTimeout(() => {
-    
-    const __i18nObserver = new MutationObserver(() => {
-      scheduleRefreshTranslations();
-    });
-
-    window.addEventListener('load', () => {
-      try {
-        __i18nObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
-      } catch (_) {}
-      scheduleRefreshTranslations();
-    });
-
-    applyTranslations();
-        translateDynamicTextNodes(currentLanguage, document.body);
-      }, 20);
-    }
-
-    function applyStaticTranslations(lang) {
-      const dict = STATIC_TEXT_TRANSLATIONS[lang] || {};
-      document.querySelectorAll('label, button, h1, h2, h3, h4, p, small, strong, th, .kpi-title, .chart-title, .sidebar-btn, .sidebar-title, .section-sub, .empty-chat').forEach(el => {
-        if (!el.dataset.origText) el.dataset.origText = (el.textContent || '').trim();
-        const base = el.dataset.origText;
-        if (!base || el.hasAttribute('data-i18n')) return;
-        if (lang === 'pt') {
-          if (el.children.length === 0) el.textContent = base;
-          else if (el.classList.contains('sidebar-btn') || el.classList.contains('tab-btn')) el.childNodes[0].textContent = base + ' ';
-          return;
-        }
-        const translated = dict[base];
-        if (!translated) return;
-        if (el.classList.contains('sidebar-btn') || el.classList.contains('tab-btn')) {
-          if (el.childNodes.length) el.childNodes[0].textContent = translated + ' ';
-        } else if (el.children.length === 0) {
-          el.textContent = translated;
-        }
-      });
-
-      document.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => {
-        if (!el.dataset.origPlaceholder) el.dataset.origPlaceholder = el.getAttribute('placeholder') || '';
-        const base = el.dataset.origPlaceholder;
-        if (lang === 'pt') {
-          el.setAttribute('placeholder', base);
-          return;
-        }
-        const phDict = {
-          en: {'Digite o email':'Enter email','Digite a password':'Enter password','Nome da empresa':'Company name','Telefone':'Phone','Confirmar password':'Confirm password','Nova password':'New password','Nome do cliente':'Client name','Número da factura':'Invoice number','Filtrar cliente':'Filter client','Ex: 0101':'Ex: 0101','País / cidade de origem':'Country / origin city','País / cidade de destino':'Country / destination city','Descreva a mercadoria':'Describe the cargo','Informações adicionais':'Additional information'},
-          fr: {'Digite o email':'Entrez l’email','Digite a password':'Entrez le mot de passe','Nome da empresa':'Nom de l’entreprise','Telefone':'Téléphone','Confirmar password':'Confirmer le mot de passe','Nova password':'Nouveau mot de passe','Nome do cliente':'Nom du client','Número da factura':'Numéro de facture','Filtrar cliente':'Filtrer le client','Ex: 0101':'Ex : 0101','País / cidade de origem':'Pays / ville d’origine','País / cidade de destino':'Pays / ville de destination','Descreva a mercadoria':'Décrivez la marchandise','Informações adicionais':'Informations supplémentaires'},
-          zh: {'Digite o email':'请输入邮箱','Digite a password':'请输入密码','Nome da empresa':'公司名称','Telefone':'电话','Confirmar password':'确认密码','Nova password':'新密码','Nome do cliente':'客户名称','Número da factura':'发票编号','Filtrar cliente':'筛选客户','Ex: 0101':'例如：0101','País / cidade de origem':'原产国家 / 城市','País / cidade de destino':'目的国家 / 城市','Descreva a mercadoria':'描述货物','Informações adicionais':'附加信息'}
-        }[lang] || {};
-        if (phDict[base]) el.setAttribute('placeholder', phDict[base]);
-      });
-
-      document.querySelectorAll('select option').forEach(opt => {
-        if (!opt.dataset.origText) opt.dataset.origText = opt.textContent.trim();
-        const base = opt.dataset.origText;
-        if (lang === 'pt') {
-          opt.textContent = base;
-          return;
-        }
-        const t = (OPTION_TRANSLATIONS[lang] || {})[base];
-        if (t) opt.textContent = t;
-      });
-    }
-
-    let currentLanguage = localStorage.getItem('efcargo_lang') || 'pt';
-
-    function applyTranslations() {
-      const dict = I18N[currentLanguage] || I18N.pt;
-      document.documentElement.lang = currentLanguage === 'zh' ? 'zh-CN' : currentLanguage;
-      document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (dict[key]) el.innerHTML = dict[key];
-      });
-      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-        const key = el.getAttribute('data-i18n-placeholder');
-        if (dict[key]) el.setAttribute('placeholder', dict[key]);
-      });
-      applyStaticTranslations(currentLanguage);
-      translateDynamicTextNodes(currentLanguage, document.body);
-      const sw = document.getElementById('languageSwitcher');
-      if (sw) sw.value = currentLanguage;
-    }
-
-    function setLanguage(lang) {
-      currentLanguage = I18N[lang] ? lang : 'pt';
-      localStorage.setItem('efcargo_lang', currentLanguage);
-  
-    const __i18nObserver = new MutationObserver(() => {
-      scheduleRefreshTranslations();
-    });
-
-    window.addEventListener('load', () => {
-      try {
-        __i18nObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
-      } catch (_) {}
-      scheduleRefreshTranslations();
-    });
-
-    applyTranslations();
-    }
-
-
-    const __i18nObserver = new MutationObserver(() => {
-      scheduleRefreshTranslations();
-    });
-
-    window.addEventListener('load', () => {
-      try {
-        __i18nObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
-      } catch (_) {}
-      scheduleRefreshTranslations();
-    });
-
-    applyTranslations();
-</script>
+  </script>
 </body>
 </html>
