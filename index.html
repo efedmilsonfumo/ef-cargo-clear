@@ -6688,138 +6688,143 @@
 
 
     function receiptHtmlFromInvoice(f) {
-      const issuedAt = (f.recibo_emitido_at || f.pago_at || new Date().toISOString());
-      const issuedDate = escapeHtml(String(issuedAt).slice(0,10));
-      const reciboNo = escapeHtml(f.recibo_numero || f.numero_recibo || ('RCB-' + (f.numero_fatura || '')));
-      const cliente = escapeHtml(f.cliente_nome || '');
-      const clienteNuit = escapeHtml(f.cliente_nuit || '-');
-      const clienteEmail = escapeHtml(f.cliente_email || '-');
-      const clienteContacto = escapeHtml(f.cliente_contacto || f.contacto || '-');
-      const valorRecebido = formatMoney(f.total_mt || 0);
-      const valorExtenso = escapeHtml(f.extenso || 'Valor recebido conforme indicado neste recibo.');
+      const reciboNumero = escapeHtml(f.recibo_numero || f.numero_recibo || ('RCB-' + (f.numero_fatura || '')));
+      const dataPagamento = escapeHtml((f.recibo_emitido_at || f.pago_at || new Date().toISOString()).slice(0, 10));
+      const clienteNome = escapeHtml(f.cliente_nome || '-');
+      const clienteEmail = escapeHtml(f.cliente_email || f.email_cliente || '-');
+      const clienteNuit = escapeHtml(f.cliente_nuit || f.nuit || '-');
       const referencia = escapeHtml(f.referencia || f.numero_fatura || '-');
-      const numeroFatura = escapeHtml(f.numero_fatura || '-');
-      const tipoMercadoria = escapeHtml(f.tipo_mercadoria || f.mercadoria || '-');
-      const origem = escapeHtml(f.origem || '-');
-      const observacao = escapeHtml(f.payment_notes || (`Liquidação da fatura ${f.numero_fatura || ''}.`));
-      const empresa = escapeHtml(cfg.empresa_nome || 'EF & ASSOCIADOS DESP ADUANEIROS LDA');
-      const empresaEmail = escapeHtml(cfg.email || 'ef.edmilsonfumo@gmail.com');
-      const empresaTelefone = escapeHtml(cfg.telefone || '+258 --- --- ---');
-      const empresaEndereco = escapeHtml(cfg.endereco || 'Maputo, Moçambique');
-      const empresaNuit = escapeHtml(cfg.nuit || 'NUIT não configurado');
-      const bancoTitular = escapeHtml(cfg.banco_titular || 'EF & ASSOCIADOS DESP ADUANEIROS LDA');
-      const bancoNome = escapeHtml(cfg.banco_nome || 'Standard Bank');
-      const bancoConta = escapeHtml(cfg.banco_conta || '1258956341001');
-      const bancoNib = escapeHtml(cfg.banco_nib || '000301250895634100135');
-      const bancoIban = escapeHtml(cfg.banco_iban || 'MZ59000301250895634100135');
+      const valor = formatMoney(f.total_mt || 0);
+      const valorExtenso = escapeHtml(numberToWordsPt(Math.round(Number(f.total_mt || 0))) + ' meticais');
+      const formaPagamento = escapeHtml(f.payment_notes || 'Pagamento confirmado no sistema');
+      const processoRef = escapeHtml(f.processo_numero || f.numero_processo || f.fatura_processo || '-');
+      const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=' + encodeURIComponent('https://ef-cargo-clear.vercel.app/validar-recibo.html?ref=' + (f.recibo_numero || f.numero_recibo || ('RCB-' + (f.numero_fatura || ''))));
 
       return `
-        <div style="font-family:Arial,sans-serif;color:#111;max-width:980px;margin:0 auto;background:#fff;border:1px solid #e5e7eb;border-radius:24px;overflow:hidden;box-shadow:0 18px 38px rgba(15,23,42,.08);">
-          <div style="background:linear-gradient(135deg,#7f0012 0%, #BE001A 55%, #d94358 100%);padding:28px 32px;color:#fff;">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap;">
-              <div style="max-width:62%;">
-                <div style="font-size:12px;letter-spacing:.18em;text-transform:uppercase;opacity:.88;font-weight:700;">Comprovativo oficial de pagamento</div>
-                <div style="font-size:34px;font-weight:800;letter-spacing:-.03em;margin-top:8px;">RECIBO</div>
-                <div style="margin-top:12px;font-size:14px;line-height:1.7;opacity:.96;">
-                  <strong>${empresa}</strong><br>
-                  NUIT: ${empresaNuit}<br>
-                  ${empresaEndereco}<br>
-                  Tel: ${empresaTelefone} • Email: ${empresaEmail}
+        <div style="font-family:Arial,sans-serif;color:#111;max-width:980px;margin:0 auto;background:#ffffff;">
+          <div style="border:1px solid #e5e7eb;border-radius:24px;overflow:hidden;box-shadow:0 16px 40px rgba(15,23,42,.08);">
+            <div style="background:linear-gradient(135deg,#7f0012 0%,#be001a 55%,#e24a5d 100%);padding:30px 34px;color:#fff;">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;">
+                <div>
+                  <div style="font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.92;">EF & Associados, Lda</div>
+                  <div style="font-size:30px;font-weight:800;margin-top:8px;">RECIBO</div>
+                  <div style="font-size:14px;opacity:.92;margin-top:8px;line-height:1.6;">
+                    Despachantes Aduaneiros<br>
+                    Documento emitido após confirmação de pagamento
+                  </div>
                 </div>
-              </div>
-              <div style="min-width:250px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:18px;padding:16px 18px;backdrop-filter:blur(4px);">
-                <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.85;font-weight:700;">Número do recibo</div>
-                <div style="font-size:26px;font-weight:800;margin-top:6px;">${reciboNo}</div>
-                <div style="margin-top:14px;font-size:14px;line-height:1.7;">
-                  <strong>Data de emissão:</strong> ${issuedDate}<br>
-                  <strong>Refª Fatura:</strong> ${numeroFatura}<br>
-                  <strong>Referência:</strong> ${referencia}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div style="padding:28px 32px 10px 32px;">
-            <div style="display:grid;grid-template-columns:1.15fr .85fr;gap:18px;">
-              <div style="border:1px solid #e5e7eb;border-radius:18px;padding:18px 20px;background:linear-gradient(180deg,#fff 0%,#fcfcfc 100%);">
-                <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#6b7280;font-weight:800;">Recebemos de</div>
-                <div style="font-size:24px;font-weight:800;color:#111827;margin-top:8px;">${cliente}</div>
-                <div style="margin-top:12px;font-size:14px;line-height:1.8;color:#374151;">
-                  <strong>NUIT:</strong> ${clienteNuit}<br>
-                  <strong>Email:</strong> ${clienteEmail}<br>
-                  <strong>Contacto:</strong> ${clienteContacto}
-                </div>
-              </div>
-
-              <div style="border:1px solid #fee2e2;border-radius:18px;padding:18px 20px;background:linear-gradient(180deg,#fff7f8 0%,#fff 100%);">
-                <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#9f1239;font-weight:800;">Valor recebido</div>
-                <div style="font-size:32px;font-weight:900;color:#BE001A;margin-top:8px;">${valorRecebido}</div>
-                <div style="margin-top:10px;font-size:13px;line-height:1.7;color:#7f1d1d;">
-                  Recebimento confirmado e registado no sistema EF Cargo Clear.
+                <div style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:16px 18px;border-radius:18px;min-width:250px;text-align:right;">
+                  <div style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;opacity:.9;">Número do recibo</div>
+                  <div style="font-size:24px;font-weight:800;margin-top:6px;">${reciboNumero}</div>
+                  <div style="margin-top:10px;font-size:13px;line-height:1.6;">
+                    <strong>Data:</strong> ${dataPagamento}<br>
+                    <strong>Ref. fatura:</strong> ${escapeHtml(f.numero_fatura || '-')}
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div style="margin-top:18px;border:1px solid #e5e7eb;border-radius:18px;padding:22px;background:#fff;">
-              <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#6b7280;font-weight:800;">Declaração de recebimento</div>
-              <div style="margin-top:12px;font-size:15px;line-height:1.9;color:#111827;">
-                Recebemos de <strong>${cliente}</strong> o valor de <strong>${valorRecebido}</strong>,
-                correspondente a <em>${valorExtenso}</em>, referente à liquidação da
-                fatura <strong>${numeroFatura}</strong>, emitida pelos serviços de desembaraço
-                aduaneiro e operações conexas prestados por <strong>${empresa}</strong>.
-              </div>
-            </div>
-
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px;">
-              <div style="border:1px solid #e5e7eb;border-radius:18px;padding:18px 20px;background:#fff;">
-                <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#6b7280;font-weight:800;">Detalhes da operação</div>
-                <div style="margin-top:12px;font-size:14px;line-height:1.9;color:#374151;">
-                  <strong>Fatura liquidada:</strong> ${numeroFatura}<br>
-                  <strong>Referência interna:</strong> ${referencia}<br>
-                  <strong>Mercadoria / serviço:</strong> ${tipoMercadoria}<br>
-                  <strong>Origem:</strong> ${origem}<br>
-                  <strong>Data do pagamento:</strong> ${issuedDate}
+            <div style="padding:30px 34px 18px;">
+              <div style="display:grid;grid-template-columns:1.2fr .8fr;gap:18px;">
+                <div style="border:1px solid #e5e7eb;border-radius:18px;padding:18px 20px;background:#fff;">
+                  <div style="font-size:12px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Recebemos de</div>
+                  <div style="font-size:22px;font-weight:800;color:#111827;">${clienteNome}</div>
+                  <div style="margin-top:12px;font-size:14px;line-height:1.7;color:#374151;">
+                    <strong>NUIT:</strong> ${clienteNuit}<br>
+                    <strong>Email:</strong> ${clienteEmail}
+                  </div>
+                </div>
+                <div style="border:1px solid #e5e7eb;border-radius:18px;padding:18px 20px;background:#fff;">
+                  <div style="font-size:12px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Valor recebido</div>
+                  <div style="font-size:32px;font-weight:800;color:#166534;line-height:1;">${valor}</div>
+                  <div style="margin-top:10px;font-size:13px;line-height:1.6;color:#4b5563;">${valorExtenso}</div>
                 </div>
               </div>
 
-              <div style="border:1px solid #e5e7eb;border-radius:18px;padding:18px 20px;background:#fff;">
-                <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#6b7280;font-weight:800;">Dados bancários / validação</div>
-                <div style="margin-top:12px;font-size:14px;line-height:1.9;color:#374151;">
-                  <strong>Titular:</strong> ${bancoTitular}<br>
-                  <strong>Banco:</strong> ${bancoNome}<br>
-                  <strong>Conta:</strong> ${bancoConta}<br>
-                  <strong>NIB:</strong> ${bancoNib}<br>
-                  <strong>IBAN:</strong> ${bancoIban}
+              <div style="margin-top:18px;border:1px solid #e5e7eb;border-radius:18px;padding:20px;background:#fcfcfd;">
+                <div style="font-size:15px;line-height:1.85;color:#1f2937;">
+                  Declaramos que recebemos de <strong>${clienteNome}</strong> o montante de <strong>${valor}</strong>,
+                  referente à liquidação da fatura <strong>${escapeHtml(f.numero_fatura || '-')}</strong>, emitida por
+                  <strong>EF & Associados – Despachantes Aduaneiros, Lda</strong>.
+                </div>
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px;">
+                <div style="border:1px solid #e5e7eb;border-radius:18px;padding:18px 20px;background:#fff;">
+                  <div style="font-size:12px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Detalhes do pagamento</div>
+                  <div style="font-size:14px;line-height:1.8;color:#374151;">
+                    <strong>Forma de pagamento:</strong> ${formaPagamento}<br>
+                    <strong>Data de pagamento:</strong> ${dataPagamento}<br>
+                    <strong>Referência:</strong> ${referencia}<br>
+                    <strong>Processo:</strong> ${processoRef}
+                  </div>
+                </div>
+                <div style="border:1px solid #e5e7eb;border-radius:18px;padding:18px 20px;background:#fff;display:flex;justify-content:space-between;gap:16px;align-items:flex-start;">
+                  <div>
+                    <div style="font-size:12px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Validação digital</div>
+                    <div style="font-size:13px;line-height:1.7;color:#4b5563;">
+                      Este recibo possui código de validação digital para conferência da autenticidade.
+                    </div>
+                  </div>
+                  <img src="${qrUrl}" alt="QR Code de validação" style="width:130px;height:130px;border:1px solid #e5e7eb;border-radius:12px;padding:8px;background:#fff;" />
+                </div>
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px;">
+                <div style="border-top:1px solid #d1d5db;padding-top:14px;font-size:13px;color:#374151;">
+                  <strong>Observação:</strong><br>
+                  Liquidação integral da fatura ${escapeHtml(f.numero_fatura || '-')}.
+                </div>
+                <div style="border-top:1px solid #d1d5db;padding-top:14px;font-size:13px;color:#374151;text-align:right;">
+                  <strong>Validação interna:</strong><br>
+                  Documento gerado automaticamente pelo sistema EF Cargo Clear.
                 </div>
               </div>
             </div>
 
-            <div style="margin-top:18px;border:1px solid #e5e7eb;border-radius:18px;padding:18px 20px;background:linear-gradient(180deg,#fafafa 0%,#fff 100%);">
-              <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#6b7280;font-weight:800;">Observações</div>
-              <div style="margin-top:10px;font-size:14px;line-height:1.8;color:#374151;">${observacao}</div>
-            </div>
-
-            <div style="display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-top:34px;align-items:flex-end;">
-              <div style="flex:1;min-width:260px;">
-                <div style="height:1px;background:#cbd5e1;margin-bottom:10px;"></div>
-                <div style="font-size:13px;color:#475569;"><strong>Recebido por:</strong> ${empresa}</div>
-                <div style="font-size:12px;color:#64748b;margin-top:4px;">Documento emitido automaticamente pelo sistema EF Cargo Clear após confirmação de pagamento.</div>
+            <div style="padding:18px 34px 26px;background:#fafafa;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:flex-end;">
+              <div style="font-size:12px;line-height:1.7;color:#6b7280;">
+                EF & Associados – Despachantes Aduaneiros, Lda<br>
+                Recibo emitido após confirmação de pagamento
               </div>
-              <div style="text-align:right;min-width:220px;">
-                <div style="display:inline-block;padding:12px 18px;border-radius:14px;background:#f8fafc;border:1px solid #e2e8f0;">
-                  <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#64748b;font-weight:800;">Estado</div>
-                  <div style="font-size:18px;font-weight:800;color:#166534;margin-top:4px;">Pagamento Confirmado</div>
-                </div>
+              <div style="text-align:right;">
+                <div style="width:220px;border-top:1px solid #9ca3af;margin-bottom:8px;"></div>
+                <div style="font-size:12px;color:#6b7280;">Autorização EF Cargo Clear</div>
               </div>
             </div>
-          </div>
-
-          <div style="margin-top:18px;padding:16px 32px;background:#111827;color:#e5e7eb;font-size:12px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-            <div><strong>EF Cargo Clear</strong> • Recibo gerado digitalmente</div>
-            <div>Este documento comprova o recebimento do valor acima indicado.</div>
           </div>
         </div>
       `;
+    }
+
+    function numberToWordsPt(n) {
+      const unidades = ['zero','um','dois','três','quatro','cinco','seis','sete','oito','nove','dez','onze','doze','treze','catorze','quinze','dezasseis','dezassete','dezoito','dezanove'];
+      const dezenas = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
+      const centenas = ['', 'cem', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
+
+      function abaixoDeMil(x) {
+        x = Number(x || 0);
+        if (x < 20) return unidades[x];
+        if (x < 100) {
+          const d = Math.floor(x / 10), r = x % 10;
+          return dezenas[d] + (r ? ' e ' + unidades[r] : '');
+        }
+        if (x === 100) return 'cem';
+        const c = Math.floor(x / 100), r = x % 100;
+        return (c === 1 ? 'cento' : centenas[c]) + (r ? ' e ' + abaixoDeMil(r) : '');
+      }
+
+      n = Math.max(0, parseInt(n || 0, 10));
+      if (n < 1000) return abaixoDeMil(n);
+      if (n < 1000000) {
+        const mil = Math.floor(n / 1000), r = n % 1000;
+        const milTxt = mil === 1 ? 'mil' : abaixoDeMil(mil) + ' mil';
+        return milTxt + (r ? (r < 100 ? ' e ' : ', ') + abaixoDeMil(r) : '');
+      }
+      const milhoes = Math.floor(n / 1000000), r = n % 1000000;
+      const milhaoTxt = milhoes === 1 ? 'um milhão' : abaixoDeMil(milhoes) + ' milhões';
+      if (!r) return milhaoTxt;
+      return milhaoTxt + (r < 100 ? ' e ' : ', ') + numberToWordsPt(r);
     }
 
     function previewClientInvoice(id) { previewInvoice(id); }
@@ -6834,8 +6839,33 @@
         return;
       }
       const w = window.open('', '_blank');
-      w.document.write(`<html><head><title>${f.recibo_numero || ('Recibo-' + (f.numero_fatura || ''))}</title></head><body style="margin:20px;">${receiptHtmlFromInvoice(f)}<script>window.onload=()=>window.print();<\/script></body></html>`);
+      if (!w) {
+        alert('O navegador bloqueou a abertura da janela do recibo.');
+        return;
+      }
+      const docHtml = `<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>${escapeHtml(f.recibo_numero || f.numero_recibo || ('Recibo-' + (f.numero_fatura || '')))}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body{margin:0;padding:24px;background:#f4f6f8;}
+    @media print{
+      body{background:#fff;padding:0;}
+    }
+  </style>
+</head>
+<body>
+  ${receiptHtmlFromInvoice(f)}
+</body>
+</html>`;
+      w.document.open();
+      w.document.write(docHtml);
       w.document.close();
+      setTimeout(() => {
+        try { w.focus(); w.print(); } catch (e) {}
+      }, 400);
     }
 
     async function deleteInvoice(id) {
