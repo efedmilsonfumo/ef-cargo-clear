@@ -1086,7 +1086,7 @@
               <div class="kpi"><div class="kpi-title">Pedidos de cotação</div><div class="kpi-value" id="cotacoesCount">0</div></div>
             </div>
 
-            <div class="stat-row" style="margin-top:18px;">
+            <div class="stat-row" id="adminFinanceSummaryRow" style="margin-top:18px;">
               <div class="kpi"><div class="kpi-title">Valor cobrado</div><div class="kpi-value" id="valorCobradoTotal">0</div></div>
               <div class="kpi"><div class="kpi-title">Custos do processo</div><div class="kpi-value" id="custosTotal">0</div></div>
               <div class="kpi"><div class="kpi-title">Margem total</div><div class="kpi-value" id="margemTotal">0</div></div>
@@ -1105,7 +1105,7 @@
                   <div class="kpi"><div class="kpi-title">Total de processos</div><div class="kpi-value" id="dashTotalProcessos">0</div></div>
                   <div class="kpi"><div class="kpi-title">Liberados / Entregues</div><div class="kpi-value" id="dashLiberados">0</div></div>
                   <div class="kpi"><div class="kpi-title">Pendências de docs</div><div class="kpi-value" id="dashPendenciasDocs">0</div></div>
-                  <div class="kpi"><div class="kpi-title">Margem total</div><div class="kpi-value" id="dashMargemTotal">0</div></div>
+                  <div class="kpi" id="dashMargemCard"><div class="kpi-title">Margem total</div><div class="kpi-value" id="dashMargemTotal">0</div></div>
                 </div>
 
                 <div class="chart-card" style="margin-bottom:18px;">
@@ -1122,7 +1122,7 @@
                     <div class="chart-title">Processos por mês</div>
                     <div class="chart-wrap"><canvas id="processosMesChart"></canvas></div>
                   </div>
-                  <div class="chart-card">
+                  <div class="chart-card" id="financeiroChartCard">
                     <div class="chart-title">Cobrado vs custos</div>
                     <div class="chart-wrap"><canvas id="financeiroMesChart"></canvas></div>
                   </div>
@@ -1474,14 +1474,6 @@
                       <input id="eq_email" />
                     </div>
                     <div>
-                      <label>Password</label>
-                      <input id="eq_password" type="password" placeholder="Defina a password do funcionário" />
-                    </div>
-                    <div>
-                      <label>Confirmar password</label>
-                      <input id="eq_password2" type="password" placeholder="Repita a password" />
-                    </div>
-                    <div>
                       <label>Nível</label>
                       <select id="eq_nivel">
                         <option value="operador">Operador</option>
@@ -1496,7 +1488,6 @@
                       </select>
                     </div>
                   </div>
-                  <div class="small" style="margin-top:10px;">Ao criar o funcionário, a conta de acesso também será criada no Auth do Supabase.</div>
                   <button class="btn" style="margin-top:14px;" onclick="criarFuncionario()">Criar funcionário</button>
                 </div>
 
@@ -2491,6 +2482,14 @@
       document.getElementById("side-faturas").style.display = isAdmin ? "block" : "none";
       document.getElementById("side-equipa").style.display = isAdmin ? "block" : "none";
 
+      const adminFinanceSummaryRow = document.getElementById("adminFinanceSummaryRow");
+      const dashMargemCard = document.getElementById("dashMargemCard");
+      const financeiroChartCard = document.getElementById("financeiroChartCard");
+
+      if (adminFinanceSummaryRow) adminFinanceSummaryRow.style.display = isAdmin ? "grid" : "none";
+      if (dashMargemCard) dashMargemCard.style.display = isAdmin ? "block" : "none";
+      if (financeiroChartCard) financeiroChartCard.style.display = isAdmin ? "block" : "none";
+
       if (isEmployee) {
         document.getElementById("internal-financeiro").classList.add("hidden");
         document.getElementById("internal-clientes").classList.add("hidden");
@@ -3180,111 +3179,39 @@
 
       const nome = document.getElementById("eq_nome").value.trim();
       const email = document.getElementById("eq_email").value.trim().toLowerCase();
-      const password = document.getElementById("eq_password").value;
-      const password2 = document.getElementById("eq_password2").value;
       const nivel = document.getElementById("eq_nivel").value;
       const activo = document.getElementById("eq_activo").value === "true";
 
-      if (!nome || !email || !password || !password2) {
-        alert("Nome, email e password são obrigatórios.");
-        return;
-      }
-
-      if (password.length < 6) {
-        alert("A password deve ter pelo menos 6 caracteres.");
-        return;
-      }
-
-      if (password !== password2) {
-        alert("As passwords não coincidem.");
+      if (!nome || !email) {
+        alert("Nome e email obrigatórios.");
         return;
       }
 
       try {
-        const { data: equipaExistente, error: equipaExistenteError } = await withTimeout(
-          supabaseClient.from("equipa").select("id, email").eq("email", email).maybeSingle(),
-          8000
-        );
-
-        if (equipaExistenteError) {
-          alert("Erro ao verificar funcionário existente: " + equipaExistenteError.message);
-          return;
-        }
-
-        if (equipaExistente?.id) {
-          alert("Já existe um funcionário com este email na tabela equipa.");
-          return;
-        }
-
-        const authClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-          auth: {
-            persistSession: false,
-            autoRefreshToken: false,
-            detectSessionInUrl: false,
-            storageKey: "ef-cargo-clear-employee-create"
-          }
-        });
-
-        const { data: authData, error: authError } = await withTimeout(
-          authClient.auth.signUp({
+        const { error } = await withTimeout(
+          supabaseClient.from("equipa").insert({
+            nome,
             email,
-            password,
-            options: {
-              data: {
-                nome,
-                role: "employee",
-                nivel
-              }
-            }
+            nivel,
+            activo
           }),
-          12000
-        );
-
-        if (authError) {
-          alert("Erro ao criar acesso de login: " + authError.message);
-          return;
-        }
-
-        const authUserId = authData?.user?.id || null;
-        if (!authUserId) {
-          alert("O acesso no Auth não devolveu utilizador. Verifique se o email já existe ou se o Auth exige confirmação por email.");
-          return;
-        }
-
-        const { data: insertedMember, error: insertError } = await withTimeout(
-          supabaseClient
-            .from("equipa")
-            .insert({
-              nome,
-              email,
-              nivel,
-              activo,
-              auth_user_id: authUserId
-            })
-            .select("*")
-            .single(),
           10000
         );
 
-        if (insertError) {
-          alert("O acesso foi criado no Auth, mas falhou ao gravar na equipa: " + insertError.message);
+        if (error) {
+          alert(error.message);
           return;
         }
 
-        equipaCache.unshift(insertedMember);
-        renderEquipaGrid();
-
+        alert("Funcionário criado com sucesso");
         document.getElementById("eq_nome").value = "";
         document.getElementById("eq_email").value = "";
-        document.getElementById("eq_password").value = "";
-        document.getElementById("eq_password2").value = "";
         document.getElementById("eq_nivel").value = "operador";
         document.getElementById("eq_activo").value = "true";
 
         await loadInternal();
-        alert("Funcionário criado com sucesso. Se o login não entrar de imediato, confirme no Supabase Auth se a confirmação de email está desativada.");
       } catch (e) {
-        alert(e.message || "Erro ao criar funcionário.");
+        alert(e.message);
       }
     }
 
@@ -3519,7 +3446,9 @@
       if (el('dashTotalProcessos')) el('dashTotalProcessos').textContent = totalProcessos;
       if (el('dashLiberados')) el('dashLiberados').textContent = liberados;
       if (el('dashPendenciasDocs')) el('dashPendenciasDocs').textContent = docsPendentes;
-      if (el('dashMargemTotal')) el('dashMargemTotal').textContent = formatMoney(margemTotal);
+      if (currentUserRole === "admin" && el('dashMargemTotal')) {
+        el('dashMargemTotal').textContent = formatMoney(margemTotal);
+      }
 
       const estadoMap = {};
       processosCache.forEach(p => {
@@ -3572,9 +3501,12 @@
         });
       }
 
-      if (financeiroMesChart) financeiroMesChart.destroy();
+      if (financeiroMesChart) {
+        financeiroMesChart.destroy();
+        financeiroMesChart = null;
+      }
       const finCanvas = document.getElementById('financeiroMesChart');
-      if (finCanvas) {
+      if (currentUserRole === "admin" && finCanvas) {
         financeiroMesChart = new Chart(finCanvas, {
           type: 'bar',
           data: { labels: labelsMes, datasets: [
