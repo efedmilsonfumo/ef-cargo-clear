@@ -6699,8 +6699,8 @@
               </div>
             </div>
             <div style="text-align:right;font-size:14px;line-height:1.6;">
-              <strong>${escapeHtml(f.recibo_numero || ('RCB-' + (f.numero_fatura || '')))}</strong><br>
-              Data: ${escapeHtml((f.recibo_emitido_at || f.pago_at || new Date().toISOString()).slice(0,10))}<br>
+              <strong>${escapeHtml(f.recibo_numero || f.numero_recibo || ('RCB-' + (f.numero_fatura || '')))}</strong><br>
+              Data: ${escapeHtml((f.recibo_emitido_at || f.pago_at || f.data_pagamento || new Date().toISOString()).slice(0,10))}<br>
               Refª Fatura: ${escapeHtml(f.numero_fatura || '')}
             </div>
           </div>
@@ -6757,28 +6757,71 @@
       if (!f) return;
       const nota = prompt('Observação do pagamento / referência bancária (opcional):', f.payment_notes || '') ?? '';
       const stamp = new Date().toISOString();
-      const reciboNumero = f.recibo_numero || `RCB/${new Date().getFullYear()}/${String((faturasCache.findIndex(x => x.id === id) + 1)).padStart(3,'0')}`;
-      try {
-        const { data, error } = await withTimeout(
-          supabaseClient.from('faturas').update({
-            status_pagamento: 'pago',
-            pago_at: stamp,
-            recibo_numero: reciboNumero,
-            recibo_emitido_at: stamp,
-            payment_notes: nota
-          }).eq('id', id).select('*').single(),
+      const reciboNumero = f.recibo_numero || f.numero_recibo || `RCB/${new Date().getFullYear()}/${String((faturasCache.findIndex(x => x.id === id) + 1)).padStart(3,'0')}`;
+
+      async function tryUpdate(payload) {
+        return withTimeout(
+          supabaseClient.from('faturas').update(payload).eq('id', id).select('*').single(),
           12000
         );
-        if (error) throw error;
+      }
+
+      try {
+        let result = await tryUpdate({
+          status_pagamento: 'pago',
+          pago: true,
+          pago_at: stamp,
+          recibo_numero: reciboNumero,
+          numero_recibo: reciboNumero,
+          recibo_emitido_at: stamp,
+          payment_notes: nota
+        });
+
+        if (result.error) {
+          const msg = String(result.error.message || '').toLowerCase();
+          const maybeSchemaMismatch =
+            msg.includes('column') ||
+            msg.includes('schema cache') ||
+            msg.includes('pago_at') ||
+            msg.includes('recibo_numero') ||
+            msg.includes('numero_recibo') ||
+            msg.includes('data_pagamento');
+
+          if (maybeSchemaMismatch) {
+            result = await tryUpdate({
+              status_pagamento: 'pago',
+              pago: true,
+              data_pagamento: stamp,
+              numero_recibo: reciboNumero
+            });
+          }
+        }
+
+        if (result.error) throw result.error;
+
+        const merged = {
+          ...(f || {}),
+          ...(result.data || {}),
+          status_pagamento: (result.data && result.data.status_pagamento) || 'pago',
+          pago: true,
+          pago_at: (result.data && (result.data.pago_at || result.data.data_pagamento)) || stamp,
+          data_pagamento: (result.data && (result.data.data_pagamento || result.data.pago_at)) || stamp,
+          recibo_numero: (result.data && (result.data.recibo_numero || result.data.numero_recibo)) || reciboNumero,
+          numero_recibo: (result.data && (result.data.numero_recibo || result.data.recibo_numero)) || reciboNumero,
+          recibo_emitido_at: (result.data && result.data.recibo_emitido_at) || stamp,
+          payment_notes: (result.data && result.data.payment_notes) || nota
+        };
+
         const idx = faturasCache.findIndex(x => x.id === id);
-        if (idx >= 0) faturasCache[idx] = data;
+        if (idx >= 0) faturasCache[idx] = merged;
         const cidx = clientFaturasCache.findIndex(x => x.id === id);
-        if (cidx >= 0) clientFaturasCache[cidx] = data;
+        if (cidx >= 0) clientFaturasCache[cidx] = merged;
+
         renderFaturasTable();
         renderClientFinanceDocs();
         alert('Pagamento confirmado e recibo preparado.');
       } catch (e) {
-        alert((e.message || 'Erro ao marcar pagamento.') + '\n\nSe a base ainda não tiver os campos de recibo/pagamento, execute o SQL que vou te passar.');
+        alert((e.message || 'Erro ao marcar pagamento.') + '\n\nExecute também o SQL atualizado das colunas de pagamento/recibo.');
       }
     }
 
