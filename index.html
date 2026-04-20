@@ -3506,7 +3506,7 @@
     function renderInternalDashboard() {
       const totalProcessos = processosCache.length;
       const liberados = processosCache.filter(p => ['Liberado','Entregue'].includes(p.estado || '')).length;
-      const docsPendentes = processosCache.filter(p => (p.documentos_em_falta || '').trim() !== '').length;
+      const docsPendentes = getPendingProcessCount(processosCache);
       const margemTotal = processosCache.reduce((sum,p) => sum + Number(p.margem_lucro || 0), 0);
 
       const el = (id) => document.getElementById(id);
@@ -4465,7 +4465,7 @@
           }
         }
 
-        document.getElementById("clientDashCotacoes").textContent = clientCotacoesCache.length;
+        document.getElementById("clientDashCotacoes").textContent = getActiveCotacoesCount(clientCotacoesCache);
         document.getElementById("clientDashDocs").textContent = docsVisible;
         document.getElementById("clientDashEstado").textContent = lastEstado;
 
@@ -4561,6 +4561,23 @@
       if (!valor) return "";
       return `${formatMoney(valor)} ${c.moeda || "MZN"}`;
     }
+
+    function isPendingProcess(p) {
+      return String(p?.estado || "").trim().toLowerCase() === "documentos em falta";
+    }
+
+    function isActiveCotacao(c) {
+      return c?.convertido_em_processo !== true;
+    }
+
+    function getPendingProcessCount(list = processosCache) {
+      return (list || []).filter(isPendingProcess).length;
+    }
+
+    function getActiveCotacoesCount(list = cotacoesCache) {
+      return (list || []).filter(isActiveCotacao).length;
+    }
+
 
     function getCotacaoActionsHtml(c, ownerView = false) {
       const id = String(c.id).replace(/'/g, "\\'");
@@ -5092,9 +5109,8 @@
         document.getElementById("clientesCount").textContent = clientesCache.length;
         document.getElementById("processosCount").textContent = processosCache.length;
         document.getElementById("liberadosCount").textContent = liberados;
-        document.getElementById("pendenciasCount").textContent =
-          processosCache.filter(p => p.documentos_em_falta && p.documentos_em_falta.trim() !== "").length;
-        document.getElementById("cotacoesCount").textContent = cotacoesCache.length;
+        document.getElementById("pendenciasCount").textContent = getPendingProcessCount(processosCache);
+        document.getElementById("cotacoesCount").textContent = getActiveCotacoesCount(cotacoesCache);
 
         document.getElementById("valorCobradoTotal").textContent = formatMoney(totalCobrado);
         document.getElementById("custosTotal").textContent = formatMoney(totalCustos);
