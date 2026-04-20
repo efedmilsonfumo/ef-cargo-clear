@@ -2338,8 +2338,6 @@
     let equipaCache = [];
     let tarefasCache = [];
     let mensagensCache = [];
-    let mensagensRealtimeChannel = null;
-    let mensagensRealtimeStarted = false;
     let cotacaoDocsCache = [];
     let currentProcessModalId = null;
     let currentUserRole = "client";
@@ -2914,7 +2912,6 @@
     }
 
     async function logout() {
-      await stopMensagensRealtime();
       await supabaseClient.auth.signOut();
       location.reload();
     }
@@ -2938,7 +2935,6 @@
         setTimeout(async () => {
           await loadInternal();
           await loadInternalMessages();
-          startMensagensRealtime();
         }, 100);
         return;
       }
@@ -2960,7 +2956,6 @@
           setTimeout(async () => {
             await loadInternal();
             await loadInternalMessages();
-            startMensagensRealtime();
           }, 100);
           return;
         }
@@ -2994,7 +2989,6 @@
         await loadClientMessages();
         await loadClientFinanceDocs();
         await refreshClientDashboard();
-        startMensagensRealtime();
       } catch (_) {
         document.getElementById("welcome").textContent = "Cliente • portal";
       }
@@ -4596,6 +4590,20 @@
         }
 
         document.getElementById("adminMessageText").value = "";
+
+        try {
+          await sendEmail(
+            currentSelectedThread,
+            "Nova mensagem da EF Cargo Clear",
+            `<div style="font-family:Arial,sans-serif;line-height:1.6;">
+              <h2>Nova mensagem da EF Cargo Clear</h2>
+              <p>Recebeu uma nova mensagem da nossa equipa dentro da plataforma.</p>
+              <p><b>Mensagem:</b> ${escapeHtml(text)}</p>
+              <p>Entre na plataforma para ver a conversa completa.</p>
+            </div>`
+          );
+        } catch (_) {}
+
         await loadInternalMessages();
       } catch (e) {
         alert(e.message || "Erro ao enviar mensagem.");
@@ -4682,97 +4690,25 @@
         }
 
         document.getElementById("clientMessageText").value = "";
+
+        try {
+          await sendEmail(
+            ADMIN_EMAIL,
+            "Nova mensagem de cliente",
+            `<div style="font-family:Arial,sans-serif;line-height:1.6;">
+              <h2>Nova mensagem de cliente</h2>
+              <p><b>Cliente:</b> ${escapeHtml(currentUserName || currentUserEmail || "-")}</p>
+              <p><b>Email:</b> ${escapeHtml(currentUserEmail || "-")}</p>
+              <p><b>Mensagem:</b> ${escapeHtml(text)}</p>
+              <p>Abra a plataforma para responder.</p>
+            </div>`
+          );
+        } catch (_) {}
+
         await loadClientMessages();
       } catch (e) {
         alert(e.message || "Erro ao enviar mensagem.");
       }
-    }
-
-
-    async function fetchMensagensRealtimeSnapshot() {
-      try {
-        if (!currentUserRole) return;
-
-        if (currentUserRole === "client") {
-          const { data, error } = await withTimeout(
-            supabaseClient.from("mensagens").select("*").eq("cliente_email", currentUserEmail).order("created_at", { ascending: true }),
-            10000
-          );
-          if (error) throw error;
-          mensagensCache = data || [];
-          updateUnreadBadges();
-
-          if (!document.getElementById("client-mensagens").classList.contains("hidden")) {
-            const box = document.getElementById("clientMessagesBox");
-            if (box) {
-              if (!mensagensCache.length) {
-                box.innerHTML = `<div class="empty-chat">Sem mensagens ainda.</div>`;
-              } else {
-                box.innerHTML = mensagensCache.map(m => `
-                  <div class="chat-bubble ${m.remetente === "cliente" ? "mine" : "other"}">
-                    <div>${escapeHtml(m.mensagem || "")}</div>
-                    <div class="chat-meta">
-                      ${m.processo_numero || "-"} • ${m.remetente} • ${formatDate(m.created_at)}
-                    </div>
-                  </div>
-                `).join("");
-                box.scrollTop = box.scrollHeight;
-              }
-            }
-          }
-
-          if (typeof refreshClientDashboard === "function") {
-            await refreshClientDashboard();
-          }
-          return;
-        }
-
-        const { data, error } = await withTimeout(
-          supabaseClient.from("mensagens").select("*").order("created_at", { ascending: true }),
-          10000
-        );
-        if (error) throw error;
-
-        mensagensCache = data || [];
-        updateUnreadBadges();
-
-        if (!document.getElementById("internal-mensagens").classList.contains("hidden")) {
-          renderInternalThreadList();
-        }
-      } catch (err) {
-        console.error("Erro ao atualizar mensagens realtime:", err);
-      }
-    }
-
-    function startMensagensRealtime() {
-      if (mensagensRealtimeStarted || !supabaseClient) return;
-
-      mensagensRealtimeChannel = supabaseClient
-        .channel("mensagens-realtime")
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "mensagens" },
-          async () => {
-            await fetchMensagensRealtimeSnapshot();
-          }
-        )
-        .subscribe((status) => {
-          console.log("Realtime mensagens:", status);
-        });
-
-      mensagensRealtimeStarted = true;
-    }
-
-    async function stopMensagensRealtime() {
-      try {
-        if (mensagensRealtimeChannel) {
-          await supabaseClient.removeChannel(mensagensRealtimeChannel);
-        }
-      } catch (err) {
-        console.error("Erro ao remover canal realtime:", err);
-      }
-      mensagensRealtimeChannel = null;
-      mensagensRealtimeStarted = false;
     }
 
     function updateUnreadBadges() {
@@ -6011,6 +5947,39 @@
         msg.className = "message-ok";
         ["frete_nome","frete_email","frete_contacto","frete_nuit","frete_origem","frete_destino","frete_tipo_carga","frete_quantidade","frete_data","frete_obs"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
         const desemb = document.getElementById("frete_desembaraco"); if (desemb) desemb.value = "sim";
+
+        try {
+          await sendEmail(
+            ADMIN_EMAIL,
+            "Novo pedido de frete recebido",
+            `<div style="font-family:Arial,sans-serif;line-height:1.6;">
+              <h2>Novo pedido de frete</h2>
+              <p><b>Cliente:</b> ${escapeHtml(payload.cliente_nome || "-")}</p>
+              <p><b>Email:</b> ${escapeHtml(payload.email || "-")}</p>
+              <p><b>Contacto:</b> ${escapeHtml(payload.contacto || "-")}</p>
+              <p><b>Origem:</b> ${escapeHtml(payload.origem || "-")}</p>
+              <p><b>Destino:</b> ${escapeHtml(payload.destino || "-")}</p>
+              <p><b>Tipo de carga:</b> ${escapeHtml(payload.tipo_carga || "-")}</p>
+              <p><b>Quantidade / peso:</b> ${escapeHtml(payload.quantidade_peso || "-")}</p>
+              <p><b>Precisa de desembaraço:</b> ${escapeHtml(payload.precisa_desembaraco || "-")}</p>
+              <p><b>Observações:</b> ${escapeHtml(payload.observacoes || "-")}</p>
+            </div>`
+          );
+          if (payload.email) {
+            await sendEmail(
+              payload.email,
+              "Recebemos o seu pedido de frete",
+              `<div style="font-family:Arial,sans-serif;line-height:1.6;">
+                <h2>Pedido de frete recebido</h2>
+                <p>Olá <b>${escapeHtml(payload.cliente_nome || "Cliente")}</b>,</p>
+                <p>Recebemos o seu pedido de frete com o seguinte percurso:</p>
+                <p><b>${escapeHtml(payload.origem || "-")}</b> → <b>${escapeHtml(payload.destino || "-")}</b></p>
+                <p>A nossa equipa vai analisar e responder em breve.</p>
+                <p>EF Cargo Clear</p>
+              </div>`
+            );
+          }
+        } catch (_) {}
         await loadClientFretes();
       } catch (e) {
         msg.textContent = e.message || "Erro ao enviar pedido de frete.";
