@@ -2505,6 +2505,11 @@
 
     let currentLanguage = localStorage.getItem("efcargo_lang") || "pt";
     let realtimeChannel = null;
+    let realtimeRefreshLocks = {};
+    let autoRefreshInterval = null;
+    let autoRefreshBound = false;
+    let activeInternalTab = "dashboard";
+    let activeClientTab = "consulta";
 
     function initLanguageSystem() {
       const selector = document.getElementById("languageSelector");
@@ -2559,185 +2564,156 @@
       if (logoutBtn) logoutBtn.textContent = t.logout;
     }
 
-    let realtimeFallbackTimer = null;
-    let realtimePulseTimer = null;
-    let refreshLocks = {
-      internal: false,
-      internalMessages: false,
-      clientMessages: false,
-      clientCotacoes: false,
-      clientFinance: false,
-      clientProcessos: false,
-      clientFretes: false,
-      clientDashboard: false
-    };
-
-    async function runRefreshLocked(key, fn) {
-      if (refreshLocks[key]) return;
-      refreshLocks[key] = true;
+    async function runRealtimeRefresh(key, fn) {
+      if (realtimeRefreshLocks[key]) return;
+      realtimeRefreshLocks[key] = true;
       try {
         await fn();
       } catch (e) {
-        console.warn('Refresh error [' + key + ']:', e);
+        console.log("Realtime refresh error [" + key + "]:", e?.message || e);
       } finally {
-        refreshLocks[key] = false;
+        setTimeout(() => {
+          realtimeRefreshLocks[key] = false;
+        }, 350);
       }
     }
 
-    async function refreshRealtimeDataByRole(reason = '') {
-      if (!currentUserRole) return;
+    async function refreshVisibleData(reason = "manual") {
+      try {
+        if (currentUserRole === "admin" || currentUserRole === "employee") {
+          if (activeInternalTab === "mensagens") {
+            await runRealtimeRefresh("internal-messages-" + reason, async () => {
+              await loadInternalMessages();
+            });
+          } else {
+            await runRealtimeRefresh("internal-full-" + reason, async () => {
+              await loadInternal();
+            });
+          }
+          return;
+        }
 
-      if (currentUserRole === 'admin' || currentUserRole === 'employee') {
-        await runRefreshLocked('internal', async () => {
-          await loadInternal();
-        });
-        await runRefreshLocked('internalMessages', async () => {
-          await loadInternalMessages();
-        });
-      } else if (currentUserRole === 'client') {
-        await runRefreshLocked('clientMessages', async () => {
-          await loadClientMessages();
-        });
-        await runRefreshLocked('clientCotacoes', async () => {
-          await loadClientCotacoes();
-        });
-        await runRefreshLocked('clientFinance', async () => {
-          await loadClientFinanceDocs();
-        });
-        await runRefreshLocked('clientProcessos', async () => {
-          await loadClientProcessos();
-        });
-        await runRefreshLocked('clientFretes', async () => {
-          await loadClientFretes();
-        });
-        await runRefreshLocked('clientDashboard', async () => {
+        if (activeClientTab === "mensagens") {
+          await runRealtimeRefresh("client-messages-" + reason, async () => {
+            await loadClientMessages();
+            await refreshClientDashboard();
+          });
+          return;
+        }
+
+        await runRealtimeRefresh("client-visible-" + reason, async () => {
+          if (activeClientTab === "processos") await loadClientProcessos();
+          if (activeClientTab === "historico") await loadClientCotacoes();
+          if (activeClientTab === "faturas") await loadClientFinanceDocs();
+          if (activeClientTab === "meus-fretes") await loadClientFretes();
           await refreshClientDashboard();
         });
+      } catch (e) {
+        console.log("Auto refresh error:", e?.message || e);
       }
     }
 
-    function startRealtimeFallback() {
-      if (realtimeFallbackTimer) return;
-      realtimeFallbackTimer = setInterval(() => {
-        if (document.hidden || !currentUserRole) return;
-        refreshRealtimeDataByRole('interval');
-      }, 25000);
+    function startAutoRefreshSafe() {
+      if (autoRefreshInterval) return;
+      autoRefreshInterval = setInterval(async () => {
+        if (document.hidden || !currentUserEmail) return;
+        await refreshVisibleData("interval");
+      }, 20000);
     }
 
-    function stopRealtimeFallback() {
-      if (realtimeFallbackTimer) {
-        clearInterval(realtimeFallbackTimer);
-        realtimeFallbackTimer = null;
-      }
-      if (realtimePulseTimer) {
-        clearTimeout(realtimePulseTimer);
-        realtimePulseTimer = null;
+    function stopAutoRefreshSafe() {
+      if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
       }
     }
 
-    function bindRefreshGuards() {
-      if (window.__efRefreshGuardsBound) return;
-      window.__efRefreshGuardsBound = true;
+    function bindAutoRefreshEvents() {
+      if (autoRefreshBound) return;
+      autoRefreshBound = true;
 
-      document.addEventListener('visibilitychange', () => {
+      document.addEventListener("visibilitychange", async () => {
+        if (!currentUserEmail) return;
         if (!document.hidden) {
-          refreshRealtimeDataByRole('visibility');
+          await refreshVisibleData("visibility");
         }
       });
 
-      window.addEventListener('focus', () => {
-        refreshRealtimeDataByRole('focus');
+      window.addEventListener("focus", async () => {
+        if (!currentUserEmail) return;
+        await refreshVisibleData("focus");
       });
     }
 
     function activateRealtimeSafe() {
-      bindRefreshGuards();
-      startRealtimeFallback();
+      startAutoRefreshSafe();
+      bindAutoRefreshEvents();
       if (realtimeChannel) return;
 
       realtimeChannel = supabaseClient
         .channel('ef-cargo-clear-realtime')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'mensagens' }, async () => {
           if (currentUserRole === "admin" || currentUserRole === "employee") {
-            await runRefreshLocked('internalMessages', async () => {
+            await runRealtimeRefresh("internal-messages", async () => {
               await loadInternalMessages();
             });
           } else {
-            await runRefreshLocked('clientMessages', async () => {
+            await runRealtimeRefresh("client-messages", async () => {
               await loadClientMessages();
-            });
-            await runRefreshLocked('clientDashboard', async () => {
               await refreshClientDashboard();
             });
           }
         })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'processos' }, async () => {
           if (currentUserRole === "admin" || currentUserRole === "employee") {
-            await runRefreshLocked('internal', async () => {
+            await runRealtimeRefresh("internal-processos", async () => {
               await loadInternal();
             });
           } else {
-            await runRefreshLocked('clientProcessos', async () => {
+            await runRealtimeRefresh("client-processos", async () => {
               await loadClientProcessos();
-            });
-            await runRefreshLocked('clientDashboard', async () => {
               await refreshClientDashboard();
             });
           }
         })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos_cotacao' }, async () => {
           if (currentUserRole === "admin" || currentUserRole === "employee") {
-            await runRefreshLocked('internal', async () => {
+            await runRealtimeRefresh("internal-cotacoes", async () => {
               await loadInternal();
             });
           } else {
-            await runRefreshLocked('clientCotacoes', async () => {
+            await runRealtimeRefresh("client-cotacoes", async () => {
               await loadClientCotacoes();
-            });
-            await runRefreshLocked('clientDashboard', async () => {
               await refreshClientDashboard();
             });
           }
         })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'faturas' }, async () => {
           if (currentUserRole === "admin" || currentUserRole === "employee") {
-            await runRefreshLocked('internal', async () => {
+            await runRealtimeRefresh("internal-faturas", async () => {
               await loadInternal();
             });
           } else {
-            await runRefreshLocked('clientFinance', async () => {
+            await runRealtimeRefresh("client-faturas", async () => {
               await loadClientFinanceDocs();
-            });
-            await runRefreshLocked('clientDashboard', async () => {
               await refreshClientDashboard();
             });
           }
         })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos_frete' }, async () => {
           if (currentUserRole === "admin" || currentUserRole === "employee") {
-            await runRefreshLocked('internal', async () => {
+            await runRealtimeRefresh("internal-fretes", async () => {
               await loadInternal();
             });
           } else {
-            await runRefreshLocked('clientFretes', async () => {
+            await runRealtimeRefresh("client-fretes", async () => {
               await loadClientFretes();
-            });
-            await runRefreshLocked('clientDashboard', async () => {
               await refreshClientDashboard();
             });
           }
         })
         .subscribe((status) => {
-          console.log('Realtime status:', status);
-          if (status === 'SUBSCRIBED') {
-            startRealtimeFallback();
-          } else {
-            stopRealtimeFallback();
-            realtimePulseTimer = setTimeout(() => {
-              refreshRealtimeDataByRole('realtime-recovery');
-              startRealtimeFallback();
-            }, 1500);
-          }
+          console.log("Realtime status:", status);
         });
     }
 
@@ -2876,27 +2852,20 @@
         });
 
         const data = await res.json().catch(() => ({}));
-        console.log("EMAIL RESULT:", data);
-
-        if (!res.ok) {
-          throw new Error(data?.error || data?.message || 'Falha ao enviar email.');
+        if (!res.ok || data?.ok === false || data?.error) {
+          console.log("EMAIL ERROR:", data);
+          return { ok: false, error: data?.error || 'Falha ao enviar email', data };
         }
 
-        return data;
+        console.log("EMAIL RESULT:", data);
+        return { ok: true, data };
       } catch (e) {
         console.log("Erro ao enviar email:", e);
-        throw e;
+        return { ok: false, error: e?.message || 'Erro ao enviar email' };
       }
     }
 
-    function buildMessageEmailHtml({
-      title = 'Nova mensagem',
-      subtitle = '',
-      fromLabel = '',
-      fromEmail = '',
-      processNumber = '',
-      messageText = ''
-    } = {}) {
+    function buildMessageEmailHtml({ title = "Nova mensagem", subtitle = "", fromLabel = "", fromEmail = "", processNumber = "", messageText = "" } = {}) {
       return `
         <div style="font-family:Arial,sans-serif;background:#f4f6f8;padding:24px;color:#111827;">
           <div style="max-width:720px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:22px;overflow:hidden;box-shadow:0 16px 40px rgba(15,23,42,.08);">
@@ -2907,13 +2876,13 @@
             </div>
             <div style="padding:24px 28px;">
               <div style="display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:18px;">
-                <div><strong>Remetente:</strong> ${escapeHtml(fromLabel || '-')}</div>
-                <div><strong>Email:</strong> ${escapeHtml(fromEmail || '-')}</div>
-                <div><strong>Processo:</strong> ${escapeHtml(processNumber || '-')}</div>
+                <div><strong>Remetente:</strong> ${escapeHtml(fromLabel || "-")}</div>
+                <div><strong>Email:</strong> ${escapeHtml(fromEmail || "-")}</div>
+                <div><strong>Processo:</strong> ${escapeHtml(processNumber || "-")}</div>
               </div>
               <div style="margin-top:8px;">
                 <div style="font-size:13px;color:#6b7280;font-weight:700;margin-bottom:8px;">Mensagem</div>
-                <div style="background:#fafafa;border:1px solid #e5e7eb;border-radius:16px;padding:16px;white-space:pre-wrap;line-height:1.6;">${escapeHtml(messageText || '')}</div>
+                <div style="background:#fafafa;border:1px solid #e5e7eb;border-radius:16px;padding:16px;white-space:pre-wrap;line-height:1.6;">${escapeHtml(messageText || "")}</div>
               </div>
               <div style="margin-top:20px;font-size:13px;color:#6b7280;line-height:1.6;">Esta mensagem também foi registada no sistema EF Cargo Clear.</div>
             </div>
@@ -2923,44 +2892,35 @@
     }
 
     async function notifyInternalAboutClientMessage({ clienteEmail, processoNumero, mensagem }) {
-      const internalRecipients = [
-        'geral.efassociados@gmail.com'
-      ].filter(Boolean);
-
-      if (!internalRecipients.length) return;
-
-      const html = buildMessageEmailHtml({
-        title: 'Nova mensagem de cliente',
-        subtitle: 'Recebeu uma nova mensagem no aplicativo.',
-        fromLabel: 'Cliente',
-        fromEmail: clienteEmail,
-        processNumber: processoNumero,
-        messageText: mensagem
-      });
-
-      await sendEmail(
-        internalRecipients.join(','),
+      const recipients = [ADMIN_EMAIL].filter(Boolean);
+      if (!recipients.length) return { ok: false, error: 'Sem destinatário interno configurado.' };
+      return await sendEmail(
+        recipients.join(','),
         `Nova mensagem no app - ${clienteEmail}${processoNumero ? ' - ' + processoNumero : ''}`,
-        html
+        buildMessageEmailHtml({
+          title: 'Nova mensagem de cliente',
+          subtitle: 'Recebeu uma nova mensagem no aplicativo.',
+          fromLabel: 'Cliente',
+          fromEmail: clienteEmail,
+          processNumber: processoNumero,
+          messageText: mensagem
+        })
       );
     }
 
     async function notifyClientAboutInternalMessage({ clienteEmail, remetenteNome, processoNumero, mensagem }) {
-      if (!clienteEmail) return;
-
-      const html = buildMessageEmailHtml({
-        title: 'Nova resposta da EF Cargo Clear',
-        subtitle: 'Recebeu uma nova mensagem da equipa no aplicativo.',
-        fromLabel: remetenteNome || 'Equipa EF',
-        fromEmail: 'Sistema EF Cargo Clear',
-        processNumber: processoNumero,
-        messageText: mensagem
-      });
-
-      await sendEmail(
+      if (!clienteEmail) return { ok: false, error: 'Cliente sem email.' };
+      return await sendEmail(
         clienteEmail,
         `Nova mensagem da EF Cargo Clear${processoNumero ? ' - ' + processoNumero : ''}`,
-        html
+        buildMessageEmailHtml({
+          title: 'Nova resposta da EF Cargo Clear',
+          subtitle: 'Recebeu uma nova mensagem da equipa no aplicativo.',
+          fromLabel: remetenteNome || 'Equipa EF',
+          fromEmail: 'Sistema EF Cargo Clear',
+          processNumber: processoNumero,
+          messageText: mensagem
+        })
       );
     }
 
@@ -3104,6 +3064,7 @@
     }
 
     function showInternalTab(tab) {
+      activeInternalTab = tab;
       document.querySelectorAll(".sidebar-btn").forEach(b => b.classList.remove("active"));
       if (tab === "dashboard") document.getElementById("side-dashboard")?.classList.add("active");
       if (tab === "processos") document.getElementById("side-processos")?.classList.add("active");
@@ -3127,6 +3088,7 @@
 
       if (tab === "mensagens") {
         loadInternalMessages();
+        markInternalMessagesRead();
       }
     }
 
@@ -3172,6 +3134,7 @@
     }
 
     function showClientTab(tab, btn) {
+      activeClientTab = tab;
       document.querySelectorAll("#clientView .tab-btn").forEach(b => b.classList.remove("active"));
       const resolvedBtn = btn || document.querySelector(`#clientView .tab-btn[data-client-tab="${tab}"]`);
       if (resolvedBtn) resolvedBtn.classList.add("active");
@@ -3352,6 +3315,7 @@
     }
 
     async function logout() {
+      stopAutoRefreshSafe();
       await supabaseClient.auth.signOut();
       location.reload();
     }
@@ -3372,9 +3336,11 @@
         document.getElementById("clientView").classList.add("hidden");
         applyInternalPermissions();
         setWelcomeMessage();
+        applyLanguage();
         setTimeout(async () => {
           await loadInternal();
           await loadInternalMessages();
+          activateRealtimeSafe();
         }, 100);
         return;
       }
@@ -4934,6 +4900,23 @@
       updateUnreadBadges();
     }
 
+    async function markInternalMessagesRead() {
+      try {
+        const unreadIds = mensagensCache
+          .filter(m => m.remetente === "cliente" && !m.lido_interno && (!currentSelectedThread || m.cliente_email === currentSelectedThread))
+          .map(m => m.id);
+
+        if (!unreadIds.length) return;
+
+        await supabaseClient.from("mensagens").update({ lido_interno: true }).in("id", unreadIds);
+        mensagensCache = mensagensCache.map(m => unreadIds.includes(m.id) ? { ...m, lido_interno: true } : m);
+        updateUnreadBadges();
+        renderInternalThreadList();
+      } catch (e) {
+        console.log("Erro ao marcar mensagens internas como lidas:", e?.message || e);
+      }
+    }
+
     function renderInternalThreadList() {
       const el = document.getElementById("adminThreadList");
       if (!el) return;
@@ -4972,30 +4955,10 @@
       renderInternalMessages();
     }
 
-    async function markInternalThreadRead(email) {
-      try {
-        const unreadIds = mensagensCache
-          .filter(m => m.cliente_email === email && m.remetente === 'cliente' && !m.lido_interno)
-          .map(m => m.id);
-
-        if (!unreadIds.length) return;
-
-        await withTimeout(
-          supabaseClient.from('mensagens').update({ lido_interno: true }).in('id', unreadIds),
-          10000
-        );
-
-        mensagensCache = mensagensCache.map(m => unreadIds.includes(m.id) ? { ...m, lido_interno: true } : m);
-        updateUnreadBadges();
-      } catch (e) {
-        console.warn('Erro ao marcar conversa como lida:', e);
-      }
-    }
-
     function selectInternalThread(email) {
       currentSelectedThread = email;
       renderInternalThreadList();
-      markInternalThreadRead(email);
+      markInternalMessagesRead();
     }
 
     function renderInternalMessages() {
@@ -5035,10 +4998,8 @@
 
       try {
         const threadMessages = mensagensCache.filter(m => m.cliente_email === currentSelectedThread);
-        const latestProcessNumber = threadMessages.length
-          ? (threadMessages[threadMessages.length - 1]?.processo_numero || "")
-          : "";
-        const senderName = currentUserName || (currentUserRole === 'admin' ? 'Administrador EF' : 'Funcionário EF');
+        const latestProcessNumber = threadMessages.length ? (threadMessages[threadMessages.length - 1]?.processo_numero || "") : "";
+        const senderName = currentUserName || (currentUserRole === "admin" ? "Administrador EF" : "Funcionário EF");
 
         const { error } = await withTimeout(
           supabaseClient.from("mensagens").insert({
@@ -5057,7 +5018,7 @@
           return;
         }
 
-        await notifyClientAboutInternalMessage({
+        const emailResult = await notifyClientAboutInternalMessage({
           clienteEmail: currentSelectedThread,
           remetenteNome: senderName,
           processoNumero: latestProcessNumber,
@@ -5066,6 +5027,10 @@
 
         document.getElementById("adminMessageText").value = "";
         await loadInternalMessages();
+
+        if (!emailResult?.ok) {
+          console.log("Mensagem gravada, mas o email ao cliente falhou:", emailResult?.error || emailResult);
+        }
       } catch (e) {
         alert(e.message || "Erro ao enviar mensagem.");
       }
@@ -5105,6 +5070,11 @@
 
         box.scrollTop = box.scrollHeight;
         updateUnreadBadges();
+        if (activeClientTab === "mensagens") {
+          setTimeout(() => {
+            markClientMessagesRead();
+          }, 0);
+        }
       } catch (e) {
         box.innerHTML = `<div class="empty-chat">${e.message}</div>`;
       }
@@ -5133,11 +5103,11 @@
       }
 
       try {
-        let processoNumero = '';
-        const factura = (document.getElementById('facturaSearch')?.value || '').trim();
+        let processoNumero = "";
+        const factura = (document.getElementById("facturaSearch")?.value || "").trim();
         if (factura) {
-          const proc = processosCache.find(p => String(p.numero_factura || '').trim() === factura);
-          if (proc) processoNumero = proc.numero_processo || '';
+          const proc = processosCache.find(p => String(p.numero_factura || "").trim() === factura);
+          if (proc) processoNumero = proc.numero_processo || proc.numero_factura || "";
         }
 
         const { error } = await withTimeout(
@@ -5157,7 +5127,7 @@
           return;
         }
 
-        await notifyInternalAboutClientMessage({
+        const emailResult = await notifyInternalAboutClientMessage({
           clienteEmail: currentUserEmail,
           processoNumero,
           mensagem: text
@@ -5165,6 +5135,11 @@
 
         document.getElementById("clientMessageText").value = "";
         await loadClientMessages();
+        await refreshClientDashboard();
+
+        if (!emailResult?.ok) {
+          console.log("Mensagem gravada, mas o email interno falhou:", emailResult?.error || emailResult);
+        }
       } catch (e) {
         alert(e.message || "Erro ao enviar mensagem.");
       }
@@ -5303,11 +5278,11 @@
         }
         await notifyInternalAboutClientMessage({
           clienteEmail: currentUserEmail,
-          processoNumero: '',
+          processoNumero: "",
           mensagem: message
         });
         await loadClientMessages();
-        await loadInternalMessages();
+        await refreshClientDashboard();
         alert('Pedido enviado com sucesso.');
       } catch (e) {
         alert(e.message || 'Erro ao enviar pedido.');
