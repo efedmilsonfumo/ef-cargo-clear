@@ -895,6 +895,23 @@
     .client-highlight-list{display:grid;gap:12px}
     .highlight-pill{border:1px solid var(--line);background:#fff;border-radius:16px;padding:14px}
 
+
+    .lang-select{
+      border:1px solid #d6d6d6;
+      background:#fff;
+      color:var(--text);
+      border-radius:14px;
+      padding:12px 14px;
+      min-height:50px;
+      font-size:14px;
+      font-weight:700;
+      outline:none;
+    }
+    .lang-select:focus{
+      border-color:rgba(190,0,26,.45);
+      box-shadow:0 0 0 4px rgba(190,0,26,.08);
+    }
+
     hr{border:none;border-top:1px solid var(--line)}
 
     @media (max-width:1180px){
@@ -1057,8 +1074,8 @@
             </div>
             <div id="welcome" class="welcome-line">A carregar...</div>
           </div>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-            <select id="languageSwitcher" class="btn btn-outline no-print" style="min-width:120px;padding:12px 14px;min-height:46px;" onchange="setLanguage(this.value)">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <select id="languageSelector" class="lang-select no-print" onchange="setLanguage(this.value)">
               <option value="pt">PT</option>
               <option value="en">EN</option>
               <option value="fr">FR</option>
@@ -2358,7 +2375,8 @@
     document.addEventListener("DOMContentLoaded", () => {
       setupCompanyLogo();
       detectRecoveryMode();
-      initLanguage();
+      initLanguageSystem();
+      setTimeout(() => applyLanguage(), 50);
     });
 
     function setupCompanyLogo() {
@@ -2383,6 +2401,210 @@
       };
 
       img.src = COMPANY_LOGO_URL;
+    }
+
+
+    const I18N = {
+      pt: {
+        app_title: "EF Cargo Clear",
+        logout: "Sair",
+        dashboard: "📊 Dashboard",
+        processos: "Processos",
+        cotacoes: "Pedidos de cotação",
+        fretes: "Pedidos de frete",
+        financeiro: "Financeiro",
+        faturas: "Faturas",
+        clientes: "Clientes",
+        funcionarios: "Funcionários",
+        mensagens: "Mensagens",
+        portal_cliente: "Portal do Cliente",
+        consultar_processo: "Consultar processo",
+        meus_processos: "Processos",
+        solicitar_cotacao: "Solicitar cotação",
+        minhas_cotacoes: "Minhas cotações",
+        faturas_recibos: "Faturas & Recibos",
+        solicitar_frete: "Solicitar frete",
+        meus_fretes: "Meus fretes",
+        contactos: "Contactos",
+        login_title: "Entrar no sistema",
+        login_btn: "Entrar"
+      },
+      en: {
+        app_title: "EF Cargo Clear",
+        logout: "Logout",
+        dashboard: "📊 Dashboard",
+        processos: "Processes",
+        cotacoes: "Quotation requests",
+        fretes: "Freight requests",
+        financeiro: "Finance",
+        faturas: "Invoices",
+        clientes: "Clients",
+        funcionarios: "Employees",
+        mensagens: "Messages",
+        portal_cliente: "Client Portal",
+        consultar_processo: "Track process",
+        meus_processos: "Processes",
+        solicitar_cotacao: "Request quotation",
+        minhas_cotacoes: "My quotations",
+        faturas_recibos: "Invoices & Receipts",
+        solicitar_frete: "Request freight",
+        meus_fretes: "My freights",
+        contactos: "Contacts",
+        login_title: "Login",
+        login_btn: "Login"
+      },
+      fr: {
+        app_title: "EF Cargo Clear",
+        logout: "Déconnexion",
+        dashboard: "📊 Tableau de bord",
+        processos: "Processus",
+        cotacoes: "Demandes de devis",
+        fretes: "Demandes de fret",
+        financeiro: "Finance",
+        faturas: "Factures",
+        clientes: "Clients",
+        funcionarios: "Employés",
+        mensagens: "Messages",
+        portal_cliente: "Portail Client",
+        consultar_processo: "Suivre le dossier",
+        meus_processos: "Processus",
+        solicitar_cotacao: "Demander un devis",
+        minhas_cotacoes: "Mes devis",
+        faturas_recibos: "Factures & Reçus",
+        solicitar_frete: "Demander un fret",
+        meus_fretes: "Mes frets",
+        contactos: "Contacts",
+        login_title: "Connexion",
+        login_btn: "Connexion"
+      },
+      zh: {
+        app_title: "EF Cargo Clear",
+        logout: "退出",
+        dashboard: "📊 仪表板",
+        processos: "流程",
+        cotacoes: "报价请求",
+        fretes: "运输请求",
+        financeiro: "财务",
+        faturas: "发票",
+        clientes: "客户",
+        funcionarios: "员工",
+        mensagens: "消息",
+        portal_cliente: "客户门户",
+        consultar_processo: "查询流程",
+        meus_processos: "流程",
+        solicitar_cotacao: "申请报价",
+        minhas_cotacoes: "我的报价",
+        faturas_recibos: "发票与收据",
+        solicitar_frete: "申请运输",
+        meus_fretes: "我的运输",
+        contactos: "联系方式",
+        login_title: "登录",
+        login_btn: "登录"
+      }
+    };
+
+    let currentLanguage = localStorage.getItem("efcargo_lang") || "pt";
+    let realtimeChannel = null;
+
+    function initLanguageSystem() {
+      const selector = document.getElementById("languageSelector");
+      if (selector) selector.value = currentLanguage;
+    }
+
+    function setLanguage(lang) {
+      currentLanguage = I18N[lang] ? lang : "pt";
+      localStorage.setItem("efcargo_lang", currentLanguage);
+      applyLanguage();
+    }
+
+    function applyLanguage() {
+      const t = I18N[currentLanguage] || I18N.pt;
+      const textBySelector = [
+        ['.brand h1', t.app_title],
+        ['#loginMode .login-title', t.login_title],
+        ['#loginMode .btn', t.login_btn],
+        ['#side-dashboard', t.dashboard],
+        ['#side-processos', t.processos],
+        ['#side-cotacoes', t.cotacoes],
+        ['#side-fretes', t.fretes],
+        ['#side-financeiro', t.financeiro],
+        ['#side-faturas', t.faturas],
+        ['#side-clientes', t.clientes],
+        ['#side-equipa', t.funcionarios],
+        ['#side-mensagens', t.mensagens],
+        ['#clientView .hero-card .section-title', t.portal_cliente],
+        ['button[data-client-tab="consulta"]', t.consultar_processo],
+        ['button[data-client-tab="processos"]', t.meus_processos],
+        ['button[data-client-tab="cotacao"]', t.solicitar_cotacao],
+        ['button[data-client-tab="historico"]', t.minhas_cotacoes],
+        ['button[data-client-tab="faturas"]', t.faturas_recibos],
+        ['button[data-client-tab="frete"]', t.solicitar_frete],
+        ['button[data-client-tab="meus-fretes"]', t.meus_fretes],
+        ['button[data-client-tab="mensagens"]', t.mensagens],
+        ['button[data-client-tab="contactos"]', t.contactos],
+      ];
+      textBySelector.forEach(([selector, value]) => {
+        const el = document.querySelector(selector);
+        if (el && value) {
+          const badge = el.querySelector('.unread-dot');
+          if (badge && selector.includes('mensagens')) {
+            el.childNodes[0].nodeValue = value + ' ';
+          } else {
+            el.textContent = value;
+          }
+        }
+      });
+
+      const logoutBtn = document.querySelector('.topbar .btn-outline');
+      if (logoutBtn) logoutBtn.textContent = t.logout;
+    }
+
+    function activateRealtimeSafe() {
+      if (realtimeChannel) return;
+
+      realtimeChannel = supabaseClient
+        .channel('ef-cargo-clear-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'mensagens' }, async () => {
+          if (currentUserRole === "admin" || currentUserRole === "employee") {
+            await loadInternalMessages();
+          } else {
+            await loadClientMessages();
+            await refreshClientDashboard();
+          }
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'processos' }, async () => {
+          if (currentUserRole === "admin" || currentUserRole === "employee") {
+            await loadInternal();
+          } else {
+            await loadClientProcessos();
+            await refreshClientDashboard();
+          }
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos_cotacao' }, async () => {
+          if (currentUserRole === "admin" || currentUserRole === "employee") {
+            await loadInternal();
+          } else {
+            await loadClientCotacoes();
+            await refreshClientDashboard();
+          }
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'faturas' }, async () => {
+          if (currentUserRole === "admin" || currentUserRole === "employee") {
+            await loadInternal();
+          } else {
+            await loadClientFinanceDocs();
+            await refreshClientDashboard();
+          }
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos_frete' }, async () => {
+          if (currentUserRole === "admin" || currentUserRole === "employee") {
+            await loadInternal();
+          } else {
+            await loadClientFretes();
+            await refreshClientDashboard();
+          }
+        })
+        .subscribe();
     }
 
     function hideAuthModes() {
@@ -2770,11 +2992,11 @@
       const adminFinanceSummaryRow = document.getElementById("adminFinanceSummaryRow");
       const dashMargemCard = document.getElementById("dashMargemCard");
       const financeiroChartCard = document.getElementById("financeiroChartCard");
+      const financeInsights = document.getElementById("financeInsights");
 
       if (adminFinanceSummaryRow) adminFinanceSummaryRow.style.display = isAdmin ? "grid" : "none";
       if (dashMargemCard) dashMargemCard.style.display = isAdmin ? "block" : "none";
       if (financeiroChartCard) financeiroChartCard.style.display = isAdmin ? "block" : "none";
-      const financeInsights = document.getElementById("financeInsights");
       if (financeInsights) financeInsights.style.display = isAdmin ? "grid" : "none";
 
       if (isEmployee) {
@@ -2954,9 +3176,11 @@
           document.getElementById("clientView").classList.add("hidden");
           applyInternalPermissions();
           setWelcomeMessage();
+          applyLanguage();
           setTimeout(async () => {
             await loadInternal();
             await loadInternalMessages();
+            activateRealtimeSafe();
           }, 100);
           return;
         }
@@ -2966,6 +3190,7 @@
       document.getElementById("clientView").classList.remove("hidden");
       document.getElementById("internalView").classList.add("hidden");
       setWelcomeMessage();
+      applyLanguage();
 
       try {
         const { data: cliente } = await withTimeout(
@@ -2990,8 +3215,12 @@
         await loadClientMessages();
         await loadClientFinanceDocs();
         await refreshClientDashboard();
+        await loadClientProcessos();
+        await loadClientFretes();
+        activateRealtimeSafe();
       } catch (_) {
         document.getElementById("welcome").textContent = "Cliente • portal";
+        activateRealtimeSafe();
       }
     }
 
@@ -7000,243 +7229,12 @@
       `;
     }
 
-    const I18N = {
-      pt: {
-        app_title: "EF Cargo Clear",
-        welcome: "Bem-vindo",
-        login_title: "Entrar no sistema",
-        login_email: "Email",
-        login_password: "Password",
-        login_button: "Entrar",
-        create_account: "Criar conta",
-        forgot_password: "Esqueci a password",
-        internal_panel: "Painel Interno",
-        dashboard: "Dashboard",
-        processos: "Processos",
-        quotes: "Pedidos de cotação",
-        freight_requests: "Pedidos de frete",
-        financeiro: "Financeiro",
-        invoices: "Faturas",
-        clients: "Clientes",
-        employees: "Funcionários",
-        messages: "Mensagens",
-        client_portal: "Portal do Cliente",
-        request_quote: "Solicitar cotação",
-        my_quotes: "Minhas cotações",
-        invoices_receipts: "Faturas & Recibos",
-        request_freight: "Solicitar frete",
-        my_freights: "Meus fretes",
-        contacts: "Contactos",
-        logout: "Sair"
-      },
-      en: {
-        app_title: "EF Cargo Clear",
-        welcome: "Welcome",
-        login_title: "Sign in",
-        login_email: "Email",
-        login_password: "Password",
-        login_button: "Login",
-        create_account: "Create account",
-        forgot_password: "Forgot password",
-        internal_panel: "Internal Panel",
-        dashboard: "Dashboard",
-        processos: "Processes",
-        quotes: "Quote requests",
-        freight_requests: "Freight requests",
-        financeiro: "Finance",
-        invoices: "Invoices",
-        clients: "Clients",
-        employees: "Employees",
-        messages: "Messages",
-        client_portal: "Client Portal",
-        request_quote: "Request quote",
-        my_quotes: "My quotes",
-        invoices_receipts: "Invoices & Receipts",
-        request_freight: "Request freight",
-        my_freights: "My freights",
-        contacts: "Contacts",
-        logout: "Logout"
-      },
-      fr: {
-        app_title: "EF Cargo Clear",
-        welcome: "Bienvenue",
-        login_title: "Connexion",
-        login_email: "Email",
-        login_password: "Mot de passe",
-        login_button: "Entrer",
-        create_account: "Créer un compte",
-        forgot_password: "Mot de passe oublié",
-        internal_panel: "Panneau interne",
-        dashboard: "Tableau de bord",
-        processos: "Dossiers",
-        quotes: "Demandes de devis",
-        freight_requests: "Demandes de fret",
-        financeiro: "Finances",
-        invoices: "Factures",
-        clients: "Clients",
-        employees: "Employés",
-        messages: "Messages",
-        client_portal: "Portail Client",
-        request_quote: "Demander un devis",
-        my_quotes: "Mes devis",
-        invoices_receipts: "Factures & Reçus",
-        request_freight: "Demander un fret",
-        my_freights: "Mes frets",
-        contacts: "Contacts",
-        logout: "Se déconnecter"
-      },
-      zh: {
-        app_title: "EF Cargo Clear",
-        welcome: "欢迎",
-        login_title: "登录系统",
-        login_email: "邮箱",
-        login_password: "密码",
-        login_button: "登录",
-        create_account: "创建账户",
-        forgot_password: "忘记密码",
-        internal_panel: "内部面板",
-        dashboard: "仪表板",
-        processos: "流程",
-        quotes: "报价请求",
-        freight_requests: "运输请求",
-        financeiro: "财务",
-        invoices: "发票",
-        clients: "客户",
-        employees: "员工",
-        messages: "消息",
-        client_portal: "客户门户",
-        request_quote: "申请报价",
-        my_quotes: "我的报价",
-        invoices_receipts: "发票和收据",
-        request_freight: "申请运输",
-        my_freights: "我的运输",
-        contacts: "联系方式",
-        logout: "退出"
-      }
-    };
-
-    function applyTranslations(lang) {
-      const t = I18N[lang] || I18N.pt;
-      const qs = (sel) => document.querySelector(sel);
-      const setText = (sel, value) => { const el = qs(sel); if (el && value) el.textContent = value; };
-
-      document.documentElement.lang = lang === 'zh' ? 'zh' : lang;
-      if (document.getElementById('languageSwitcher')) document.getElementById('languageSwitcher').value = lang;
-      document.title = t.app_title;
-
-      setText('.login-welcome h1', t.welcome);
-      setText('#loginMode .login-title', t.login_title);
-      setText('#loginMode label[for="email"]', t.login_email);
-      setText('#loginMode label[for="password"]', t.login_password);
-
-      const loginLabels = document.querySelectorAll('#loginMode label');
-      if (loginLabels[0]) loginLabels[0].textContent = t.login_email;
-      if (loginLabels[1]) loginLabels[1].textContent = t.login_password;
-      const loginBtn = document.querySelector('#loginMode .btn');
-      if (loginBtn) loginBtn.textContent = t.login_button;
-
-      const loginLinks = document.querySelectorAll('#loginMode .link-btn');
-      if (loginLinks[0]) loginLinks[0].textContent = t.create_account;
-      if (loginLinks[1]) loginLinks[1].textContent = t.forgot_password;
-
-      const heroTitle = document.querySelector('.brand h1');
-      if (heroTitle) heroTitle.textContent = t.app_title;
-      const logoutBtn = document.querySelector('.topbar .btn-outline:last-of-type');
-      if (logoutBtn) logoutBtn.textContent = t.logout;
-
-      setText('.sidebar-title', t.internal_panel);
-      setText('#side-dashboard', '📊 ' + t.dashboard);
-      setText('#side-processos', t.processos);
-      setText('#side-cotacoes', t.quotes);
-      setText('#side-fretes', t.freight_requests);
-      setText('#side-financeiro', t.financeiro);
-      setText('#side-faturas', t.invoices);
-      setText('#side-clientes', t.clients);
-      setText('#side-equipa', t.employees);
-      const msgSide = document.getElementById('side-mensagens');
-      if (msgSide) {
-        const badge = document.getElementById('internalUnreadBadge');
-        msgSide.innerHTML = t.messages + (badge ? ` <span id="internalUnreadBadge" class="unread-dot ${badge.classList.contains('hidden') ? 'hidden' : ''}">${badge.textContent}</span>` : '');
-      }
-
-      const clientHero = document.querySelector('#clientView .hero-card .section-title');
-      if (clientHero) clientHero.textContent = t.client_portal;
-
-      const clientTabs = document.querySelectorAll('#clientView .tabs .tab-btn');
-      const clientBadge = document.getElementById('clientUnreadBadge');
-      if (clientTabs[0]) clientTabs[0].textContent = 'Consultar processo';
-      if (clientTabs[1]) clientTabs[1].textContent = t.processos;
-      if (clientTabs[2]) clientTabs[2].textContent = t.request_quote;
-      if (clientTabs[3]) clientTabs[3].textContent = t.my_quotes;
-      if (clientTabs[4]) clientTabs[4].textContent = t.invoices_receipts;
-      if (clientTabs[5]) clientTabs[5].textContent = t.request_freight;
-      if (clientTabs[6]) clientTabs[6].textContent = t.my_freights;
-      if (clientTabs[7]) clientTabs[7].innerHTML = t.messages + (clientBadge ? ` <span id="clientUnreadBadge" class="unread-dot ${clientBadge.classList.contains('hidden') ? 'hidden' : ''}">${clientBadge.textContent}</span>` : '');
-      if (clientTabs[8]) clientTabs[8].textContent = t.contacts;
-    }
-
-    function setLanguage(lang) {
-      localStorage.setItem('efcargo_lang', lang);
-      applyTranslations(lang);
-    }
-
-    function initLanguage() {
-      const saved = localStorage.getItem('efcargo_lang') || 'pt';
-      applyTranslations(saved);
-    }
-
-    let realtimeMainChannel = null;
-    function activateRealtime() {
-      try {
-        if (realtimeMainChannel) return;
-        realtimeMainChannel = supabaseClient
-          .channel('efcargo-main-realtime')
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'mensagens' }, async () => {
-            if (typeof loadInternalMessages === 'function' && currentUserRole !== 'client') await loadInternalMessages();
-            if (typeof loadClientMessages === 'function' && currentUserRole === 'client') await loadClientMessages();
-            if (typeof updateUnreadBadges === 'function') updateUnreadBadges();
-          })
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'processos' }, async () => {
-            if (currentUserRole === 'client') {
-              if (typeof loadClientProcessos === 'function') await loadClientProcessos();
-            } else {
-              if (typeof loadInternal === 'function') await loadInternal();
-            }
-          })
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos_cotacao' }, async () => {
-            if (currentUserRole === 'client') {
-              if (typeof loadClientCotacoes === 'function') await loadClientCotacoes();
-            } else {
-              if (typeof loadInternal === 'function') await loadInternal();
-            }
-          })
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'faturas' }, async () => {
-            if (currentUserRole === 'client') {
-              if (typeof loadClientFinanceDocs === 'function') await loadClientFinanceDocs();
-            } else {
-              if (typeof loadInternal === 'function') await loadInternal();
-            }
-          })
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos_frete' }, async () => {
-            if (currentUserRole === 'client') {
-              if (typeof loadClientFretes === 'function') await loadClientFretes();
-            } else {
-              if (typeof loadInternal === 'function') await loadInternal();
-            }
-          })
-          .subscribe();
-      } catch (e) {
-        console.log('Realtime init error:', e);
-      }
-    }
-
     window.addEventListener("load", async () => {
       try {
         const { data } = await withTimeout(supabaseClient.auth.getSession(), 8000);
         if (data.session?.user) {
           await loadApp(data.session.user);
         }
-        activateRealtime();
       } catch (_) {}
     });
   </script>
