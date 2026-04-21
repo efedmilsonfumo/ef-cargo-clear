@@ -246,10 +246,6 @@
       box-shadow:none;
     }
     .btn-outline:hover{background:#fafafa;color:var(--primary)}
-    .topbar-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-    .lang-switch{min-width:120px;border:1px solid #d6d6d6;background:#fff;color:var(--text);border-radius:14px;padding:12px 14px;font-size:14px;min-height:50px}
-    .lang-switch:focus{border-color:rgba(190,0,26,.45);box-shadow:0 0 0 4px rgba(190,0,26,.08)}
-    .login-lang-wrap{display:flex;justify-content:flex-end;margin-bottom:10px}
 
     .btn-mini{
       border:none;
@@ -935,14 +931,6 @@
       <p>Portal interno e do cliente para gestão de processos, cotações e faturação.</p>
     </div>
     <div class="login-card">
-      <div class="login-lang-wrap">
-        <select id="languageSelectLogin" class="lang-switch" onchange="setLanguage(this.value)">
-          <option value="pt">Português</option>
-          <option value="en">English</option>
-          <option value="fr">Français</option>
-          <option value="zh">中文</option>
-        </select>
-      </div>
 
       <div id="loginMode">
         <div class="pill">EF Cargo Clear</div>
@@ -1069,14 +1057,14 @@
             </div>
             <div id="welcome" class="welcome-line">A carregar...</div>
           </div>
-          <div class="topbar-actions no-print">
-            <select id="languageSelectApp" class="lang-switch" onchange="setLanguage(this.value)">
-              <option value="pt">Português</option>
-              <option value="en">English</option>
-              <option value="fr">Français</option>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <select id="languageSwitcher" class="btn btn-outline no-print" style="min-width:120px;padding:12px 14px;min-height:46px;" onchange="setLanguage(this.value)">
+              <option value="pt">PT</option>
+              <option value="en">EN</option>
+              <option value="fr">FR</option>
               <option value="zh">中文</option>
             </select>
-            <button class="btn btn-outline no-print" id="logoutButton" style="min-width:180px" onclick="logout()">Sair</button>
+            <button class="btn btn-outline no-print" style="min-width:180px" onclick="logout()">Sair</button>
           </div>
         </div>
       </div>
@@ -2366,447 +2354,12 @@
     let estadoDonutChart = null;
     let processosMesChart = null;
     let financeiroMesChart = null;
-    let currentLanguage = window.localStorage.getItem("ef-cargo-clear-lang") || "pt";
-    let realtimeChannel = null;
-    let realtimeRefreshTimers = {};
 
     document.addEventListener("DOMContentLoaded", () => {
       setupCompanyLogo();
       detectRecoveryMode();
-      syncLanguageSelectors();
-      applyTranslations();
+      initLanguage();
     });
-
-
-    function syncLanguageSelectors() {
-      const loginSelect = document.getElementById("languageSelectLogin");
-      const appSelect = document.getElementById("languageSelectApp");
-      if (loginSelect) loginSelect.value = currentLanguage;
-      if (appSelect) appSelect.value = currentLanguage;
-      document.documentElement.lang = currentLanguage === "zh" ? "zh" : currentLanguage;
-    }
-
-    function setLanguage(lang) {
-      currentLanguage = lang || "pt";
-      window.localStorage.setItem("ef-cargo-clear-lang", currentLanguage);
-      syncLanguageSelectors();
-      applyTranslations();
-    }
-
-    function setText(selector, value) {
-      const el = document.querySelector(selector);
-      if (el) el.textContent = value;
-    }
-
-    function setHtml(selector, value) {
-      const el = document.querySelector(selector);
-      if (el) el.innerHTML = value;
-    }
-
-    function setPlaceholder(selector, value) {
-      const el = document.querySelector(selector);
-      if (el) el.placeholder = value;
-    }
-
-    function setOptionText(selector, texts) {
-      const el = document.querySelector(selector);
-      if (!el) return;
-      Array.from(el.options).forEach((opt, idx) => {
-        if (texts[idx] != null) opt.textContent = texts[idx];
-      });
-    }
-
-    function applyTranslations() {
-      const t = {
-        pt: {
-          welcomeTitle: "Bem-vindo",
-          welcomeText: "Portal interno e do cliente para gestão de processos, cotações e faturação.",
-          loginTitle: "Entrar no sistema",
-          loginSub: "Painel interno e portal do cliente para acompanhamento de despachos e pedidos de cotação.",
-          email: "Email",
-          password: "Password",
-          loginBtn: "Entrar",
-          createAccount: "Criar conta",
-          forgotPassword: "Esqueci a password",
-          newClient: "Novo cliente",
-          registerTitle: "Criar conta",
-          registerSub: "Registe a sua empresa para entrar no portal e solicitar cotações diretamente no sistema.",
-          companyName: "Nome da empresa",
-          nuit: "NUIT",
-          contact: "Contacto",
-          confirmPassword: "Confirmar password",
-          backToLogin: "Voltar ao login",
-          recovery: "Recuperação",
-          recoverTitle: "Recuperar password",
-          recoverSub: "Digite o email da conta. Será enviado um link para redefinir a password.",
-          sendLink: "Enviar link",
-          newPasswordBadge: "Nova password",
-          newPasswordTitle: "Definir nova password",
-          newPasswordSub: "Introduza a nova password da conta.",
-          saveNewPassword: "Guardar nova password",
-          internalPanel: "Painel Interno",
-          dashboard: "📊 Dashboard",
-          processos: "Processos",
-          quotes: "Pedidos de cotação",
-          fretes: "Pedidos de frete",
-          financeiro: "Financeiro",
-          invoices: "Faturas",
-          clients: "Clientes",
-          employees: "Funcionários",
-          messages: "Mensagens",
-          logout: "Sair",
-          analyticsTitle: "Dashboard Analytics",
-          analyticsSub: "Visão geral do negócio com gráficos, alertas e atividade recente.",
-          processMgmtTitle: "Gestão de Processos",
-          processMgmtSub: "Atualize estado, documentos em falta, financeiro e documentos do processo.",
-          globalSearch: "Pesquisa global",
-          client: "Cliente",
-          invoiceNumber: "Factura",
-          state: "Estado",
-          clear: "Limpar",
-          portalTitle: "Portal do Cliente",
-          portalSub: "Consulte o estado do seu processo, veja documentos do processo, envie pedidos de cotação e frete, acompanhe o histórico e fale connosco.",
-          clientDashTitle: "Dashboard Premium do Cliente",
-          clientDashSub: "Tudo o que precisa para acompanhar o processo sem ter de ligar.",
-          myQuotes: "Minhas cotações",
-          unreadMessages: "Mensagens não lidas",
-          docsVisible: "Docs visíveis",
-          lastStatus: "Último estado"
-        },
-        en: {
-          welcomeTitle: "Welcome",
-          welcomeText: "Internal and client portal for process, quotation and billing management.",
-          loginTitle: "Sign in",
-          loginSub: "Internal panel and client portal for tracking clearances and quotation requests.",
-          email: "Email",
-          password: "Password",
-          loginBtn: "Login",
-          createAccount: "Create account",
-          forgotPassword: "Forgot password",
-          newClient: "New client",
-          registerTitle: "Create account",
-          registerSub: "Register your company to access the portal and request quotations directly in the system.",
-          companyName: "Company name",
-          nuit: "Tax number",
-          contact: "Contact",
-          confirmPassword: "Confirm password",
-          backToLogin: "Back to login",
-          recovery: "Recovery",
-          recoverTitle: "Recover password",
-          recoverSub: "Enter the account email. A reset link will be sent.",
-          sendLink: "Send link",
-          newPasswordBadge: "New password",
-          newPasswordTitle: "Set new password",
-          newPasswordSub: "Enter the new account password.",
-          saveNewPassword: "Save new password",
-          internalPanel: "Internal Panel",
-          dashboard: "📊 Dashboard",
-          processos: "Processes",
-          quotes: "Quote requests",
-          fretes: "Freight requests",
-          financeiro: "Finance",
-          invoices: "Invoices",
-          clients: "Clients",
-          employees: "Employees",
-          messages: "Messages",
-          logout: "Logout",
-          analyticsTitle: "Analytics Dashboard",
-          analyticsSub: "Business overview with charts, alerts and recent activity.",
-          processMgmtTitle: "Process Management",
-          processMgmtSub: "Update status, missing documents, financial data and process files.",
-          globalSearch: "Global search",
-          client: "Client",
-          invoiceNumber: "Invoice",
-          state: "Status",
-          clear: "Clear",
-          portalTitle: "Client Portal",
-          portalSub: "Check your process status, view process documents, send quote and freight requests, track history and contact us.",
-          clientDashTitle: "Premium Client Dashboard",
-          clientDashSub: "Everything you need to track your process without calling.",
-          myQuotes: "My quotations",
-          unreadMessages: "Unread messages",
-          docsVisible: "Visible docs",
-          lastStatus: "Latest status"
-        },
-        fr: {
-          welcomeTitle: "Bienvenue",
-          welcomeText: "Portail interne et client pour la gestion des dossiers, devis et facturation.",
-          loginTitle: "Connexion",
-          loginSub: "Tableau interne et portail client pour suivre les dédouanements et demandes de devis.",
-          email: "Email",
-          password: "Mot de passe",
-          loginBtn: "Entrer",
-          createAccount: "Créer un compte",
-          forgotPassword: "Mot de passe oublié",
-          newClient: "Nouveau client",
-          registerTitle: "Créer un compte",
-          registerSub: "Enregistrez votre entreprise pour accéder au portail et demander des devis directement dans le système.",
-          companyName: "Nom de l'entreprise",
-          nuit: "NUIT",
-          contact: "Contact",
-          confirmPassword: "Confirmer le mot de passe",
-          backToLogin: "Retour à la connexion",
-          recovery: "Récupération",
-          recoverTitle: "Récupérer le mot de passe",
-          recoverSub: "Saisissez l'email du compte. Un lien de réinitialisation sera envoyé.",
-          sendLink: "Envoyer le lien",
-          newPasswordBadge: "Nouveau mot de passe",
-          newPasswordTitle: "Définir un nouveau mot de passe",
-          newPasswordSub: "Saisissez le nouveau mot de passe du compte.",
-          saveNewPassword: "Enregistrer",
-          internalPanel: "Panneau interne",
-          dashboard: "📊 Tableau de bord",
-          processos: "Dossiers",
-          quotes: "Demandes de devis",
-          fretes: "Demandes de fret",
-          financeiro: "Finance",
-          invoices: "Factures",
-          clients: "Clients",
-          employees: "Employés",
-          messages: "Messages",
-          logout: "Quitter",
-          analyticsTitle: "Tableau analytique",
-          analyticsSub: "Vue d'ensemble avec graphiques, alertes et activité récente.",
-          processMgmtTitle: "Gestion des dossiers",
-          processMgmtSub: "Mettez à jour le statut, les documents manquants, les finances et les fichiers du dossier.",
-          globalSearch: "Recherche globale",
-          client: "Client",
-          invoiceNumber: "Facture",
-          state: "Statut",
-          clear: "Effacer",
-          portalTitle: "Portail client",
-          portalSub: "Consultez l'état de votre dossier, les documents, envoyez des demandes de devis et de fret, suivez l'historique et contactez-nous.",
-          clientDashTitle: "Tableau client premium",
-          clientDashSub: "Tout ce dont vous avez besoin pour suivre votre dossier sans appeler.",
-          myQuotes: "Mes devis",
-          unreadMessages: "Messages non lus",
-          docsVisible: "Docs visibles",
-          lastStatus: "Dernier statut"
-        },
-        zh: {
-          welcomeTitle: "欢迎",
-          welcomeText: "用于流程、报价和开票管理的内部与客户门户。",
-          loginTitle: "登录系统",
-          loginSub: "用于跟踪清关和报价请求的内部面板与客户门户。",
-          email: "邮箱",
-          password: "密码",
-          loginBtn: "登录",
-          createAccount: "创建账户",
-          forgotPassword: "忘记密码",
-          newClient: "新客户",
-          registerTitle: "创建账户",
-          registerSub: "注册您的公司以访问门户并直接在系统中请求报价。",
-          companyName: "公司名称",
-          nuit: "税号",
-          contact: "联系方式",
-          confirmPassword: "确认密码",
-          backToLogin: "返回登录",
-          recovery: "恢复",
-          recoverTitle: "找回密码",
-          recoverSub: "输入账户邮箱。系统将发送重置链接。",
-          sendLink: "发送链接",
-          newPasswordBadge: "新密码",
-          newPasswordTitle: "设置新密码",
-          newPasswordSub: "输入账户的新密码。",
-          saveNewPassword: "保存新密码",
-          internalPanel: "内部面板",
-          dashboard: "📊 仪表盘",
-          processos: "流程",
-          quotes: "报价请求",
-          fretes: "运输请求",
-          financeiro: "财务",
-          invoices: "发票",
-          clients: "客户",
-          employees: "员工",
-          messages: "消息",
-          logout: "退出",
-          analyticsTitle: "分析仪表盘",
-          analyticsSub: "通过图表、提醒和近期活动查看业务概况。",
-          processMgmtTitle: "流程管理",
-          processMgmtSub: "更新状态、缺失文件、财务和流程文件。",
-          globalSearch: "全局搜索",
-          client: "客户",
-          invoiceNumber: "发票",
-          state: "状态",
-          clear: "清除",
-          portalTitle: "客户门户",
-          portalSub: "查看流程状态、流程文件、发送报价和运输请求、跟踪历史并联系我们。",
-          clientDashTitle: "高级客户仪表盘",
-          clientDashSub: "无需打电话即可跟踪流程所需的一切。",
-          myQuotes: "我的报价",
-          unreadMessages: "未读消息",
-          docsVisible: "可见文件",
-          lastStatus: "最新状态"
-        }
-      }[currentLanguage] || {};
-
-      setText(".login-welcome h1", t.welcomeTitle || "Bem-vindo");
-      setText(".login-welcome p", t.welcomeText || "Portal interno e do cliente para gestão de processos, cotações e faturação.");
-      setText("#loginMode .login-title", t.loginTitle || "Entrar no sistema");
-      setText("#loginMode .login-sub", t.loginSub || "Painel interno e portal do cliente para acompanhamento de despachos e pedidos de cotação.");
-      setText("#loginMode label[for], #loginMode label", document.querySelector("#loginMode label") ? (document.querySelector("#loginMode label").textContent = t.email || "Email") : "");
-      const loginLabels = document.querySelectorAll("#loginMode label");
-      if (loginLabels[0]) loginLabels[0].textContent = t.email || "Email";
-      if (loginLabels[1]) loginLabels[1].textContent = t.password || "Password";
-      setPlaceholder("#email", t.email || "Email");
-      setPlaceholder("#password", t.password || "Password");
-      setText("#loginMode .btn", t.loginBtn || "Entrar");
-      const loginLinks = document.querySelectorAll("#loginMode .link-btn");
-      if (loginLinks[0]) loginLinks[0].textContent = t.createAccount || "Criar conta";
-      if (loginLinks[1]) loginLinks[1].textContent = t.forgotPassword || "Esqueci a password";
-
-      setText("#registerMode .pill", t.newClient || "Novo cliente");
-      setText("#registerMode .login-title", t.registerTitle || "Criar conta");
-      setText("#registerMode .login-sub", t.registerSub || "Registe a sua empresa para entrar no portal e solicitar cotações diretamente no sistema.");
-      const regLabels = document.querySelectorAll("#registerMode label");
-      if (regLabels[0]) regLabels[0].textContent = t.companyName || "Nome da empresa";
-      if (regLabels[1]) regLabels[1].textContent = t.nuit || "NUIT";
-      if (regLabels[2]) regLabels[2].textContent = t.contact || "Contacto";
-      if (regLabels[3]) regLabels[3].textContent = t.email || "Email";
-      if (regLabels[4]) regLabels[4].textContent = t.password || "Password";
-      if (regLabels[5]) regLabels[5].textContent = t.confirmPassword || "Confirmar password";
-      setText("#registerMode .btn", t.registerTitle || "Criar conta");
-      const regBack = document.querySelector("#registerMode .link-btn");
-      if (regBack) regBack.textContent = t.backToLogin || "Voltar ao login";
-
-      setText("#forgotMode .pill", t.recovery || "Recuperação");
-      setText("#forgotMode .login-title", t.recoverTitle || "Recuperar password");
-      setText("#forgotMode .login-sub", t.recoverSub || "Digite o email da conta. Será enviado um link para redefinir a password.");
-      const forgotLabel = document.querySelector("#forgotMode label");
-      if (forgotLabel) forgotLabel.textContent = t.email || "Email";
-      setText("#forgotMode .btn", t.sendLink || "Enviar link");
-      const forgotBack = document.querySelector("#forgotMode .link-btn");
-      if (forgotBack) forgotBack.textContent = t.backToLogin || "Voltar ao login";
-
-      setText("#resetMode .pill", t.newPasswordBadge || "Nova password");
-      setText("#resetMode .login-title", t.newPasswordTitle || "Definir nova password");
-      setText("#resetMode .login-sub", t.newPasswordSub || "Introduza a nova password da conta.");
-      const resetLabels = document.querySelectorAll("#resetMode label");
-      if (resetLabels[0]) resetLabels[0].textContent = t.newPasswordBadge || "Nova password";
-      if (resetLabels[1]) resetLabels[1].textContent = t.confirmPassword || "Confirmar password";
-      setText("#resetMode .btn", t.saveNewPassword || "Guardar nova password");
-
-      setText(".sidebar-title", t.internalPanel || "Painel Interno");
-      setText("#side-dashboard", t.dashboard || "📊 Dashboard");
-      setText("#side-processos", t.processos || "Processos");
-      setText("#side-cotacoes", t.quotes || "Pedidos de cotação");
-      setText("#side-fretes", t.fretes || "Pedidos de frete");
-      setText("#side-financeiro", t.financeiro || "Financeiro");
-      setText("#side-faturas", t.invoices || "Faturas");
-      setText("#side-clientes", t.clients || "Clientes");
-      setText("#side-equipa", t.employees || "Funcionários");
-      const msgBtn = document.querySelector("#side-mensagens");
-      if (msgBtn) {
-        const badge = document.getElementById("internalUnreadBadge");
-        msgBtn.textContent = t.messages || "Mensagens";
-        if (badge) msgBtn.appendChild(document.createTextNode(" "));
-        if (badge) msgBtn.appendChild(badge);
-      }
-
-      setText("#logoutButton", t.logout || "Sair");
-      setText("#internal-dashboard .section-title", t.analyticsTitle || "Dashboard Analytics");
-      setText("#internal-dashboard .section-sub", t.analyticsSub || "Visão geral do negócio com gráficos, alertas e atividade recente.");
-      setText("#internal-processos .section-title", t.processMgmtTitle || "Gestão de Processos");
-      setText("#internal-processos .section-sub", t.processMgmtSub || "Atualize estado, documentos em falta, financeiro e documentos do processo.");
-
-      const procLabels = document.querySelectorAll("#internal-processos .toolbar label");
-      if (procLabels[0]) procLabels[0].textContent = t.globalSearch || "Pesquisa global";
-      if (procLabels[1]) procLabels[1].textContent = t.client || "Cliente";
-      if (procLabels[2]) procLabels[2].textContent = t.invoiceNumber || "Factura";
-      if (procLabels[3]) procLabels[3].textContent = t.state || "Estado";
-      setPlaceholder("#globalSearch", t.globalSearch || "Pesquisar tudo...");
-      setPlaceholder("#filterCliente", t.client || "Cliente");
-      setPlaceholder("#filterFactura", t.invoiceNumber || "Factura");
-      const clearBtn = document.querySelector('#internal-processos .btn-mini.info');
-      if (clearBtn) clearBtn.textContent = t.clear || "Limpar";
-
-      setText("#clientView .hero-card .section-title", t.portalTitle || "Portal do Cliente");
-      setText("#clientView .hero-card .section-sub", t.portalSub || "Consulte o estado do seu processo, veja documentos do processo, envie pedidos de cotação e frete, acompanhe o histórico e fale connosco.");
-      setText("#client-dashboard .section-title", t.clientDashTitle || "Dashboard Premium do Cliente");
-      setText("#client-dashboard .section-sub", t.clientDashSub || "Tudo o que precisa para acompanhar o processo sem ter de ligar.");
-
-      const clientKpis = document.querySelectorAll("#client-dashboard .kpi-title");
-      if (clientKpis[0]) clientKpis[0].textContent = t.myQuotes || "Minhas cotações";
-      if (clientKpis[1]) clientKpis[1].textContent = t.unreadMessages || "Mensagens não lidas";
-      if (clientKpis[2]) clientKpis[2].textContent = t.docsVisible || "Docs visíveis";
-      if (clientKpis[3]) clientKpis[3].textContent = t.lastStatus || "Último estado";
-    }
-
-    function scheduleRealtimeRefresh(key, fn, delay = 600) {
-      clearTimeout(realtimeRefreshTimers[key]);
-      realtimeRefreshTimers[key] = setTimeout(async () => {
-        try {
-          await fn();
-        } catch (_) {}
-      }, delay);
-    }
-
-    function activateRealtime() {
-      if (realtimeChannel) return;
-
-      realtimeChannel = supabaseClient
-        .channel("ef-cargo-clear-live")
-        .on("postgres_changes", { event: "*", schema: "public", table: "mensagens" }, () => {
-          if (currentUserRole === "admin" || currentUserRole === "employee") {
-            scheduleRealtimeRefresh("internal-messages", async () => {
-              if (typeof loadInternalMessages === "function") await loadInternalMessages();
-              if (typeof updateUnreadBadges === "function") updateUnreadBadges();
-            }, 300);
-          } else {
-            scheduleRealtimeRefresh("client-messages", async () => {
-              if (typeof loadClientMessages === "function") await loadClientMessages();
-              if (typeof refreshClientDashboard === "function") await refreshClientDashboard();
-            }, 300);
-          }
-        })
-        .on("postgres_changes", { event: "*", schema: "public", table: "processos" }, () => {
-          if (currentUserRole === "admin" || currentUserRole === "employee") {
-            scheduleRealtimeRefresh("internal-processos", async () => {
-              if (typeof loadInternal === "function") await loadInternal();
-            }, 500);
-          } else {
-            scheduleRealtimeRefresh("client-processos", async () => {
-              if (typeof loadClientFinanceDocs === "function") await loadClientFinanceDocs();
-              if (typeof refreshClientDashboard === "function") await refreshClientDashboard();
-            }, 500);
-          }
-        })
-        .on("postgres_changes", { event: "*", schema: "public", table: "pedidos_cotacao" }, () => {
-          if (currentUserRole === "admin" || currentUserRole === "employee") {
-            scheduleRealtimeRefresh("internal-cotacoes", async () => {
-              if (typeof loadInternal === "function") await loadInternal();
-            }, 500);
-          } else {
-            scheduleRealtimeRefresh("client-cotacoes", async () => {
-              if (typeof loadClientCotacoes === "function") await loadClientCotacoes();
-              if (typeof refreshClientDashboard === "function") await refreshClientDashboard();
-            }, 500);
-          }
-        })
-        .on("postgres_changes", { event: "*", schema: "public", table: "faturas" }, () => {
-          if (currentUserRole === "admin") {
-            scheduleRealtimeRefresh("internal-faturas", async () => {
-              if (typeof loadInternal === "function") await loadInternal();
-            }, 500);
-          } else {
-            scheduleRealtimeRefresh("client-finance-docs", async () => {
-              if (typeof loadClientFinanceDocs === "function") await loadClientFinanceDocs();
-            }, 500);
-          }
-        })
-        .on("postgres_changes", { event: "*", schema: "public", table: "pedidos_frete" }, () => {
-          if (currentUserRole === "admin" || currentUserRole === "employee") {
-            scheduleRealtimeRefresh("internal-fretes", async () => {
-              if (typeof loadInternal === "function") await loadInternal();
-            }, 500);
-          } else {
-            scheduleRealtimeRefresh("client-fretes", async () => {
-              if (typeof loadClientFinanceDocs === "function") await loadClientFinanceDocs();
-            }, 500);
-          }
-        })
-        .subscribe();
-    }
 
     function setupCompanyLogo() {
       const img = document.getElementById("companyLogo");
@@ -3217,11 +2770,11 @@
       const adminFinanceSummaryRow = document.getElementById("adminFinanceSummaryRow");
       const dashMargemCard = document.getElementById("dashMargemCard");
       const financeiroChartCard = document.getElementById("financeiroChartCard");
-      const financeInsights = document.getElementById("financeInsights");
 
       if (adminFinanceSummaryRow) adminFinanceSummaryRow.style.display = isAdmin ? "grid" : "none";
       if (dashMargemCard) dashMargemCard.style.display = isAdmin ? "block" : "none";
       if (financeiroChartCard) financeiroChartCard.style.display = isAdmin ? "block" : "none";
+      const financeInsights = document.getElementById("financeInsights");
       if (financeInsights) financeInsights.style.display = isAdmin ? "grid" : "none";
 
       if (isEmployee) {
@@ -3380,8 +2933,6 @@
         document.getElementById("clientView").classList.add("hidden");
         applyInternalPermissions();
         setWelcomeMessage();
-        applyTranslations();
-        activateRealtime();
         setTimeout(async () => {
           await loadInternal();
           await loadInternalMessages();
@@ -3403,8 +2954,6 @@
           document.getElementById("clientView").classList.add("hidden");
           applyInternalPermissions();
           setWelcomeMessage();
-          applyTranslations();
-          activateRealtime();
           setTimeout(async () => {
             await loadInternal();
             await loadInternalMessages();
@@ -3417,8 +2966,6 @@
       document.getElementById("clientView").classList.remove("hidden");
       document.getElementById("internalView").classList.add("hidden");
       setWelcomeMessage();
-      applyTranslations();
-      activateRealtime();
 
       try {
         const { data: cliente } = await withTimeout(
@@ -7453,12 +7000,243 @@
       `;
     }
 
+    const I18N = {
+      pt: {
+        app_title: "EF Cargo Clear",
+        welcome: "Bem-vindo",
+        login_title: "Entrar no sistema",
+        login_email: "Email",
+        login_password: "Password",
+        login_button: "Entrar",
+        create_account: "Criar conta",
+        forgot_password: "Esqueci a password",
+        internal_panel: "Painel Interno",
+        dashboard: "Dashboard",
+        processos: "Processos",
+        quotes: "Pedidos de cotação",
+        freight_requests: "Pedidos de frete",
+        financeiro: "Financeiro",
+        invoices: "Faturas",
+        clients: "Clientes",
+        employees: "Funcionários",
+        messages: "Mensagens",
+        client_portal: "Portal do Cliente",
+        request_quote: "Solicitar cotação",
+        my_quotes: "Minhas cotações",
+        invoices_receipts: "Faturas & Recibos",
+        request_freight: "Solicitar frete",
+        my_freights: "Meus fretes",
+        contacts: "Contactos",
+        logout: "Sair"
+      },
+      en: {
+        app_title: "EF Cargo Clear",
+        welcome: "Welcome",
+        login_title: "Sign in",
+        login_email: "Email",
+        login_password: "Password",
+        login_button: "Login",
+        create_account: "Create account",
+        forgot_password: "Forgot password",
+        internal_panel: "Internal Panel",
+        dashboard: "Dashboard",
+        processos: "Processes",
+        quotes: "Quote requests",
+        freight_requests: "Freight requests",
+        financeiro: "Finance",
+        invoices: "Invoices",
+        clients: "Clients",
+        employees: "Employees",
+        messages: "Messages",
+        client_portal: "Client Portal",
+        request_quote: "Request quote",
+        my_quotes: "My quotes",
+        invoices_receipts: "Invoices & Receipts",
+        request_freight: "Request freight",
+        my_freights: "My freights",
+        contacts: "Contacts",
+        logout: "Logout"
+      },
+      fr: {
+        app_title: "EF Cargo Clear",
+        welcome: "Bienvenue",
+        login_title: "Connexion",
+        login_email: "Email",
+        login_password: "Mot de passe",
+        login_button: "Entrer",
+        create_account: "Créer un compte",
+        forgot_password: "Mot de passe oublié",
+        internal_panel: "Panneau interne",
+        dashboard: "Tableau de bord",
+        processos: "Dossiers",
+        quotes: "Demandes de devis",
+        freight_requests: "Demandes de fret",
+        financeiro: "Finances",
+        invoices: "Factures",
+        clients: "Clients",
+        employees: "Employés",
+        messages: "Messages",
+        client_portal: "Portail Client",
+        request_quote: "Demander un devis",
+        my_quotes: "Mes devis",
+        invoices_receipts: "Factures & Reçus",
+        request_freight: "Demander un fret",
+        my_freights: "Mes frets",
+        contacts: "Contacts",
+        logout: "Se déconnecter"
+      },
+      zh: {
+        app_title: "EF Cargo Clear",
+        welcome: "欢迎",
+        login_title: "登录系统",
+        login_email: "邮箱",
+        login_password: "密码",
+        login_button: "登录",
+        create_account: "创建账户",
+        forgot_password: "忘记密码",
+        internal_panel: "内部面板",
+        dashboard: "仪表板",
+        processos: "流程",
+        quotes: "报价请求",
+        freight_requests: "运输请求",
+        financeiro: "财务",
+        invoices: "发票",
+        clients: "客户",
+        employees: "员工",
+        messages: "消息",
+        client_portal: "客户门户",
+        request_quote: "申请报价",
+        my_quotes: "我的报价",
+        invoices_receipts: "发票和收据",
+        request_freight: "申请运输",
+        my_freights: "我的运输",
+        contacts: "联系方式",
+        logout: "退出"
+      }
+    };
+
+    function applyTranslations(lang) {
+      const t = I18N[lang] || I18N.pt;
+      const qs = (sel) => document.querySelector(sel);
+      const setText = (sel, value) => { const el = qs(sel); if (el && value) el.textContent = value; };
+
+      document.documentElement.lang = lang === 'zh' ? 'zh' : lang;
+      if (document.getElementById('languageSwitcher')) document.getElementById('languageSwitcher').value = lang;
+      document.title = t.app_title;
+
+      setText('.login-welcome h1', t.welcome);
+      setText('#loginMode .login-title', t.login_title);
+      setText('#loginMode label[for="email"]', t.login_email);
+      setText('#loginMode label[for="password"]', t.login_password);
+
+      const loginLabels = document.querySelectorAll('#loginMode label');
+      if (loginLabels[0]) loginLabels[0].textContent = t.login_email;
+      if (loginLabels[1]) loginLabels[1].textContent = t.login_password;
+      const loginBtn = document.querySelector('#loginMode .btn');
+      if (loginBtn) loginBtn.textContent = t.login_button;
+
+      const loginLinks = document.querySelectorAll('#loginMode .link-btn');
+      if (loginLinks[0]) loginLinks[0].textContent = t.create_account;
+      if (loginLinks[1]) loginLinks[1].textContent = t.forgot_password;
+
+      const heroTitle = document.querySelector('.brand h1');
+      if (heroTitle) heroTitle.textContent = t.app_title;
+      const logoutBtn = document.querySelector('.topbar .btn-outline:last-of-type');
+      if (logoutBtn) logoutBtn.textContent = t.logout;
+
+      setText('.sidebar-title', t.internal_panel);
+      setText('#side-dashboard', '📊 ' + t.dashboard);
+      setText('#side-processos', t.processos);
+      setText('#side-cotacoes', t.quotes);
+      setText('#side-fretes', t.freight_requests);
+      setText('#side-financeiro', t.financeiro);
+      setText('#side-faturas', t.invoices);
+      setText('#side-clientes', t.clients);
+      setText('#side-equipa', t.employees);
+      const msgSide = document.getElementById('side-mensagens');
+      if (msgSide) {
+        const badge = document.getElementById('internalUnreadBadge');
+        msgSide.innerHTML = t.messages + (badge ? ` <span id="internalUnreadBadge" class="unread-dot ${badge.classList.contains('hidden') ? 'hidden' : ''}">${badge.textContent}</span>` : '');
+      }
+
+      const clientHero = document.querySelector('#clientView .hero-card .section-title');
+      if (clientHero) clientHero.textContent = t.client_portal;
+
+      const clientTabs = document.querySelectorAll('#clientView .tabs .tab-btn');
+      const clientBadge = document.getElementById('clientUnreadBadge');
+      if (clientTabs[0]) clientTabs[0].textContent = 'Consultar processo';
+      if (clientTabs[1]) clientTabs[1].textContent = t.processos;
+      if (clientTabs[2]) clientTabs[2].textContent = t.request_quote;
+      if (clientTabs[3]) clientTabs[3].textContent = t.my_quotes;
+      if (clientTabs[4]) clientTabs[4].textContent = t.invoices_receipts;
+      if (clientTabs[5]) clientTabs[5].textContent = t.request_freight;
+      if (clientTabs[6]) clientTabs[6].textContent = t.my_freights;
+      if (clientTabs[7]) clientTabs[7].innerHTML = t.messages + (clientBadge ? ` <span id="clientUnreadBadge" class="unread-dot ${clientBadge.classList.contains('hidden') ? 'hidden' : ''}">${clientBadge.textContent}</span>` : '');
+      if (clientTabs[8]) clientTabs[8].textContent = t.contacts;
+    }
+
+    function setLanguage(lang) {
+      localStorage.setItem('efcargo_lang', lang);
+      applyTranslations(lang);
+    }
+
+    function initLanguage() {
+      const saved = localStorage.getItem('efcargo_lang') || 'pt';
+      applyTranslations(saved);
+    }
+
+    let realtimeMainChannel = null;
+    function activateRealtime() {
+      try {
+        if (realtimeMainChannel) return;
+        realtimeMainChannel = supabaseClient
+          .channel('efcargo-main-realtime')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'mensagens' }, async () => {
+            if (typeof loadInternalMessages === 'function' && currentUserRole !== 'client') await loadInternalMessages();
+            if (typeof loadClientMessages === 'function' && currentUserRole === 'client') await loadClientMessages();
+            if (typeof updateUnreadBadges === 'function') updateUnreadBadges();
+          })
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'processos' }, async () => {
+            if (currentUserRole === 'client') {
+              if (typeof loadClientProcessos === 'function') await loadClientProcessos();
+            } else {
+              if (typeof loadInternal === 'function') await loadInternal();
+            }
+          })
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos_cotacao' }, async () => {
+            if (currentUserRole === 'client') {
+              if (typeof loadClientCotacoes === 'function') await loadClientCotacoes();
+            } else {
+              if (typeof loadInternal === 'function') await loadInternal();
+            }
+          })
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'faturas' }, async () => {
+            if (currentUserRole === 'client') {
+              if (typeof loadClientFinanceDocs === 'function') await loadClientFinanceDocs();
+            } else {
+              if (typeof loadInternal === 'function') await loadInternal();
+            }
+          })
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos_frete' }, async () => {
+            if (currentUserRole === 'client') {
+              if (typeof loadClientFretes === 'function') await loadClientFretes();
+            } else {
+              if (typeof loadInternal === 'function') await loadInternal();
+            }
+          })
+          .subscribe();
+      } catch (e) {
+        console.log('Realtime init error:', e);
+      }
+    }
+
     window.addEventListener("load", async () => {
       try {
         const { data } = await withTimeout(supabaseClient.auth.getSession(), 8000);
         if (data.session?.user) {
           await loadApp(data.session.user);
         }
+        activateRealtime();
       } catch (_) {}
     });
   </script>
