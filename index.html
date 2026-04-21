@@ -963,15 +963,14 @@
             <label>Password</label>
             <input id="password" type="password" placeholder="Digite a password" />
           </div>
-          <button class="btn" onclick="login()">Entrar</button>
-  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;">
-    <button class="btn" onclick="login()">Entrar</button>
-    <a href="https://www.dropbox.com/scl/fi/2ws6abpqp0eo63rz8dcxh/EF-Cargo-Clear.apk?rlkey=s8scvdu563aovgnd04ajfxktc&st=z0p9c0k1&dl=1"
-       class="btn btn-outline"
-       style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">
-       📥 Baixar App
-    </a>
-  </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
+            <button class="btn" onclick="login()">Entrar</button>
+            <a href="https://www.dropbox.com/scl/fi/2ws6abpqp0eo63rz8dcxh/EF-Cargo-Clear.apk?rlkey=s8scvdu563aovgnd04ajfxktc&st=z0p9c0k1&dl=1"
+               class="btn btn-outline"
+               style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">
+               📥 Baixar App
+            </a>
+          </div>
 
         </div>
 
@@ -1104,6 +1103,7 @@
               <button class="sidebar-btn" id="side-processos" onclick="showInternalTab('processos')">Processos</button>
               <button class="sidebar-btn" id="side-cotacoes" onclick="showInternalTab('cotacoes')">Pedidos de cotação</button>
               <button class="sidebar-btn" id="side-fretes" onclick="showInternalTab('fretes')">Pedidos de frete</button>
+              <button class="sidebar-btn" id="side-produtos" onclick="showInternalTab('produtos')">Pedidos de produto</button>
               <button class="sidebar-btn" id="side-financeiro" onclick="showInternalTab('financeiro')">Financeiro</button>
               <button class="sidebar-btn" id="side-faturas" onclick="showInternalTab('faturas')">Faturas</button>
               <button class="sidebar-btn" id="side-clientes" onclick="showInternalTab('clientes')">Clientes</button>
@@ -1295,6 +1295,36 @@
                       </tr>
                     </thead>
                     <tbody id="fretesTable"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+
+            <div id="internal-produtos" class="tab-content hidden" style="margin-top:18px;">
+              <div class="card">
+                <div class="panel-head">
+                  <div>
+                    <h2 class="section-title">Pedidos de Produto</h2>
+                    <div class="section-sub">Receba pedidos de aquisição, pesquise no mercado e converta em cotação quando encontrar a melhor opção.</div>
+                  </div>
+                </div>
+
+                <div class="table-scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Cliente</th>
+                        <th>Produto</th>
+                        <th>Qtd</th>
+                        <th>Orçamento</th>
+                        <th>Mercado</th>
+                        <th>Estado</th>
+                        <th>Cotação</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="produtosTable"></tbody>
                   </table>
                 </div>
               </div>
@@ -1685,6 +1715,7 @@
           <button class="tab-btn" data-client-tab="historico" onclick="showClientTab('historico', this)">Minhas cotações</button>
           <button class="tab-btn" data-client-tab="faturas" onclick="showClientTab('faturas', this)">Faturas & Recibos</button>
           <button class="tab-btn" data-client-tab="frete" onclick="showClientTab('frete', this)">Solicitar frete</button>
+          <button class="tab-btn" data-client-tab="produto" onclick="showClientTab('produto', this)">Solicitar produto</button>
           <button class="tab-btn" data-client-tab="meus-fretes" onclick="showClientTab('meus-fretes', this)">Meus fretes</button>
           <button class="tab-btn" data-client-tab="mensagens" onclick="showClientTab('mensagens', this)">
             Mensagens <span id="clientUnreadBadge" class="unread-dot hidden">0</span>
@@ -1976,6 +2007,103 @@
               </div>
 
               <p id="freteMsg" class="small"></p>
+            </div>
+          </div>
+        </div>
+
+
+        <div id="client-produto" class="tab-content hidden">
+          <div class="card">
+            <h2 class="section-title">Solicitar produto</h2>
+            <div class="muted-box" style="margin-bottom:18px;">
+              Descreva o produto que pretende adquirir. A equipa irá pesquisar, validar margem e converter em cotação quando encontrar a melhor opção.
+            </div>
+
+            <div class="grid">
+              <div class="row">
+                <div>
+                  <label>Nome do cliente</label>
+                  <input id="produto_nome_cliente" placeholder="Nome da empresa" />
+                </div>
+                <div>
+                  <label>Email</label>
+                  <input id="produto_email" placeholder="Email" />
+                </div>
+              </div>
+
+              <div class="row">
+                <div>
+                  <label>Contacto</label>
+                  <input id="produto_contacto" placeholder="Telefone" />
+                </div>
+                <div>
+                  <label>NUIT</label>
+                  <input id="produto_nuit" placeholder="NUIT" />
+                </div>
+              </div>
+
+              <div class="row">
+                <div>
+                  <label>Produto pretendido</label>
+                  <input id="produto_nome" placeholder="Ex: Toyota Axio 2015" />
+                </div>
+                <div>
+                  <label>Quantidade</label>
+                  <input id="produto_quantidade" type="number" min="1" placeholder="Ex: 1" />
+                </div>
+              </div>
+
+              <div class="row">
+                <div>
+                  <label>Orçamento estimado</label>
+                  <input id="produto_orcamento" type="number" step="0.01" placeholder="Ex: 500000" />
+                </div>
+                <div>
+                  <label>Mercado / país preferido</label>
+                  <input id="produto_mercado" placeholder="Ex: Japão, Durban, China" />
+                </div>
+              </div>
+
+              <div>
+                <label>Especificações</label>
+                <textarea id="produto_especificacoes" placeholder="Modelo, ano, cor, estado, marca, medidas, capacidade ou outras características"></textarea>
+              </div>
+
+              <div>
+                <label>Observações</label>
+                <textarea id="produto_obs" placeholder="Informações adicionais"></textarea>
+              </div>
+
+              <div style="max-width:280px;">
+                <button class="btn" onclick="submeterPedidoProduto()">Enviar pedido de produto</button>
+              </div>
+
+              <p id="produtoMsg" class="small"></p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="panel-head">
+              <div>
+                <h2 class="section-title">Meus pedidos de produto</h2>
+                <div class="section-sub">Acompanhe a pesquisa, a resposta comercial e a conversão em cotação.</div>
+              </div>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Produto</th>
+                    <th>Quantidade</th>
+                    <th>Orçamento</th>
+                    <th>Mercado</th>
+                    <th>Estado</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="clientProdutosTable"></tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -2376,6 +2504,8 @@
     let clientFaturasCache = [];
     let fretesCache = [];
     let clientFretesCache = [];
+    let produtosCache = [];
+    let clientProdutosCache = [];
     let currentInvoiceExtraCounter = 0;
     let estadoDonutChart = null;
     let processosMesChart = null;
@@ -2433,7 +2563,9 @@
         minhas_cotacoes: "Minhas cotações",
         faturas_recibos: "Faturas & Recibos",
         solicitar_frete: "Solicitar frete",
+        solicitar_produto: "Solicitar produto",
         meus_fretes: "Meus fretes",
+        pedidos_produto: "Pedidos de produto",
         contactos: "Contactos",
         login_title: "Entrar no sistema",
         login_btn: "Entrar"
@@ -2457,7 +2589,9 @@
         minhas_cotacoes: "My quotations",
         faturas_recibos: "Invoices & Receipts",
         solicitar_frete: "Request freight",
+        solicitar_produto: "Request product",
         meus_fretes: "My freights",
+        pedidos_produto: "Product requests",
         contactos: "Contacts",
         login_title: "Login",
         login_btn: "Login"
@@ -2481,7 +2615,9 @@
         minhas_cotacoes: "Mes devis",
         faturas_recibos: "Factures & Reçus",
         solicitar_frete: "Demander un fret",
+        solicitar_produto: "Demander un produit",
         meus_fretes: "Mes frets",
+        pedidos_produto: "Demandes de produit",
         contactos: "Contacts",
         login_title: "Connexion",
         login_btn: "Connexion"
@@ -2505,7 +2641,9 @@
         minhas_cotacoes: "我的报价",
         faturas_recibos: "发票与收据",
         solicitar_frete: "申请运输",
+        solicitar_produto: "申请产品",
         meus_fretes: "我的运输",
+        pedidos_produto: "产品请求",
         contactos: "联系方式",
         login_title: "登录",
         login_btn: "登录"
@@ -2536,6 +2674,7 @@
         ['#side-processos', t.processos],
         ['#side-cotacoes', t.cotacoes],
         ['#side-fretes', t.fretes],
+        ['#side-produtos', t.pedidos_produto],
         ['#side-financeiro', t.financeiro],
         ['#side-faturas', t.faturas],
         ['#side-clientes', t.clientes],
@@ -2548,6 +2687,7 @@
         ['button[data-client-tab="historico"]', t.minhas_cotacoes],
         ['button[data-client-tab="faturas"]', t.faturas_recibos],
         ['button[data-client-tab="frete"]', t.solicitar_frete],
+        ['button[data-client-tab="produto"]', t.solicitar_produto],
         ['button[data-client-tab="meus-fretes"]', t.meus_fretes],
         ['button[data-client-tab="mensagens"]', t.mensagens],
         ['button[data-client-tab="contactos"]', t.contactos],
@@ -2578,6 +2718,7 @@
       clientFinance: false,
       clientProcessos: false,
       clientFretes: false,
+      clientProdutos: false,
       clientDashboard: false
     };
 
@@ -2618,6 +2759,9 @@
         });
         await runRefreshLocked('clientFretes', async () => {
           await loadClientFretes();
+        });
+        await runRefreshLocked('clientProdutos', async () => {
+          await loadClientProdutos();
         });
         await runRefreshLocked('clientDashboard', async () => {
           await refreshClientDashboard();
@@ -3118,6 +3262,7 @@
       if (tab === "processos") document.getElementById("side-processos")?.classList.add("active");
       if (tab === "cotacoes") document.getElementById("side-cotacoes")?.classList.add("active");
       if (tab === "fretes") document.getElementById("side-fretes")?.classList.add("active");
+      if (tab === "produtos") document.getElementById("side-produtos")?.classList.add("active");
       if (tab === "financeiro") document.getElementById("side-financeiro")?.classList.add("active");
       if (tab === "faturas") document.getElementById("side-faturas")?.classList.add("active");
       if (tab === "clientes") document.getElementById("side-clientes")?.classList.add("active");
@@ -3128,6 +3273,7 @@
       document.getElementById("internal-processos").classList.toggle("hidden", tab !== "processos");
       document.getElementById("internal-cotacoes").classList.toggle("hidden", tab !== "cotacoes");
       document.getElementById("internal-fretes").classList.toggle("hidden", tab !== "fretes");
+      document.getElementById("internal-produtos").classList.toggle("hidden", tab !== "produtos");
       document.getElementById("internal-financeiro").classList.toggle("hidden", tab !== "financeiro");
       document.getElementById("internal-faturas").classList.toggle("hidden", tab !== "faturas");
       document.getElementById("internal-clientes").classList.toggle("hidden", tab !== "clientes");
@@ -3191,6 +3337,7 @@
       document.getElementById("client-historico").classList.toggle("hidden", tab !== "historico");
       document.getElementById("client-faturas").classList.toggle("hidden", tab !== "faturas");
       document.getElementById("client-frete").classList.toggle("hidden", tab !== "frete");
+      document.getElementById("client-produto").classList.toggle("hidden", tab !== "produto");
       document.getElementById("client-meus-fretes").classList.toggle("hidden", tab !== "meus-fretes");
       document.getElementById("client-mensagens").classList.toggle("hidden", tab !== "mensagens");
       document.getElementById("client-contactos").classList.toggle("hidden", tab !== "contactos");
@@ -3198,6 +3345,7 @@
       if (tab === "processos") loadClientProcessos();
       if (tab === "historico") loadClientCotacoes();
       if (tab === "faturas") loadClientFinanceDocs();
+      if (tab === "produto") loadClientProdutos();
       if (tab === "meus-fretes") loadClientFretes();
       if (tab === "mensagens") {
         loadClientMessages();
@@ -3443,6 +3591,7 @@
         await refreshClientDashboard();
         await loadClientProcessos();
         await loadClientFretes();
+        await loadClientProdutos();
         activateRealtimeSafe();
       } catch (_) {
         document.getElementById("welcome").textContent = "Cliente • portal";
@@ -4751,6 +4900,40 @@
       });
     }
 
+
+    function renderProdutosTable() {
+      const tbody = document.getElementById("produtosTable");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+
+      if (!produtosCache.length) {
+        tbody.innerHTML = `<tr><td colspan="8">Sem pedidos de produto.</td></tr>`;
+        return;
+      }
+
+      produtosCache.forEach(p => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>${p.cliente_nome || ""}</strong><div class="small">${p.email || ""}</div></td>
+          <td>${p.produto_nome || "-"}<div class="small">${escapeHtml(p.especificacoes || "")}</div></td>
+          <td>${p.quantidade || "-"}</td>
+          <td>${Number(p.orcamento_estimado || 0) ? formatMoney(p.orcamento_estimado) : "-"}</td>
+          <td>${p.mercado_preferido || "-"}</td>
+          <td>
+            <select id="produto_estado_${p.id}">
+              ${["recebido","em pesquisa","produto encontrado","convertido em cotacao","fechado","cancelado"].map(op => `<option value="${op}" ${String(p.estado||"").toLowerCase()===op ? "selected" : ""}>${op}</option>`).join("")}
+            </select>
+          </td>
+          <td>${p.cotacao_id ? `<span class="badge green">Ligado</span>` : `<span class="badge amber">Pendente</span>`}</td>
+          <td>
+            <button class="btn-mini info" onclick="saveProdutoUpdate('${p.id}')">Guardar</button>
+            ${p.cotacao_id ? '' : `<button class="btn-mini green" onclick="convertProdutoToCotacao('${p.id}')">Transformar em cotação</button>`}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
     function getFinanceFilteredProcessos() {
       let rows = [...processosCache];
       const fromVal = document.getElementById("financeFrom")?.value || "";
@@ -5901,6 +6084,16 @@
           fretesCache = [];
         }
 
+        try {
+          const { data: produtos } = await withTimeout(
+            supabaseClient.from("pedidos_produto").select("*").order("created_at", { ascending: false }),
+            8000
+          );
+          produtosCache = produtos || [];
+        } catch (produtoLoadError) {
+          produtosCache = [];
+        }
+
         clientesCache = clientes || [];
         processosCache = processos || [];
         cotacoesCache = cotacoes || [];
@@ -5929,6 +6122,7 @@
         renderProcessosTable();
         renderCotacoesTable();
         renderFretesTable();
+        renderProdutosTable();
         renderFinanceiroTable();
         renderClientesGrid();
         renderEquipaGrid();
@@ -6476,6 +6670,153 @@
         await loadInternal();
       } catch (e) {
         alert(e.message || "Erro ao atualizar frete.");
+      }
+    }
+
+
+    async function submeterPedidoProduto() {
+      const msg = document.getElementById("produtoMsg");
+      const payload = {
+        cliente_nome: document.getElementById("produto_nome_cliente").value.trim(),
+        email: document.getElementById("produto_email").value.trim(),
+        contacto: document.getElementById("produto_contacto").value.trim(),
+        nuit: document.getElementById("produto_nuit").value.trim(),
+        produto_nome: document.getElementById("produto_nome").value.trim(),
+        especificacoes: document.getElementById("produto_especificacoes").value.trim(),
+        quantidade: Number(document.getElementById("produto_quantidade").value || 0) || null,
+        orcamento_estimado: Number(document.getElementById("produto_orcamento").value || 0) || 0,
+        mercado_preferido: document.getElementById("produto_mercado").value.trim(),
+        observacoes: document.getElementById("produto_obs").value.trim(),
+        estado: "recebido"
+      };
+
+      if (!payload.cliente_nome || !payload.email || !payload.produto_nome) {
+        msg.textContent = "Preencha nome do cliente, email e produto pretendido.";
+        msg.className = "message-err";
+        return;
+      }
+
+      msg.textContent = "A enviar pedido...";
+      msg.className = "small";
+      try {
+        const { error } = await withTimeout(supabaseClient.from("pedidos_produto").insert(payload), 10000);
+        if (error) throw error;
+        msg.textContent = "Pedido de produto enviado com sucesso.";
+        msg.className = "message-ok";
+        ["produto_nome_cliente","produto_email","produto_contacto","produto_nuit","produto_nome","produto_especificacoes","produto_quantidade","produto_orcamento","produto_mercado","produto_obs"].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.value = "";
+        });
+        await loadClientProdutos();
+      } catch (e) {
+        msg.textContent = e.message || "Erro ao enviar pedido de produto.";
+        msg.className = "message-err";
+      }
+    }
+
+    async function loadClientProdutos() {
+      const tbody = document.getElementById("clientProdutosTable");
+      if (!tbody) return;
+      tbody.innerHTML = `<tr><td colspan="7">A carregar...</td></tr>`;
+      try {
+        const { data: userData } = await withTimeout(supabaseClient.auth.getUser(), 8000);
+        const user = userData?.user;
+        if (!user?.email) {
+          tbody.innerHTML = `<tr><td colspan="7">Não foi possível identificar o utilizador.</td></tr>`;
+          return;
+        }
+        const { data, error } = await withTimeout(
+          supabaseClient.from("pedidos_produto").select("*").eq("email", user.email).order("created_at", { ascending: false }),
+          10000
+        );
+        if (error) throw error;
+        clientProdutosCache = data || [];
+        if (!clientProdutosCache.length) {
+          tbody.innerHTML = `<tr><td colspan="7">Ainda não enviou nenhum pedido de produto.</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = clientProdutosCache.map(p => `
+          <tr>
+            <td>${formatDate(p.created_at)}</td>
+            <td>${p.produto_nome || ""}<div class="small">${escapeHtml(p.especificacoes || "")}</div></td>
+            <td>${p.quantidade || "-"}</td>
+            <td>${Number(p.orcamento_estimado || 0) ? formatMoney(p.orcamento_estimado) : "-"}</td>
+            <td>${p.mercado_preferido || "-"}</td>
+            <td>${badgeEstado(p.estado || "recebido")}</td>
+            <td>${p.cotacao_id ? `<button class="btn-mini info" onclick="showClientTab('historico', document.querySelector('#clientView .tab-btn[data-client-tab='historico']'))">Ver cotação</button>` : "-"}</td>
+          </tr>
+        `).join("");
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="7">${escapeHtml(e.message || "Erro ao carregar pedidos de produto.")}</td></tr>`;
+      }
+    }
+
+    async function saveProdutoUpdate(produtoId) {
+      const payload = {
+        estado: document.getElementById(`produto_estado_${produtoId}`)?.value || "recebido"
+      };
+      try {
+        const { error } = await withTimeout(supabaseClient.from("pedidos_produto").update(payload).eq("id", produtoId), 10000);
+        if (error) throw error;
+        alert("Pedido de produto atualizado.");
+        await loadInternal();
+      } catch (e) {
+        alert(e.message || "Erro ao atualizar pedido de produto.");
+      }
+    }
+
+    async function convertProdutoToCotacao(produtoId) {
+      if (!confirm("Transformar este pedido de produto em cotação?")) return;
+      try {
+        const { data: produto, error: readError } = await withTimeout(
+          supabaseClient.from("pedidos_produto").select("*").eq("id", produtoId).single(),
+          8000
+        );
+        if (readError) throw readError;
+        if (!produto) throw new Error("Pedido de produto não encontrado.");
+
+        const descricao = [produto.produto_nome, produto.especificacoes, produto.mercado_preferido ? `Mercado: ${produto.mercado_preferido}` : "", produto.orcamento_estimado ? `Orçamento estimado: ${formatMoney(produto.orcamento_estimado)}` : "", produto.observacoes || ""].filter(Boolean).join(" | ");
+
+        const { data: cotacao, error: cotError } = await withTimeout(
+          supabaseClient.from("pedidos_cotacao").insert({
+            nome_cliente: produto.cliente_nome || "",
+            nuit: produto.nuit || "",
+            contacto: produto.contacto || "",
+            email: produto.email || "",
+            tipo_operacao: "Solicitação de produto",
+            origem: produto.mercado_preferido || "A definir",
+            destino: "Moçambique",
+            descricao_mercadoria: descricao,
+            numero_factura: produto.produto_nome || "",
+            observacoes: `Origem: pedido de produto #${produto.id}`,
+            estado: "recebido"
+          }).select("id").single(),
+          10000
+        );
+        if (cotError) throw cotError;
+
+        const { error: updError } = await withTimeout(
+          supabaseClient.from("pedidos_produto").update({
+            cotacao_id: cotacao.id,
+            estado: "convertido em cotacao"
+          }).eq("id", produtoId),
+          10000
+        );
+        if (updError) throw updError;
+
+        await supabaseClient.from("mensagens").insert({
+          cliente_email: produto.email,
+          remetente: "admin",
+          mensagem: `O seu pedido de produto (${produto.produto_nome || ''}) foi convertido em cotação. Entre no portal para acompanhar.`,
+          processo_numero: produto.produto_nome || "",
+          lido_cliente: false,
+          lido_interno: true
+        });
+
+        alert("Pedido convertido em cotação com sucesso.");
+        await loadInternal();
+      } catch (e) {
+        alert(e.message || "Erro ao converter pedido em cotação.");
       }
     }
 
