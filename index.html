@@ -3508,17 +3508,19 @@
           return;
         }
 
-        const { data: membro, error: membroError } = await withTimeout(
-          supabaseClient.from("equipa").select("*").eq("email", email).eq("activo", true).maybeSingle(),
+        const { data: membros, error: membroError } = await withTimeout(
+          supabaseClient.from("equipa").select("*").eq("email", email).eq("activo", true),
           8000
         );
 
-        if (!membroError && membro && String(membro.password || "") === password) {
+        const membro = Array.isArray(membros) && membros.length ? membros[0] : null;
+
+        if (!membroError && membro && String(membro.password || "").trim() === password.trim()) {
           await loadApp({ email: membro.email, id: membro.id || null, app_metadata: { provider: "equipa_local" } });
           return;
         }
 
-        loginMsg.textContent = error?.message || membroError?.message || "Invalid login credentials";
+        loginMsg.textContent = membroError?.message || error?.message || "Invalid login credentials";
         loginMsg.className = "message-err";
       } catch (e) {
         loginMsg.textContent = e.message || "Erro ao entrar.";
