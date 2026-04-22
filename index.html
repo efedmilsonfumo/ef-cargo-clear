@@ -2079,8 +2079,17 @@
                 <textarea id="produto_observacoes" placeholder="Informações adicionais"></textarea>
               </div>
 
-              <div style="max-width:260px;">
-                <button class="btn" onclick="submeterPedidoProduto()">Enviar pedido de produto</button>
+              <div>
+                <label>Produto / referência (anexo)</label>
+                <input id="produto_anexo" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx" />
+                <input id="produto_edit_id" type="hidden" />
+                <input id="produto_anexo_atual_path" type="hidden" />
+                <input id="produto_anexo_atual_nome" type="hidden" />
+              </div>
+
+              <div style="display:flex;gap:10px;flex-wrap:wrap;max-width:520px;">
+                <button class="btn" id="produto_submit_btn" onclick="submeterPedidoProduto()">Enviar pedido de produto</button>
+                <button class="btn btn-outline hidden" id="produto_cancel_edit_btn" onclick="cancelarEdicaoPedidoProduto()">Cancelar edição</button>
               </div>
 
               <p id="produtoMsg" class="small"></p>
@@ -2103,7 +2112,9 @@
                     <th>Quantidade</th>
                     <th>Orçamento</th>
                     <th>Estado</th>
+                    <th>Referência</th>
                     <th>Cotação</th>
+                    <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody id="clientProdutosTable"></tbody>
@@ -3336,7 +3347,7 @@
       if (tab === "processos") loadClientProcessos();
       if (tab === "historico") loadClientCotacoes();
       if (tab === "faturas") loadClientFinanceDocs();
-      if (tab === "produto") loadClientProdutos();
+      if (tab === "produto") { preloadProdutoForm(); loadClientProdutos(); }
       if (tab === "meus-fretes") loadClientFretes();
       if (tab === "mensagens") {
         loadClientMessages();
@@ -6643,24 +6654,138 @@
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td><strong>${escapeHtml(p.cliente_nome || "")}</strong><div class="small">${escapeHtml(p.cliente_email || "")}</div></td>
-          <td>${escapeHtml(p.produto || "")}<div class="small">${escapeHtml(p.descricao || "")}</div></td>
+          <td>${escapeHtml(p.produto || "")}<div class="small">${escapeHtml(p.descricao || "")}</div>${p.anexo_path ? `<div class="small" style="margin-top:6px;"><button class="link-btn" onclick="openSignedFromBucket('processos','${escapeHtml(p.anexo_path)}')">Abrir referência</button></div>` : ``}</td>
           <td>${escapeHtml(String(p.quantidade || "-"))}</td>
           <td>${Number(p.orcamento || 0) ? formatMoney(p.orcamento) : "-"}</td>
           <td>${escapeHtml(p.prazo || "-")}</td>
           <td>${badgeEstado(p.status || "Recebido")}</td>
           <td>
-            ${p.convertido_em_cotacao ? `<span class="badge green">Convertido</span>` : `<button class="btn-mini green" onclick="transformarProdutoEmCotacao('${p.id}')">Transformar em cotação</button>`}
+            ${p.convertido_em_cotacao ? `<span class="badge green">Convertido</span>` : `
+              <button class="btn-mini green" onclick="transformarProdutoEmCotacao('${p.id}')">Transformar em cotação</button>
+              <button class="btn-mini danger" onclick="recusarPedidoProduto('${p.id}')">Recusar</button>
+            `}
           </td>
         `;
         tbody.appendChild(tr);
       });
     }
 
+    function preloadProdutoForm() {
+      const nome = document.getElementById("produto_nome_cliente");
+      const email = document.getElementById("produto_email");
+      const contacto = document.getElementById("produto_contacto");
+      const nuit = document.getElementById("produto_nuit");
+      if (nome && !nome.value) nome.value = currentUserName || "";
+      if (email && !email.value) email.value = currentUserEmail || "";
+      const cotContato = document.getElementById("cot_contacto");
+      const cotNuit = document.getElementById("cot_nuit");
+      if (contacto && !contacto.value && cotContato?.value) contacto.value = cotContato.value;
+      if (nuit && !nuit.value && cotNuit?.value) nuit.value = cotNuit.value;
+    }
+
+    async function uploadProdutoAnexo() {
+      const fileInput = document.getElementById("produto_anexo");
+      const currentPath = document.getElementById("produto_anexo_atual_path")?.value || null;
+      const currentName = document.getElementById("produto_anexo_atual_nome")?.value || null;
+      const file = fileInput?.files?.[0];
+      if (!file) {
+        return { anexo_path: currentPath, anexo_filename: currentName };
+      }
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `produto/${Date.now()}_${safeName}`;
+      const { error } = await withTimeout(
+        supabaseClient.storage.from("processos").upload(path, file, {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: file.type || "application/octet-stream"
+        }),
+        15000
+      );
+      if (error) throw error;
+      return { anexo_path: path, anexo_filename: file.name };
+    }
+
+    function resetProdutoForm() {
+      ["produto_nome_cliente","produto_email","produto_contacto","produto_nuit","produto_nome","produto_descricao","produto_quantidade","produto_orcamento","produto_pais","produto_observacoes","produto_edit_id","produto_anexo_atual_path","produto_anexo_atual_nome"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+      });
+      const prazo = document.getElementById("produto_prazo"); if (prazo) prazo.value = "Normal";
+      const file = document.getElementById("produto_anexo"); if (file) file.value = "";
+      const submit = document.getElementById("produto_submit_btn"); if (submit) submit.textContent = "Enviar pedido de produto";
+      document.getElementById("produto_cancel_edit_btn")?.classList.add("hidden");
+      preloadProdutoForm();
+    }
+
+    function cancelarEdicaoPedidoProduto() {
+      resetProdutoForm();
+      const msg = document.getElementById("produtoMsg");
+      if (msg) { msg.textContent = "Edição cancelada."; msg.className = "small"; }
+    }
+
+    function editarPedidoProduto(produtoId) {
+      const pedido = clientProdutosCache.find(p => p.id === produtoId);
+      if (!pedido) return;
+      document.getElementById("produto_edit_id").value = pedido.id || "";
+      document.getElementById("produto_nome_cliente").value = pedido.cliente_nome || "";
+      document.getElementById("produto_email").value = pedido.cliente_email || "";
+      document.getElementById("produto_contacto").value = pedido.contacto || "";
+      document.getElementById("produto_nuit").value = pedido.nuit || "";
+      document.getElementById("produto_nome").value = pedido.produto || "";
+      document.getElementById("produto_descricao").value = pedido.descricao || "";
+      document.getElementById("produto_quantidade").value = pedido.quantidade || "";
+      document.getElementById("produto_orcamento").value = pedido.orcamento || "";
+      document.getElementById("produto_pais").value = pedido.pais_preferencial || "";
+      document.getElementById("produto_prazo").value = pedido.prazo || "Normal";
+      document.getElementById("produto_observacoes").value = pedido.observacoes || "";
+      document.getElementById("produto_anexo_atual_path").value = pedido.anexo_path || "";
+      document.getElementById("produto_anexo_atual_nome").value = pedido.anexo_filename || "";
+      const submit = document.getElementById("produto_submit_btn"); if (submit) submit.textContent = "Guardar alterações";
+      document.getElementById("produto_cancel_edit_btn")?.classList.remove("hidden");
+      const msg = document.getElementById("produtoMsg");
+      if (msg) {
+        msg.textContent = pedido.anexo_filename ? `A editar pedido. Referência atual: ${pedido.anexo_filename}` : "A editar pedido.";
+        msg.className = "small";
+      }
+      document.getElementById("client-produto")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    async function cancelarPedidoProduto(produtoId) {
+      if (!confirm("Cancelar este pedido de produto?")) return;
+      try {
+        const { error } = await withTimeout(
+          supabaseClient.from("pedidos_produto").update({ status: "Cancelado" }).eq("id", produtoId),
+          10000
+        );
+        if (error) throw error;
+        await loadClientProdutos();
+        if (currentUserRole === "admin" || currentUserRole === "employee") await loadInternal();
+      } catch (e) {
+        alert(e.message || "Erro ao cancelar pedido.");
+      }
+    }
+
+    async function recusarPedidoProduto(produtoId) {
+      if (!confirm("Recusar este pedido de produto?")) return;
+      try {
+        const { error } = await withTimeout(
+          supabaseClient.from("pedidos_produto").update({ status: "Recusado" }).eq("id", produtoId),
+          10000
+        );
+        if (error) throw error;
+        await loadInternal();
+      } catch (e) {
+        alert(e.message || "Erro ao recusar pedido de produto.");
+      }
+    }
+
     async function submeterPedidoProduto() {
       const msg = document.getElementById("produtoMsg");
+      const editId = document.getElementById("produto_edit_id")?.value || "";
+      const emailValue = (document.getElementById("produto_email").value.trim() || currentUserEmail || "").toLowerCase();
       const payload = {
-        cliente_nome: document.getElementById("produto_nome_cliente").value.trim(),
-        cliente_email: document.getElementById("produto_email").value.trim(),
+        cliente_nome: document.getElementById("produto_nome_cliente").value.trim() || currentUserName || "",
+        cliente_email: emailValue,
         contacto: document.getElementById("produto_contacto").value.trim(),
         nuit: document.getElementById("produto_nuit").value.trim(),
         produto: document.getElementById("produto_nome").value.trim(),
@@ -6670,7 +6795,7 @@
         pais_preferencial: document.getElementById("produto_pais").value.trim(),
         prazo: document.getElementById("produto_prazo").value,
         observacoes: document.getElementById("produto_observacoes").value.trim(),
-        status: "Recebido"
+        status: editId ? "Atualizado" : "Recebido"
       };
 
       if (!payload.cliente_nome || !payload.cliente_email || !payload.produto) {
@@ -6679,15 +6804,27 @@
         return;
       }
 
-      msg.textContent = "A enviar pedido...";
+      msg.textContent = editId ? "A guardar alterações..." : "A enviar pedido...";
       msg.className = "small";
       try {
-        const { error } = await withTimeout(supabaseClient.from("pedidos_produto").insert(payload), 10000);
-        if (error) throw error;
-        msg.textContent = "Pedido de produto enviado com sucesso.";
+        const anexo = await uploadProdutoAnexo();
+        payload.anexo_path = anexo.anexo_path;
+        payload.anexo_filename = anexo.anexo_filename;
+
+        if (editId) {
+          const { error } = await withTimeout(
+            supabaseClient.from("pedidos_produto").update(payload).eq("id", editId).in("status", ["Recebido","Atualizado"]),
+            10000
+          );
+          if (error) throw error;
+          msg.textContent = "Pedido de produto atualizado com sucesso.";
+        } else {
+          const { error } = await withTimeout(supabaseClient.from("pedidos_produto").insert(payload), 10000);
+          if (error) throw error;
+          msg.textContent = "Pedido de produto enviado com sucesso.";
+        }
         msg.className = "message-ok";
-        ["produto_nome_cliente","produto_email","produto_contacto","produto_nuit","produto_nome","produto_descricao","produto_quantidade","produto_orcamento","produto_pais","produto_observacoes"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
-        const prazo = document.getElementById("produto_prazo"); if (prazo) prazo.value = "Normal";
+        resetProdutoForm();
         await loadClientProdutos();
       } catch (e) {
         msg.textContent = e.message || "Erro ao enviar pedido de produto.";
@@ -6698,33 +6835,36 @@
     async function loadClientProdutos() {
       const tbody = document.getElementById("clientProdutosTable");
       if (!tbody) return;
-      tbody.innerHTML = `<tr><td colspan="6">A carregar...</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8">A carregar...</td></tr>`;
       try {
-        const { data: userData } = await withTimeout(supabaseClient.auth.getUser(), 8000);
-        const user = userData?.user;
-        if (!user?.email) {
-          tbody.innerHTML = `<tr><td colspan="6">Não foi possível identificar o utilizador.</td></tr>`;
+        const userEmail = (currentUserEmail || "").toLowerCase();
+        if (!userEmail) {
+          tbody.innerHTML = `<tr><td colspan="8">Não foi possível identificar o utilizador.</td></tr>`;
           return;
         }
-        const { data, error } = await withTimeout(supabaseClient.from("pedidos_produto").select("*").eq("cliente_email", user.email).order("created_at", { ascending: false }), 10000);
+        const { data, error } = await withTimeout(supabaseClient.from("pedidos_produto").select("*").eq("cliente_email", userEmail).order("created_at", { ascending: false }), 10000);
         if (error) throw error;
         clientProdutosCache = data || [];
         if (!clientProdutosCache.length) {
-          tbody.innerHTML = `<tr><td colspan="6">Ainda não enviou nenhum pedido de produto.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="8">Ainda não enviou nenhum pedido de produto.</td></tr>`;
           return;
         }
-        tbody.innerHTML = clientProdutosCache.map(p => `
+        tbody.innerHTML = clientProdutosCache.map(p => {
+          const canChange = !p.convertido_em_cotacao && !["Recusado","Cancelado","Convertido em cotação"].includes(p.status || "");
+          return `
           <tr>
             <td>${formatDate(p.created_at)}</td>
             <td>${escapeHtml(p.produto || "")}<div class="small">${escapeHtml(p.descricao || "")}</div></td>
             <td>${escapeHtml(String(p.quantidade || "-"))}</td>
             <td>${Number(p.orcamento || 0) ? formatMoney(p.orcamento) : "-"}</td>
             <td>${badgeEstado(p.status || "Recebido")}</td>
+            <td>${p.anexo_path ? `<button class="link-btn" onclick="openSignedFromBucket('processos','${escapeHtml(p.anexo_path)}')">${escapeHtml(p.anexo_filename || 'Abrir')}</button>` : "-"}</td>
             <td>${p.cotacao_id ? `<span class="badge green">Criada</span>` : "-"}</td>
-          </tr>
-        `).join("");
+            <td>${canChange ? `<button class="btn-mini info" onclick="editarPedidoProduto('${p.id}')">Editar</button><button class="btn-mini danger" onclick="cancelarPedidoProduto('${p.id}')">Cancelar</button>` : `-`}</td>
+          </tr>`;
+        }).join("");
       } catch (e) {
-        tbody.innerHTML = `<tr><td colspan="6">${escapeHtml(e.message || "Erro ao carregar pedidos de produto.")}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8">${escapeHtml(e.message || "Erro ao carregar pedidos de produto.")}</td></tr>`;
       }
     }
 
