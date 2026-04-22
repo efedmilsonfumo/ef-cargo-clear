@@ -966,6 +966,7 @@
           <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;">
     <button class="btn" onclick="login()">Entrar</button>
     <a href="https://www.dropbox.com/scl/fi/2ws6abpqp0eo63rz8dcxh/EF-Cargo-Clear.apk?rlkey=s8scvdu563aovgnd04ajfxktc&st=z0p9c0k1&dl=1"
+       target="_blank" rel="noopener noreferrer"
        class="btn btn-outline"
        style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">
        📥 Baixar App
@@ -1585,6 +1586,11 @@
                       <select id="eq_nivel">
                         <option value="operador">Operador</option>
                         <option value="supervisor">Supervisor</option>
+                        <option value="assistente_administrativa">Assistente Administrativa</option>
+                        <option value="gestao_documental">Gestão Documental</option>
+                        <option value="financeiro">Financeiro</option>
+                        <option value="comercial">Comercial</option>
+                        <option value="logistica">Logística</option>
                       </select>
                     </div>
                     <div>
@@ -2297,6 +2303,11 @@
           <select id="edit_eq_nivel">
             <option value="operador">Operador</option>
             <option value="supervisor">Supervisor</option>
+            <option value="assistente_administrativa">Assistente Administrativa</option>
+            <option value="gestao_documental">Gestão Documental</option>
+            <option value="financeiro">Financeiro</option>
+            <option value="comercial">Comercial</option>
+            <option value="logistica">Logística</option>
           </select>
         </div>
         <div>
@@ -3473,7 +3484,7 @@
     }
 
     async function login() {
-      const email = document.getElementById("email").value.trim();
+      const email = document.getElementById("email").value.trim().toLowerCase();
       const password = document.getElementById("password").value.trim();
       const loginMsg = document.getElementById("loginMsg");
 
@@ -3492,21 +3503,25 @@
           8000
         );
 
-        if (error) {
-          loginMsg.textContent = error.message;
-          loginMsg.className = "message-err";
+        if (!error && data?.user) {
+          await loadApp(data.user);
           return;
         }
 
-        if (!data.user) {
-          loginMsg.textContent = "Login não concluído.";
-          loginMsg.className = "message-err";
+        const { data: membro, error: membroError } = await withTimeout(
+          supabaseClient.from("equipa").select("*").eq("email", email).eq("activo", true).maybeSingle(),
+          8000
+        );
+
+        if (!membroError && membro && String(membro.password || "") === password) {
+          await loadApp({ email: membro.email, id: membro.id || null, app_metadata: { provider: "equipa_local" } });
           return;
         }
 
-        await loadApp(data.user);
+        loginMsg.textContent = error?.message || membroError?.message || "Invalid login credentials";
+        loginMsg.className = "message-err";
       } catch (e) {
-        loginMsg.textContent = e.message;
+        loginMsg.textContent = e.message || "Erro ao entrar.";
         loginMsg.className = "message-err";
       }
     }
@@ -4131,13 +4146,28 @@
   const nivel = document.getElementById("eq_nivel").value;
   const activo = document.getElementById("eq_activo").value === "true";
 
-  if (!nome || !email) {
-    alert("Nome e email obrigatórios.");
+  if (!nome || !email || !password) {
+    alert("Nome, email e password obrigatórios.");
+    return;
+  }
+
+  if (password.length < 4) {
+    alert("A password deve ter pelo menos 4 caracteres.");
     return;
   }
 
   try {
-    let result = await withTimeout(
+    const { data: existente } = await withTimeout(
+      supabaseClient.from("equipa").select("id").eq("email", email).maybeSingle(),
+      10000
+    );
+
+    if (existente?.id) {
+      alert("Já existe um funcionário com este email.");
+      return;
+    }
+
+    const { error } = await withTimeout(
       supabaseClient.from("equipa").insert({
         nome,
         email,
@@ -4148,20 +4178,8 @@
       10000
     );
 
-    if (result.error && String(result.error.message || '').toLowerCase().includes('password')) {
-      result = await withTimeout(
-        supabaseClient.from("equipa").insert({
-          nome,
-          email,
-          nivel,
-          activo
-        }),
-        10000
-      );
-    }
-
-    if (result.error) {
-      alert(result.error.message);
+    if (error) {
+      alert(error.message);
       return;
     }
 
@@ -4174,7 +4192,7 @@
 
     await loadInternal();
   } catch (e) {
-    alert(e.message);
+    alert(e.message || "Erro ao criar funcionário.");
   }
 }
 
@@ -5405,11 +5423,22 @@ async function deleteSingleMessage(messageId) {
       10000
     );
     if (error) throw error;
+
+    mensagensCache = (mensagensCache || []).filter(m => String(m.id) !== String(messageId));
+
     if (currentUserRole === "admin" || currentUserRole === "employee") {
-      await loadInternalMessages();
+      const aindaExisteThread = mensagensCache.some(m => m.cliente_email === currentSelectedThread);
+      if (!aindaExisteThread) {
+        const first = mensagensCache[0]?.cliente_email || "";
+        currentSelectedThread = first;
+      }
+      renderInternalThreadList();
+      renderInternalMessages();
+      updateUnreadBadges();
     }
     if (currentUserRole === "client") {
-      await loadClientMessages();
+      renderClientMessagesSafe();
+      updateUnreadBadges();
     }
   } catch (e) {
     alert(e.message || "Erro ao apagar mensagem.");
@@ -5424,12 +5453,20 @@ async function deleteMessageThread(clienteEmail) {
       10000
     );
     if (error) throw error;
+
+    mensagensCache = (mensagensCache || []).filter(m => String(m.cliente_email) !== String(clienteEmail));
+
     if (currentUserRole === "admin" || currentUserRole === "employee") {
-      currentSelectedThread = "";
-      await loadInternalMessages();
+      const first = mensagensCache[0]?.cliente_email || "";
+      currentSelectedThread = first;
+      renderInternalThreadList();
+      renderInternalMessages();
+      updateUnreadBadges();
     }
     if (currentUserRole === "client") {
-      await loadClientMessages();
+      mensagensCache = [];
+      renderClientMessagesSafe();
+      updateUnreadBadges();
     }
   } catch (e) {
     alert(e.message || "Erro ao apagar conversa.");
