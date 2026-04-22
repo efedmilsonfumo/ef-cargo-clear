@@ -3038,13 +3038,14 @@
         console.log("EMAIL RESULT:", data);
 
         if (!res.ok) {
-          throw new Error(data?.error || data?.message || 'Falha ao enviar email.');
+          console.warn("Falha ao enviar email:", data?.error || data?.message || 'Falha ao enviar email.');
+          return { ok: false, error: data?.error || data?.message || 'Falha ao enviar email.' };
         }
 
-        return data;
+        return { ok: true, data };
       } catch (e) {
-        console.log("Erro ao enviar email:", e);
-        throw e;
+        console.warn("Erro ao enviar email:", e);
+        return { ok: false, error: e?.message || 'Erro ao enviar email.' };
       }
     }
 
@@ -3083,7 +3084,7 @@
 
     async function notifyInternalAboutClientMessage({ clienteEmail, processoNumero, mensagem }) {
       const internalRecipients = [
-        'geral.efassociados@gmail.com'
+        ADMIN_EMAIL
       ].filter(Boolean);
 
       if (!internalRecipients.length) return;
@@ -3117,7 +3118,7 @@
       });
 
       await sendEmail(
-        clienteEmail,
+        ADMIN_EMAIL,
         `Nova mensagem da EF Cargo Clear${processoNumero ? ' - ' + processoNumero : ''}`,
         html
       );
@@ -5827,7 +5828,7 @@
 
         if (cotacao?.email) {
           await sendEmail(
-            cotacao.email,
+            ADMIN_EMAIL,
             "A sua cotação foi respondida",
             `<div style="font-family:Arial,sans-serif">
               <h2>Cotação respondida</h2>
@@ -7144,7 +7145,7 @@
 
         if (email) {
           await sendEmail(
-            email,
+            ADMIN_EMAIL,
             "Recebemos o seu pedido de cotação",
             `<div style="font-family:Arial,sans-serif">
               <h2>Pedido recebido com sucesso</h2>
@@ -7659,7 +7660,11 @@
         return;
       }
       const html = invoiceHtmlFromRecord(f);
-      await sendEmail(f.cliente_email, `Fatura ${f.numero_fatura}`, html);
+      const mailResult = await sendEmail(f.cliente_email, `Fatura ${f.numero_fatura}`, html);
+      if (!mailResult?.ok) {
+        alert('Falha ao enviar a fatura por email.');
+        return;
+      }
       try {
         const stamp = new Date().toISOString();
         await withTimeout(supabaseClient.from('faturas').update({ status_envio: 'enviado', enviado_at: stamp }).eq('id', id), 10000);
