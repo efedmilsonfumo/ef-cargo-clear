@@ -963,14 +963,14 @@
             <label>Password</label>
             <input id="password" type="password" placeholder="Digite a password" />
           </div>
-          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
-            <button class="btn" onclick="login()">Entrar</button>
-            <a href="https://www.dropbox.com/scl/fi/2ws6abpqp0eo63rz8dcxh/EF-Cargo-Clear.apk?rlkey=s8scvdu563aovgnd04ajfxktc&st=z0p9c0k1&dl=1"
-               class="btn btn-outline"
-               style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">
-               📥 Baixar App
-            </a>
-          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;">
+    <button class="btn" onclick="login()">Entrar</button>
+    <a href="https://www.dropbox.com/scl/fi/2ws6abpqp0eo63rz8dcxh/EF-Cargo-Clear.apk?rlkey=s8scvdu563aovgnd04ajfxktc&st=z0p9c0k1&dl=1"
+       class="btn btn-outline"
+       style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">
+       📥 Baixar App
+    </a>
+  </div>
 
         </div>
 
@@ -1103,7 +1103,7 @@
               <button class="sidebar-btn" id="side-processos" onclick="showInternalTab('processos')">Processos</button>
               <button class="sidebar-btn" id="side-cotacoes" onclick="showInternalTab('cotacoes')">Pedidos de cotação</button>
               <button class="sidebar-btn" id="side-fretes" onclick="showInternalTab('fretes')">Pedidos de frete</button>
-              <button class="sidebar-btn" id="side-produtos" onclick="showInternalTab('produtos')">Pedidos de produto</button>
+              <button class="sidebar-btn" id="side-produtos" onclick="showInternalTab('produtos')">Solicitar produto</button>
               <button class="sidebar-btn" id="side-financeiro" onclick="showInternalTab('financeiro')">Financeiro</button>
               <button class="sidebar-btn" id="side-faturas" onclick="showInternalTab('faturas')">Faturas</button>
               <button class="sidebar-btn" id="side-clientes" onclick="showInternalTab('clientes')">Clientes</button>
@@ -1300,13 +1300,12 @@
               </div>
             </div>
 
-
             <div id="internal-produtos" class="tab-content hidden" style="margin-top:18px;">
               <div class="card">
                 <div class="panel-head">
                   <div>
-                    <h2 class="section-title">Pedidos de Produto</h2>
-                    <div class="section-sub">Receba pedidos de aquisição, pesquise no mercado e converta em cotação quando encontrar a melhor opção.</div>
+                    <h2 class="section-title">Pedidos de produto</h2>
+                    <div class="section-sub">Pedidos enviados pelos clientes para pesquisa e futura conversão em cotação.</div>
                   </div>
                 </div>
 
@@ -1316,11 +1315,10 @@
                       <tr>
                         <th>Cliente</th>
                         <th>Produto</th>
-                        <th>Qtd</th>
+                        <th>Quantidade</th>
                         <th>Orçamento</th>
-                        <th>Mercado</th>
+                        <th>Prazo</th>
                         <th>Estado</th>
-                        <th>Cotação</th>
                         <th>Ações</th>
                       </tr>
                     </thead>
@@ -2011,13 +2009,10 @@
           </div>
         </div>
 
-
         <div id="client-produto" class="tab-content hidden">
           <div class="card">
             <h2 class="section-title">Solicitar produto</h2>
-            <div class="muted-box" style="margin-bottom:18px;">
-              Descreva o produto que pretende adquirir. A equipa irá pesquisar, validar margem e converter em cotação quando encontrar a melhor opção.
-            </div>
+            <div class="muted-box" style="margin-bottom:18px;">Descreva o produto que pretende adquirir. A equipa irá pesquisar, responder com cotação e acompanhar o processo.</div>
 
             <div class="grid">
               <div class="row">
@@ -2044,7 +2039,7 @@
 
               <div class="row">
                 <div>
-                  <label>Produto pretendido</label>
+                  <label>Produto</label>
                   <input id="produto_nome" placeholder="Ex: Toyota Axio 2015" />
                 </div>
                 <div>
@@ -2059,22 +2054,32 @@
                   <input id="produto_orcamento" type="number" step="0.01" placeholder="Ex: 500000" />
                 </div>
                 <div>
-                  <label>Mercado / país preferido</label>
-                  <input id="produto_mercado" placeholder="Ex: Japão, Durban, China" />
+                  <label>País / mercado preferencial</label>
+                  <input id="produto_pais" placeholder="Ex: Japão / África do Sul" />
+                </div>
+              </div>
+
+              <div class="row">
+                <div>
+                  <label>Prazo pretendido</label>
+                  <select id="produto_prazo">
+                    <option value="Normal">Normal</option>
+                    <option value="Urgente">Urgente</option>
+                  </select>
                 </div>
               </div>
 
               <div>
-                <label>Especificações</label>
-                <textarea id="produto_especificacoes" placeholder="Modelo, ano, cor, estado, marca, medidas, capacidade ou outras características"></textarea>
+                <label>Descrição / especificações</label>
+                <textarea id="produto_descricao" placeholder="Modelo, ano, cor, características e outros detalhes"></textarea>
               </div>
 
               <div>
                 <label>Observações</label>
-                <textarea id="produto_obs" placeholder="Informações adicionais"></textarea>
+                <textarea id="produto_observacoes" placeholder="Informações adicionais"></textarea>
               </div>
 
-              <div style="max-width:280px;">
+              <div style="max-width:260px;">
                 <button class="btn" onclick="submeterPedidoProduto()">Enviar pedido de produto</button>
               </div>
 
@@ -2086,7 +2091,7 @@
             <div class="panel-head">
               <div>
                 <h2 class="section-title">Meus pedidos de produto</h2>
-                <div class="section-sub">Acompanhe a pesquisa, a resposta comercial e a conversão em cotação.</div>
+                <div class="section-sub">Acompanhe aqui os pedidos enviados e a conversão para cotação.</div>
               </div>
             </div>
             <div class="table-scroll">
@@ -2097,9 +2102,8 @@
                     <th>Produto</th>
                     <th>Quantidade</th>
                     <th>Orçamento</th>
-                    <th>Mercado</th>
                     <th>Estado</th>
-                    <th>Ações</th>
+                    <th>Cotação</th>
                   </tr>
                 </thead>
                 <tbody id="clientProdutosTable"></tbody>
@@ -2563,9 +2567,7 @@
         minhas_cotacoes: "Minhas cotações",
         faturas_recibos: "Faturas & Recibos",
         solicitar_frete: "Solicitar frete",
-        solicitar_produto: "Solicitar produto",
         meus_fretes: "Meus fretes",
-        pedidos_produto: "Pedidos de produto",
         contactos: "Contactos",
         login_title: "Entrar no sistema",
         login_btn: "Entrar"
@@ -2589,9 +2591,7 @@
         minhas_cotacoes: "My quotations",
         faturas_recibos: "Invoices & Receipts",
         solicitar_frete: "Request freight",
-        solicitar_produto: "Request product",
         meus_fretes: "My freights",
-        pedidos_produto: "Product requests",
         contactos: "Contacts",
         login_title: "Login",
         login_btn: "Login"
@@ -2615,9 +2615,7 @@
         minhas_cotacoes: "Mes devis",
         faturas_recibos: "Factures & Reçus",
         solicitar_frete: "Demander un fret",
-        solicitar_produto: "Demander un produit",
         meus_fretes: "Mes frets",
-        pedidos_produto: "Demandes de produit",
         contactos: "Contacts",
         login_title: "Connexion",
         login_btn: "Connexion"
@@ -2641,9 +2639,7 @@
         minhas_cotacoes: "我的报价",
         faturas_recibos: "发票与收据",
         solicitar_frete: "申请运输",
-        solicitar_produto: "申请产品",
         meus_fretes: "我的运输",
-        pedidos_produto: "产品请求",
         contactos: "联系方式",
         login_title: "登录",
         login_btn: "登录"
@@ -2674,7 +2670,6 @@
         ['#side-processos', t.processos],
         ['#side-cotacoes', t.cotacoes],
         ['#side-fretes', t.fretes],
-        ['#side-produtos', t.pedidos_produto],
         ['#side-financeiro', t.financeiro],
         ['#side-faturas', t.faturas],
         ['#side-clientes', t.clientes],
@@ -2687,7 +2682,7 @@
         ['button[data-client-tab="historico"]', t.minhas_cotacoes],
         ['button[data-client-tab="faturas"]', t.faturas_recibos],
         ['button[data-client-tab="frete"]', t.solicitar_frete],
-        ['button[data-client-tab="produto"]', t.solicitar_produto],
+        ['button[data-client-tab="produto"]', 'Solicitar produto'],
         ['button[data-client-tab="meus-fretes"]', t.meus_fretes],
         ['button[data-client-tab="mensagens"]', t.mensagens],
         ['button[data-client-tab="contactos"]', t.contactos],
@@ -2718,7 +2713,6 @@
       clientFinance: false,
       clientProcessos: false,
       clientFretes: false,
-      clientProdutos: false,
       clientDashboard: false
     };
 
@@ -2759,9 +2753,6 @@
         });
         await runRefreshLocked('clientFretes', async () => {
           await loadClientFretes();
-        });
-        await runRefreshLocked('clientProdutos', async () => {
-          await loadClientProdutos();
         });
         await runRefreshLocked('clientDashboard', async () => {
           await refreshClientDashboard();
@@ -3591,7 +3582,6 @@
         await refreshClientDashboard();
         await loadClientProcessos();
         await loadClientFretes();
-        await loadClientProdutos();
         activateRealtimeSafe();
       } catch (_) {
         document.getElementById("welcome").textContent = "Cliente • portal";
@@ -4894,40 +4884,6 @@
           </td>
           <td>
             <button class="btn-mini info" onclick="saveFreteUpdate('${f.id}')">Guardar</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-
-    function renderProdutosTable() {
-      const tbody = document.getElementById("produtosTable");
-      if (!tbody) return;
-      tbody.innerHTML = "";
-
-      if (!produtosCache.length) {
-        tbody.innerHTML = `<tr><td colspan="8">Sem pedidos de produto.</td></tr>`;
-        return;
-      }
-
-      produtosCache.forEach(p => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td><strong>${p.cliente_nome || ""}</strong><div class="small">${p.email || ""}</div></td>
-          <td>${p.produto_nome || "-"}<div class="small">${escapeHtml(p.especificacoes || "")}</div></td>
-          <td>${p.quantidade || "-"}</td>
-          <td>${Number(p.orcamento_estimado || 0) ? formatMoney(p.orcamento_estimado) : "-"}</td>
-          <td>${p.mercado_preferido || "-"}</td>
-          <td>
-            <select id="produto_estado_${p.id}">
-              ${["recebido","em pesquisa","produto encontrado","convertido em cotacao","fechado","cancelado"].map(op => `<option value="${op}" ${String(p.estado||"").toLowerCase()===op ? "selected" : ""}>${op}</option>`).join("")}
-            </select>
-          </td>
-          <td>${p.cotacao_id ? `<span class="badge green">Ligado</span>` : `<span class="badge amber">Pendente</span>`}</td>
-          <td>
-            <button class="btn-mini info" onclick="saveProdutoUpdate('${p.id}')">Guardar</button>
-            ${p.cotacao_id ? '' : `<button class="btn-mini green" onclick="convertProdutoToCotacao('${p.id}')">Transformar em cotação</button>`}
           </td>
         `;
         tbody.appendChild(tr);
@@ -6673,25 +6629,52 @@
       }
     }
 
+    function renderProdutosTable() {
+      const tbody = document.getElementById("produtosTable");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+
+      if (!produtosCache.length) {
+        tbody.innerHTML = `<tr><td colspan="7">Sem pedidos de produto.</td></tr>`;
+        return;
+      }
+
+      produtosCache.forEach(p => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(p.cliente_nome || "")}</strong><div class="small">${escapeHtml(p.cliente_email || "")}</div></td>
+          <td>${escapeHtml(p.produto || "")}<div class="small">${escapeHtml(p.descricao || "")}</div></td>
+          <td>${escapeHtml(String(p.quantidade || "-"))}</td>
+          <td>${Number(p.orcamento || 0) ? formatMoney(p.orcamento) : "-"}</td>
+          <td>${escapeHtml(p.prazo || "-")}</td>
+          <td>${badgeEstado(p.status || "Recebido")}</td>
+          <td>
+            ${p.convertido_em_cotacao ? `<span class="badge green">Convertido</span>` : `<button class="btn-mini green" onclick="transformarProdutoEmCotacao('${p.id}')">Transformar em cotação</button>`}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
 
     async function submeterPedidoProduto() {
       const msg = document.getElementById("produtoMsg");
       const payload = {
         cliente_nome: document.getElementById("produto_nome_cliente").value.trim(),
-        email: document.getElementById("produto_email").value.trim(),
+        cliente_email: document.getElementById("produto_email").value.trim(),
         contacto: document.getElementById("produto_contacto").value.trim(),
         nuit: document.getElementById("produto_nuit").value.trim(),
-        produto_nome: document.getElementById("produto_nome").value.trim(),
-        especificacoes: document.getElementById("produto_especificacoes").value.trim(),
+        produto: document.getElementById("produto_nome").value.trim(),
+        descricao: document.getElementById("produto_descricao").value.trim(),
         quantidade: Number(document.getElementById("produto_quantidade").value || 0) || null,
-        orcamento_estimado: Number(document.getElementById("produto_orcamento").value || 0) || 0,
-        mercado_preferido: document.getElementById("produto_mercado").value.trim(),
-        observacoes: document.getElementById("produto_obs").value.trim(),
-        estado: "recebido"
+        orcamento: Number(document.getElementById("produto_orcamento").value || 0) || null,
+        pais_preferencial: document.getElementById("produto_pais").value.trim(),
+        prazo: document.getElementById("produto_prazo").value,
+        observacoes: document.getElementById("produto_observacoes").value.trim(),
+        status: "Recebido"
       };
 
-      if (!payload.cliente_nome || !payload.email || !payload.produto_nome) {
-        msg.textContent = "Preencha nome do cliente, email e produto pretendido.";
+      if (!payload.cliente_nome || !payload.cliente_email || !payload.produto) {
+        msg.textContent = "Preencha nome, email e produto.";
         msg.className = "message-err";
         return;
       }
@@ -6703,10 +6686,8 @@
         if (error) throw error;
         msg.textContent = "Pedido de produto enviado com sucesso.";
         msg.className = "message-ok";
-        ["produto_nome_cliente","produto_email","produto_contacto","produto_nuit","produto_nome","produto_especificacoes","produto_quantidade","produto_orcamento","produto_mercado","produto_obs"].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.value = "";
-        });
+        ["produto_nome_cliente","produto_email","produto_contacto","produto_nuit","produto_nome","produto_descricao","produto_quantidade","produto_orcamento","produto_pais","produto_observacoes"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+        const prazo = document.getElementById("produto_prazo"); if (prazo) prazo.value = "Normal";
         await loadClientProdutos();
       } catch (e) {
         msg.textContent = e.message || "Erro ao enviar pedido de produto.";
@@ -6717,106 +6698,83 @@
     async function loadClientProdutos() {
       const tbody = document.getElementById("clientProdutosTable");
       if (!tbody) return;
-      tbody.innerHTML = `<tr><td colspan="7">A carregar...</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6">A carregar...</td></tr>`;
       try {
         const { data: userData } = await withTimeout(supabaseClient.auth.getUser(), 8000);
         const user = userData?.user;
         if (!user?.email) {
-          tbody.innerHTML = `<tr><td colspan="7">Não foi possível identificar o utilizador.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="6">Não foi possível identificar o utilizador.</td></tr>`;
           return;
         }
-        const { data, error } = await withTimeout(
-          supabaseClient.from("pedidos_produto").select("*").eq("email", user.email).order("created_at", { ascending: false }),
-          10000
-        );
+        const { data, error } = await withTimeout(supabaseClient.from("pedidos_produto").select("*").eq("cliente_email", user.email).order("created_at", { ascending: false }), 10000);
         if (error) throw error;
         clientProdutosCache = data || [];
         if (!clientProdutosCache.length) {
-          tbody.innerHTML = `<tr><td colspan="7">Ainda não enviou nenhum pedido de produto.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="6">Ainda não enviou nenhum pedido de produto.</td></tr>`;
           return;
         }
         tbody.innerHTML = clientProdutosCache.map(p => `
           <tr>
             <td>${formatDate(p.created_at)}</td>
-            <td>${p.produto_nome || ""}<div class="small">${escapeHtml(p.especificacoes || "")}</div></td>
-            <td>${p.quantidade || "-"}</td>
-            <td>${Number(p.orcamento_estimado || 0) ? formatMoney(p.orcamento_estimado) : "-"}</td>
-            <td>${p.mercado_preferido || "-"}</td>
-            <td>${badgeEstado(p.estado || "recebido")}</td>
-            <td>${p.cotacao_id ? `<button class="btn-mini info" onclick="showClientTab('historico', document.querySelector('#clientView .tab-btn[data-client-tab='historico']'))">Ver cotação</button>` : "-"}</td>
+            <td>${escapeHtml(p.produto || "")}<div class="small">${escapeHtml(p.descricao || "")}</div></td>
+            <td>${escapeHtml(String(p.quantidade || "-"))}</td>
+            <td>${Number(p.orcamento || 0) ? formatMoney(p.orcamento) : "-"}</td>
+            <td>${badgeEstado(p.status || "Recebido")}</td>
+            <td>${p.cotacao_id ? `<span class="badge green">Criada</span>` : "-"}</td>
           </tr>
         `).join("");
       } catch (e) {
-        tbody.innerHTML = `<tr><td colspan="7">${escapeHtml(e.message || "Erro ao carregar pedidos de produto.")}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6">${escapeHtml(e.message || "Erro ao carregar pedidos de produto.")}</td></tr>`;
       }
     }
 
-    async function saveProdutoUpdate(produtoId) {
-      const payload = {
-        estado: document.getElementById(`produto_estado_${produtoId}`)?.value || "recebido"
-      };
+    async function transformarProdutoEmCotacao(produtoId) {
       try {
-        const { error } = await withTimeout(supabaseClient.from("pedidos_produto").update(payload).eq("id", produtoId), 10000);
-        if (error) throw error;
-        alert("Pedido de produto atualizado.");
-        await loadInternal();
-      } catch (e) {
-        alert(e.message || "Erro ao atualizar pedido de produto.");
-      }
-    }
-
-    async function convertProdutoToCotacao(produtoId) {
-      if (!confirm("Transformar este pedido de produto em cotação?")) return;
-      try {
-        const { data: produto, error: readError } = await withTimeout(
+        const { data: pedido, error: pedidoError } = await withTimeout(
           supabaseClient.from("pedidos_produto").select("*").eq("id", produtoId).single(),
-          8000
-        );
-        if (readError) throw readError;
-        if (!produto) throw new Error("Pedido de produto não encontrado.");
-
-        const descricao = [produto.produto_nome, produto.especificacoes, produto.mercado_preferido ? `Mercado: ${produto.mercado_preferido}` : "", produto.orcamento_estimado ? `Orçamento estimado: ${formatMoney(produto.orcamento_estimado)}` : "", produto.observacoes || ""].filter(Boolean).join(" | ");
-
-        const { data: cotacao, error: cotError } = await withTimeout(
-          supabaseClient.from("pedidos_cotacao").insert({
-            nome_cliente: produto.cliente_nome || "",
-            nuit: produto.nuit || "",
-            contacto: produto.contacto || "",
-            email: produto.email || "",
-            tipo_operacao: "Solicitação de produto",
-            origem: produto.mercado_preferido || "A definir",
-            destino: "Moçambique",
-            descricao_mercadoria: descricao,
-            numero_factura: produto.produto_nome || "",
-            observacoes: `Origem: pedido de produto #${produto.id}`,
-            estado: "recebido"
-          }).select("id").single(),
           10000
         );
-        if (cotError) throw cotError;
+        if (pedidoError) throw pedidoError;
+        if (!pedido) throw new Error("Pedido de produto não encontrado.");
+        if (pedido.convertido_em_cotacao || pedido.cotacao_id) {
+          alert("Este pedido já foi convertido em cotação.");
+          return;
+        }
 
-        const { error: updError } = await withTimeout(
+        const payload = {
+          nome_cliente: pedido.cliente_nome || "",
+          nuit: pedido.nuit || "",
+          contacto: pedido.contacto || "",
+          email: pedido.cliente_email || "",
+          tipo_operacao: "Procurement",
+          origem: pedido.pais_preferencial || "A definir",
+          destino: "Moçambique",
+          descricao_mercadoria: `${pedido.produto || ""}${pedido.descricao ? ' - ' + pedido.descricao : ''}`,
+          numero_factura: null,
+          observacoes: `Pedido de produto convertido automaticamente.${pedido.observacoes ? ' ' + pedido.observacoes : ''}${pedido.orcamento ? ' Orçamento estimado: ' + pedido.orcamento : ''}`,
+          estado: "recebido"
+        };
+
+        const { data: cotacaoCriada, error: cotacaoError } = await withTimeout(
+          supabaseClient.from("pedidos_cotacao").insert(payload).select("id").single(),
+          10000
+        );
+        if (cotacaoError) throw cotacaoError;
+
+        const { error: updateError } = await withTimeout(
           supabaseClient.from("pedidos_produto").update({
-            cotacao_id: cotacao.id,
-            estado: "convertido em cotacao"
+            cotacao_id: cotacaoCriada.id,
+            convertido_em_cotacao: true,
+            status: "Convertido em cotação"
           }).eq("id", produtoId),
           10000
         );
-        if (updError) throw updError;
+        if (updateError) throw updateError;
 
-        await supabaseClient.from("mensagens").insert({
-          cliente_email: produto.email,
-          remetente: "admin",
-          mensagem: `O seu pedido de produto (${produto.produto_nome || ''}) foi convertido em cotação. Entre no portal para acompanhar.`,
-          processo_numero: produto.produto_nome || "",
-          lido_cliente: false,
-          lido_interno: true
-        });
-
-        alert("Pedido convertido em cotação com sucesso.");
+        alert("Pedido transformado em cotação com sucesso.");
         await loadInternal();
       } catch (e) {
-        alert(e.message || "Erro ao converter pedido em cotação.");
+        alert(e.message || "Erro ao transformar pedido em cotação.");
       }
     }
 
