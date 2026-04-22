@@ -1577,6 +1577,10 @@
                       <input id="eq_email" />
                     </div>
                     <div>
+                      <label>Password</label>
+                      <input id="eq_password" type="password" placeholder="Password do funcionário" />
+                    </div>
+                    <div>
                       <label>Nível</label>
                       <select id="eq_nivel">
                         <option value="operador">Operador</option>
@@ -3027,27 +3031,27 @@
     }
 
     async function sendEmail(to, subject, html) {
-      try {
-        const res = await fetch('/api/send-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ to, subject, html })
-        });
+  try {
+    const res = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: ADMIN_EMAIL, subject, html })
+    });
 
-        const data = await res.json().catch(() => ({}));
-        console.log("EMAIL RESULT:", data);
+    const data = await res.json().catch(() => ({}));
+    console.log("EMAIL RESULT:", data);
 
-        if (!res.ok) {
-          console.warn("Falha ao enviar email:", data?.error || data?.message || 'Falha ao enviar email.');
-          return { ok: false, error: data?.error || data?.message || 'Falha ao enviar email.' };
-        }
-
-        return { ok: true, data };
-      } catch (e) {
-        console.warn("Erro ao enviar email:", e);
-        return { ok: false, error: e?.message || 'Erro ao enviar email.' };
-      }
+    if (!res.ok) {
+      console.warn("Falha no envio de email:", data?.error || data?.message || res.status);
+      return { ok: false, error: data?.error || data?.message || 'Falha ao enviar email.' };
     }
+
+    return { ok: true, data };
+  } catch (e) {
+    console.warn("Erro ao enviar email:", e);
+    return { ok: false, error: e?.message || 'Erro ao enviar email.' };
+  }
+}
 
     function buildMessageEmailHtml({
       title = 'Nova mensagem',
@@ -3083,46 +3087,38 @@
     }
 
     async function notifyInternalAboutClientMessage({ clienteEmail, processoNumero, mensagem }) {
-      const internalRecipients = [
-        ADMIN_EMAIL
-      ].filter(Boolean);
+  const html = buildMessageEmailHtml({
+    title: 'Nova mensagem de cliente',
+    subtitle: 'Recebeu uma nova mensagem no aplicativo.',
+    fromLabel: 'Cliente',
+    fromEmail: clienteEmail,
+    processNumber: processoNumero,
+    messageText: mensagem
+  });
 
-      if (!internalRecipients.length) return;
-
-      const html = buildMessageEmailHtml({
-        title: 'Nova mensagem de cliente',
-        subtitle: 'Recebeu uma nova mensagem no aplicativo.',
-        fromLabel: 'Cliente',
-        fromEmail: clienteEmail,
-        processNumber: processoNumero,
-        messageText: mensagem
-      });
-
-      await sendEmail(
-        internalRecipients.join(','),
-        `Nova mensagem no app - ${clienteEmail}${processoNumero ? ' - ' + processoNumero : ''}`,
-        html
-      );
-    }
+  return await sendEmail(
+    ADMIN_EMAIL,
+    `Nova mensagem no app - ${clienteEmail}${processoNumero ? ' - ' + processoNumero : ''}`,
+    html
+  );
+}
 
     async function notifyClientAboutInternalMessage({ clienteEmail, remetenteNome, processoNumero, mensagem }) {
-      if (!clienteEmail) return;
+  const html = buildMessageEmailHtml({
+    title: 'Nova resposta da EF Cargo Clear',
+    subtitle: 'Recebeu uma nova mensagem da equipa no aplicativo.',
+    fromLabel: remetenteNome || 'Equipa EF',
+    fromEmail: 'Sistema EF Cargo Clear',
+    processNumber: processoNumero,
+    messageText: mensagem
+  });
 
-      const html = buildMessageEmailHtml({
-        title: 'Nova resposta da EF Cargo Clear',
-        subtitle: 'Recebeu uma nova mensagem da equipa no aplicativo.',
-        fromLabel: remetenteNome || 'Equipa EF',
-        fromEmail: 'Sistema EF Cargo Clear',
-        processNumber: processoNumero,
-        messageText: mensagem
-      });
-
-      await sendEmail(
-        ADMIN_EMAIL,
-        `Nova mensagem da EF Cargo Clear${processoNumero ? ' - ' + processoNumero : ''}`,
-        html
-      );
-    }
+  return await sendEmail(
+    ADMIN_EMAIL,
+    `Nova resposta enviada ao cliente${processoNumero ? ' - ' + processoNumero : ''}`,
+    html
+  );
+}
 
 
     function openModal(title, content){
@@ -4058,79 +4054,129 @@
       }
     }
 
-    async function deleteCliente(clienteId) {
-      if (currentUserRole !== "admin") {
-        alert("Sem permissão.");
-        return;
-      }
+    async async function deleteCliente(clienteId) {
+  if (currentUserRole !== "admin") {
+    alert("Sem permissão.");
+    return;
+  }
 
-      const c = clientesCache.find(x => String(x.id) === String(clienteId));
-      if (!c) return;
+  const c = clientesCache.find(x => String(x.id) === String(clienteId));
+  if (!c) return;
 
-      const ok = confirm(`Eliminar o cliente "${c.nome || c.email || clienteId}"?`);
-      if (!ok) return;
+  const ok = confirm(`Eliminar o cliente "${c.nome || c.email || clienteId}"? Isto irá apagar histórico, mensagens, cotações, pedidos e processos ligados.`);
+  if (!ok) return;
 
-      try {
-        const { error } = await withTimeout(
-          supabaseClient.from("clientes").delete().eq("id", clienteId),
-          10000
-        );
+  try {
+    const clienteEmail = String(c.email || '').trim().toLowerCase();
+    const clienteNome = String(c.nome || '').trim();
 
-        if (error) {
-          alert(error.message);
-          return;
-        }
+    const { data: processosDoCliente } = await withTimeout(
+      supabaseClient.from("processos").select("id").eq("importador_exportador", clienteNome),
+      10000
+    );
+    const processoIds = (processosDoCliente || []).map(p => p.id).filter(Boolean);
 
-        alert("Cliente eliminado com sucesso");
-        await loadInternal();
-      } catch (e) {
-        alert(e.message);
-      }
+    const { data: cotacoesDoCliente } = await withTimeout(
+      supabaseClient.from("pedidos_cotacao").select("id").eq("email", clienteEmail),
+      10000
+    );
+    const cotacaoIds = (cotacoesDoCliente || []).map(x => x.id).filter(Boolean);
+
+    if (processoIds.length) {
+      await withTimeout(supabaseClient.from("processos_documentos").delete().in("processo_id", processoIds), 10000);
+      await withTimeout(supabaseClient.from("processos_tarefas").delete().in("processo_id", processoIds), 10000);
+      await withTimeout(supabaseClient.from("faturas").delete().in("processo_id", processoIds), 10000);
+      await withTimeout(supabaseClient.from("processos").delete().in("id", processoIds), 10000);
     }
+
+    if (cotacaoIds.length) {
+      await withTimeout(supabaseClient.from("pedidos_cotacao_documentos").delete().in("cotacao_id", cotacaoIds), 10000);
+      await withTimeout(supabaseClient.from("faturas").delete().in("cotacao_id", cotacaoIds), 10000);
+      await withTimeout(supabaseClient.from("pedidos_cotacao").delete().in("id", cotacaoIds), 10000);
+    }
+
+    if (clienteEmail) {
+      await withTimeout(supabaseClient.from("mensagens").delete().eq("cliente_email", clienteEmail), 10000);
+      await withTimeout(supabaseClient.from("pedidos_frete").delete().eq("email", clienteEmail), 10000);
+      await withTimeout(supabaseClient.from("pedidos_produto").delete().eq("cliente_email", clienteEmail), 10000);
+      await withTimeout(supabaseClient.from("faturas").delete().eq("email_cliente", clienteEmail), 10000).catch(()=>null);
+    }
+
+    const { error } = await withTimeout(
+      supabaseClient.from("clientes").delete().eq("id", clienteId),
+      10000
+    );
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    alert("Cliente eliminado com sucesso");
+    await loadInternal();
+  } catch (e) {
+    alert(e.message || "Erro ao eliminar cliente.");
+  }
+}
 
     async function criarFuncionario() {
-      if (currentUserRole !== "admin") {
-        alert("Sem permissão.");
-        return;
-      }
+  if (currentUserRole !== "admin") {
+    alert("Sem permissão.");
+    return;
+  }
 
-      const nome = document.getElementById("eq_nome").value.trim();
-      const email = document.getElementById("eq_email").value.trim().toLowerCase();
-      const nivel = document.getElementById("eq_nivel").value;
-      const activo = document.getElementById("eq_activo").value === "true";
+  const nome = document.getElementById("eq_nome").value.trim();
+  const email = document.getElementById("eq_email").value.trim().toLowerCase();
+  const password = document.getElementById("eq_password")?.value.trim() || "";
+  const nivel = document.getElementById("eq_nivel").value;
+  const activo = document.getElementById("eq_activo").value === "true";
 
-      if (!nome || !email) {
-        alert("Nome e email obrigatórios.");
-        return;
-      }
+  if (!nome || !email) {
+    alert("Nome e email obrigatórios.");
+    return;
+  }
 
-      try {
-        const { error } = await withTimeout(
-          supabaseClient.from("equipa").insert({
-            nome,
-            email,
-            nivel,
-            activo
-          }),
-          10000
-        );
+  try {
+    let result = await withTimeout(
+      supabaseClient.from("equipa").insert({
+        nome,
+        email,
+        password,
+        nivel,
+        activo
+      }),
+      10000
+    );
 
-        if (error) {
-          alert(error.message);
-          return;
-        }
-
-        alert("Funcionário criado com sucesso");
-        document.getElementById("eq_nome").value = "";
-        document.getElementById("eq_email").value = "";
-        document.getElementById("eq_nivel").value = "operador";
-        document.getElementById("eq_activo").value = "true";
-
-        await loadInternal();
-      } catch (e) {
-        alert(e.message);
-      }
+    if (result.error && String(result.error.message || '').toLowerCase().includes('password')) {
+      result = await withTimeout(
+        supabaseClient.from("equipa").insert({
+          nome,
+          email,
+          nivel,
+          activo
+        }),
+        10000
+      );
     }
+
+    if (result.error) {
+      alert(result.error.message);
+      return;
+    }
+
+    alert("Funcionário criado com sucesso");
+    document.getElementById("eq_nome").value = "";
+    document.getElementById("eq_email").value = "";
+    if (document.getElementById("eq_password")) document.getElementById("eq_password").value = "";
+    document.getElementById("eq_nivel").value = "operador";
+    document.getElementById("eq_activo").value = "true";
+
+    await loadInternal();
+  } catch (e) {
+    alert(e.message);
+  }
+}
 
     function openEquipaModal(id) {
       const m = equipaCache.find(x => String(x.id) === String(id));
@@ -5163,26 +5209,34 @@
     }
 
     function renderInternalMessages() {
-      const box = document.getElementById("adminMessagesBox");
-      if (!box) return;
+  const box = document.getElementById("adminMessagesBox");
+  if (!box) return;
 
-      if (!currentSelectedThread) {
-        box.innerHTML = `<div class="empty-chat">Selecione uma conversa.</div>`;
-        return;
-      }
+  if (!currentSelectedThread) {
+    box.innerHTML = `<div class="empty-chat">Selecione uma conversa.</div>`;
+    return;
+  }
 
-      const rows = mensagensCache.filter(m => m.cliente_email === currentSelectedThread);
-      box.innerHTML = rows.map(m => `
-        <div class="chat-bubble ${m.remetente === "cliente" ? "other" : "mine"}">
-          <div>${escapeHtml(m.mensagem || "")}</div>
-          <div class="chat-meta">
-            ${m.processo_numero || "-"} • ${m.remetente} • ${formatDate(m.created_at)}
-          </div>
+  const rows = mensagensCache.filter(m => m.cliente_email === currentSelectedThread);
+  box.innerHTML = `
+    <div style="display:flex;justify-content:flex-end;gap:8px;padding:0 0 10px 0;">
+      <button class="btn-mini danger" onclick="deleteMessageThread('${String(currentSelectedThread).replace(/'/g, "\'")}')">Apagar conversa</button>
+    </div>
+    ${rows.map(m => `
+      <div class="chat-bubble ${m.remetente === "cliente" ? "other" : "mine"}">
+        <div>${escapeHtml(m.mensagem || "")}</div>
+        <div class="chat-meta">
+          ${m.processo_numero || "-"} • ${m.remetente} • ${formatDate(m.created_at)}
         </div>
-      `).join("");
+        <div style="margin-top:8px;">
+          <button class="btn-mini danger" onclick="deleteSingleMessage('${String(m.id).replace(/'/g, "\'")}')">Apagar</button>
+        </div>
+      </div>
+    `).join("")}
+  `;
 
-      box.scrollTop = box.scrollHeight;
-    }
+  box.scrollTop = box.scrollHeight;
+}
 
     async function sendAdminMessage() {
       const text = document.getElementById("adminMessageText").value.trim();
@@ -5235,44 +5289,52 @@
       }
     }
 
-    async function loadClientMessages() {
-      const box = document.getElementById("clientMessagesBox");
-      if (!box) return;
+    async async function loadClientMessages() {
+  const box = document.getElementById("clientMessagesBox");
+  if (!box) return;
 
-      try {
-        const { data, error } = await withTimeout(
-          supabaseClient.from("mensagens").select("*").eq("cliente_email", currentUserEmail).order("created_at", { ascending: true }),
-          10000
-        );
+  try {
+    const { data, error } = await withTimeout(
+      supabaseClient.from("mensagens").select("*").eq("cliente_email", currentUserEmail).order("created_at", { ascending: true }),
+      10000
+    );
 
-        if (error) {
-          box.innerHTML = `<div class="empty-chat">${error.message}</div>`;
-          return;
-        }
-
-        mensagensCache = data || [];
-
-        if (!mensagensCache.length) {
-          box.innerHTML = `<div class="empty-chat">Sem mensagens ainda.</div>`;
-          updateUnreadBadges();
-          return;
-        }
-
-        box.innerHTML = mensagensCache.map(m => `
-          <div class="chat-bubble ${m.remetente === "cliente" ? "mine" : "other"}">
-            <div>${escapeHtml(m.mensagem || "")}</div>
-            <div class="chat-meta">
-              ${m.processo_numero || "-"} • ${m.remetente} • ${formatDate(m.created_at)}
-            </div>
-          </div>
-        `).join("");
-
-        box.scrollTop = box.scrollHeight;
-        updateUnreadBadges();
-      } catch (e) {
-        box.innerHTML = `<div class="empty-chat">${e.message}</div>`;
-      }
+    if (error) {
+      box.innerHTML = `<div class="empty-chat">${error.message}</div>`;
+      return;
     }
+
+    mensagensCache = data || [];
+
+    if (!mensagensCache.length) {
+      box.innerHTML = `<div class="empty-chat">Sem mensagens ainda.</div>`;
+      updateUnreadBadges();
+      return;
+    }
+
+    box.innerHTML = `
+      <div style="display:flex;justify-content:flex-end;gap:8px;padding:0 0 10px 0;">
+        <button class="btn-mini danger" onclick="deleteMessageThread('${String(currentUserEmail).replace(/'/g, "\'")}')">Apagar conversa</button>
+      </div>
+      ${mensagensCache.map(m => `
+        <div class="chat-bubble ${m.remetente === "cliente" ? "mine" : "other"}">
+          <div>${escapeHtml(m.mensagem || "")}</div>
+          <div class="chat-meta">
+            ${m.processo_numero || "-"} • ${m.remetente} • ${formatDate(m.created_at)}
+          </div>
+          <div style="margin-top:8px;">
+            <button class="btn-mini danger" onclick="deleteSingleMessage('${String(m.id).replace(/'/g, "\'")}')">Apagar</button>
+          </div>
+        </div>
+      `).join("")}
+    `;
+
+    box.scrollTop = box.scrollHeight;
+    updateUnreadBadges();
+  } catch (e) {
+    box.innerHTML = `<div class="empty-chat">${e.message}</div>`;
+  }
+}
 
     async function markClientMessagesRead() {
       try {
@@ -5333,6 +5395,46 @@
         alert(e.message || "Erro ao enviar mensagem.");
       }
     }
+
+
+async function deleteSingleMessage(messageId) {
+  if (!confirm("Apagar esta mensagem?")) return;
+  try {
+    const { error } = await withTimeout(
+      supabaseClient.from("mensagens").delete().eq("id", messageId),
+      10000
+    );
+    if (error) throw error;
+    if (currentUserRole === "admin" || currentUserRole === "employee") {
+      await loadInternalMessages();
+    }
+    if (currentUserRole === "client") {
+      await loadClientMessages();
+    }
+  } catch (e) {
+    alert(e.message || "Erro ao apagar mensagem.");
+  }
+}
+
+async function deleteMessageThread(clienteEmail) {
+  if (!confirm("Apagar toda a conversa?")) return;
+  try {
+    const { error } = await withTimeout(
+      supabaseClient.from("mensagens").delete().eq("cliente_email", clienteEmail),
+      10000
+    );
+    if (error) throw error;
+    if (currentUserRole === "admin" || currentUserRole === "employee") {
+      currentSelectedThread = "";
+      await loadInternalMessages();
+    }
+    if (currentUserRole === "client") {
+      await loadClientMessages();
+    }
+  } catch (e) {
+    alert(e.message || "Erro ao apagar conversa.");
+  }
+}
 
     function updateUnreadBadges() {
       const clientUnread = mensagensCache.filter(m =>
@@ -5828,7 +5930,7 @@
 
         if (cotacao?.email) {
           await sendEmail(
-            ADMIN_EMAIL,
+            cotacao.email,
             "A sua cotação foi respondida",
             `<div style="font-family:Arial,sans-serif">
               <h2>Cotação respondida</h2>
@@ -6646,42 +6748,49 @@
     }
 
     function renderProdutosTable() {
-      const tbody = document.getElementById("produtosTable");
-      if (!tbody) return;
-      tbody.innerHTML = "";
+  const tbody = document.getElementById("produtosTable");
+  if (!tbody) return;
+  tbody.innerHTML = "";
 
-      if (!produtosCache.length) {
-        tbody.innerHTML = `<tr><td colspan="11">Sem pedidos de produto.</td></tr>`;
-        return;
-      }
+  if (!produtosCache.length) {
+    tbody.innerHTML = `<tr><td colspan="11">Sem pedidos de produto.</td></tr>`;
+    return;
+  }
 
-      produtosCache.forEach(p => {
-        const tr = document.createElement("tr");
-        const isRecusado = (p.status || "") === "Recusado";
-        const isConvertido = !!(p.convertido_em_cotacao || p.cotacao_id);
-        tr.innerHTML = `
-          <td><strong>${escapeHtml(p.cliente_nome || "")}</strong><div class="small">${escapeHtml(p.cliente_email || "")}</div><div class="small">${escapeHtml(p.contacto || "")}</div></td>
-          <td>${escapeHtml(p.produto || "")}</td>
-          <td>${escapeHtml(String(p.quantidade || "-"))}</td>
-          <td>${Number(p.orcamento || 0) ? formatMoney(p.orcamento) : "-"}</td>
-          <td>${escapeHtml(p.prazo || "-")}</td>
-          <td>${escapeHtml(p.pais_preferencial || "-")}</td>
-          <td>${escapeHtml(p.descricao || "-")}</td>
-          <td>${escapeHtml(p.observacoes || "-")}</td>
-          <td>${p.anexo_path ? `<button class="link-btn" onclick="openSignedFromBucket('processos','${escapeHtml(p.anexo_path)}')">${escapeHtml(p.anexo_filename || 'Abrir referência')}</button>` : "-"}</td>
-          <td>${badgeEstado(p.status || "Recebido")}</td>
-          <td>
-            ${isConvertido ? `<span class="badge green">Convertido</span>` : ``}
-            ${(!isConvertido && !isRecusado) ? `
-              <button class="btn-mini green" onclick="transformarProdutoEmCotacao('${p.id}')">Transformar em cotação</button>
-              <button class="btn-mini danger" onclick="recusarPedidoProduto('${p.id}')">Recusar</button>
-            ` : ``}
-            ${isRecusado ? `<button class="btn-mini danger" onclick="apagarPedidoProduto('${p.id}')">Apagar</button>` : ``}
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
+  produtosCache.forEach(p => {
+    const tr = document.createElement("tr");
+    const anexoHtml = p.anexo_path
+      ? `<button class="link-btn" onclick="openSignedFromBucket('processos','${escapeHtml(p.anexo_path)}')">Abrir referência</button>`
+      : "-";
+
+    let actionHtml = '';
+    if (p.convertido_em_cotacao) {
+      actionHtml = `<span class="badge green">Convertido</span>`;
+    } else if ((p.status || '').toLowerCase() === 'recusado') {
+      actionHtml = `<button class="btn-mini danger" onclick="apagarPedidoProduto('${p.id}')">Apagar</button>`;
+    } else {
+      actionHtml = `
+        <button class="btn-mini green" onclick="transformarProdutoEmCotacao('${p.id}')">Transformar em cotação</button>
+        <button class="btn-mini danger" onclick="recusarPedidoProduto('${p.id}')">Recusar</button>
+      `;
     }
+
+    tr.innerHTML = `
+      <td><strong>${escapeHtml(p.cliente_nome || "")}</strong><div class="small">${escapeHtml(p.cliente_email || "")}</div></td>
+      <td>${escapeHtml(p.produto || "")}</td>
+      <td>${escapeHtml(String(p.quantidade || "-"))}</td>
+      <td>${Number(p.orcamento || 0) ? formatMoney(p.orcamento) : "-"}</td>
+      <td>${escapeHtml(p.prazo || "-")}</td>
+      <td>${escapeHtml(p.pais_preferencial || "-")}</td>
+      <td>${escapeHtml(p.descricao || "-")}</td>
+      <td>${escapeHtml(p.observacoes || "-")}</td>
+      <td>${anexoHtml}</td>
+      <td>${badgeEstado(p.status || "Recebido")}</td>
+      <td>${actionHtml}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
 
     function preloadProdutoForm() {
       const nome = document.getElementById("produto_nome_cliente");
@@ -6793,14 +6902,14 @@
     }
 
     async function apagarPedidoProduto(produtoId) {
-      if (!confirm("Apagar este pedido recusado?")) return;
+      if (!confirm("Apagar este pedido de produto?")) return;
       try {
         const pedido = produtosCache.find(p => String(p.id) === String(produtoId));
-        const path = String(pedido?.anexo_path || "").trim();
-        if (path) {
-          try {
-            await withTimeout(supabaseClient.storage.from("processos").remove([path]), 10000);
-          } catch (_) {}
+        if (pedido?.anexo_path) {
+          await withTimeout(
+            supabaseClient.storage.from("processos").remove([pedido.anexo_path]),
+            10000
+          ).catch(() => null);
         }
         const { error } = await withTimeout(
           supabaseClient.from("pedidos_produto").delete().eq("id", produtoId),
@@ -7145,7 +7254,7 @@
 
         if (email) {
           await sendEmail(
-            ADMIN_EMAIL,
+            email,
             "Recebemos o seu pedido de cotação",
             `<div style="font-family:Arial,sans-serif">
               <h2>Pedido recebido com sucesso</h2>
@@ -7660,11 +7769,7 @@
         return;
       }
       const html = invoiceHtmlFromRecord(f);
-      const mailResult = await sendEmail(f.cliente_email, `Fatura ${f.numero_fatura}`, html);
-      if (!mailResult?.ok) {
-        alert('Falha ao enviar a fatura por email.');
-        return;
-      }
+      await sendEmail(f.cliente_email, `Fatura ${f.numero_fatura}`, html);
       try {
         const stamp = new Date().toISOString();
         await withTimeout(supabaseClient.from('faturas').update({ status_envio: 'enviado', enviado_at: stamp }).eq('id', id), 10000);
@@ -7944,39 +8049,53 @@
     }
 
     function renderFinanceInsights(rows) {
-      const box = document.getElementById('financeInsights');
-      if (!box) return;
-      const totalCobrado = rows.reduce((s,p)=>s+Number(p.valor_cobrado||0),0);
-      const totalCustos = rows.reduce((s,p)=>s+Number(p.custos_processo||0),0);
-      const totalMargem = rows.reduce((s,p)=>s+Number(p.margem_lucro||0),0);
-      const clientes = [...new Set(rows.map(p => String(p.importador_exportador || '').trim()).filter(Boolean))];
-      const procIds = new Set(rows.map(p => String(p.id)));
-      const breakdown = {};
-      (faturasCache || []).forEach(f => {
-        if (f.processo_id && !procIds.has(String(f.processo_id))) return;
-        const lines = [...(Array.isArray(f.encargos_json) ? f.encargos_json : []), ...(Array.isArray(f.servicos_json) ? f.servicos_json : [])];
-        lines.forEach(line => {
-          const key = line.nome || 'Outros';
-          breakdown[key] = (breakdown[key] || 0) + Number(line.valor || 0);
-        });
-      });
-      const top = Object.entries(breakdown).sort((a,b)=>b[1]-a[1]).slice(0,6);
-      box.innerHTML = `
-        <div class="progress-card">
-          <div class="kpi-title">Resumo filtrado</div>
-          <div class="grid grid-3">
-            <div><strong>Cobrado</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:#BE001A;">${formatMoney(totalCobrado)}</div></div>
-            <div><strong>Custos</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:#111827;">${formatMoney(totalCustos)}</div></div>
-            <div><strong>Margem</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:${totalMargem >= 0 ? '#166534' : '#b91c1c'};">${formatMoney(totalMargem)}</div></div>
-          </div>
-          <div class="small" style="margin-top:12px;">Clientes no filtro: ${clientes.length} • Processos: ${rows.length}</div>
-        </div>
-        <div class="progress-card">
-          <div class="kpi-title">Em que foi gasto / cobrado</div>
-          ${top.length ? top.map(([nome,valor]) => `<div style="display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #eee;"><span>${escapeHtml(nome)}</span><strong>${formatMoney(valor)}</strong></div>`).join('') : `<div class="small">Sem linhas detalhadas de faturas para o filtro atual.</div>`}
-        </div>
-      `;
-    }
+  const box = document.getElementById('financeInsights');
+  if (!box) return;
+  const totalCobrado = rows.reduce((s,p)=>s+Number(p.valor_cobrado||0),0);
+  const totalCustos = rows.reduce((s,p)=>s+Number(p.custos_processo||0),0);
+  const totalMargem = rows.reduce((s,p)=>s+Number(p.margem_lucro||0),0);
+  const clientes = [...new Set(rows.map(p => String(p.importador_exportador || '').trim()).filter(Boolean))];
+
+  const procIds = new Set(rows.map(p => String(p.id || '')).filter(Boolean));
+  const invoiceRefs = new Set(rows.map(p => String(p.numero_factura || '').trim()).filter(Boolean));
+  const clientNames = new Set(rows.map(p => String(p.importador_exportador || '').trim().toLowerCase()).filter(Boolean));
+
+  const breakdown = {};
+  (faturasCache || []).forEach(f => {
+    const matchByProc = f.processo_id && procIds.has(String(f.processo_id));
+    const matchByRef = String(f.referencia || f.numero_fatura || '').trim() && invoiceRefs.has(String(f.referencia || f.numero_fatura || '').trim());
+    const matchByClient = String(f.cliente_nome || '').trim().toLowerCase() && clientNames.has(String(f.cliente_nome || '').trim().toLowerCase());
+
+    if (!(matchByProc || matchByRef || matchByClient)) return;
+
+    const lines = [
+      ...(Array.isArray(f.encargos_json) ? f.encargos_json : []),
+      ...(Array.isArray(f.servicos_json) ? f.servicos_json : [])
+    ];
+
+    lines.forEach(line => {
+      const key = line.nome || 'Outros';
+      breakdown[key] = (breakdown[key] || 0) + Number(line.valor || 0);
+    });
+  });
+
+  const top = Object.entries(breakdown).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  box.innerHTML = `
+    <div class="progress-card">
+      <div class="kpi-title">Resumo filtrado</div>
+      <div class="grid grid-3">
+        <div><strong>Cobrado</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:#BE001A;">${formatMoney(totalCobrado)}</div></div>
+        <div><strong>Custos</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:#111827;">${formatMoney(totalCustos)}</div></div>
+        <div><strong>Margem</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:${totalMargem >= 0 ? '#166534' : '#b91c1c'};">${formatMoney(totalMargem)}</div></div>
+      </div>
+      <div class="small" style="margin-top:12px;">Clientes no filtro: ${clientes.length} • Processos: ${rows.length}</div>
+    </div>
+    <div class="progress-card">
+      <div class="kpi-title">Em que foi gasto / cobrado</div>
+      ${top.length ? top.map(([nome,valor]) => `<div style="display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #eee;"><span>${escapeHtml(nome)}</span><strong>${formatMoney(valor)}</strong></div>`).join("") : `<div class="small">Sem valores ligados ao filtro atual.</div>`}
+    </div>
+  `;
+}
 
     window.addEventListener("load", async () => {
       try {
