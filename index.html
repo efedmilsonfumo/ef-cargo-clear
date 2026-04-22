@@ -1103,7 +1103,7 @@
               <button class="sidebar-btn" id="side-processos" onclick="showInternalTab('processos')">Processos</button>
               <button class="sidebar-btn" id="side-cotacoes" onclick="showInternalTab('cotacoes')">Pedidos de cotação</button>
               <button class="sidebar-btn" id="side-fretes" onclick="showInternalTab('fretes')">Pedidos de frete</button>
-              <button class="sidebar-btn" id="side-produtos" onclick="showInternalTab('produtos')">Solicitar produto</button>
+              <button class="sidebar-btn" id="side-produtos" onclick="showInternalTab('produtos')">Pedidos de produto</button>
               <button class="sidebar-btn" id="side-financeiro" onclick="showInternalTab('financeiro')">Financeiro</button>
               <button class="sidebar-btn" id="side-faturas" onclick="showInternalTab('faturas')">Faturas</button>
               <button class="sidebar-btn" id="side-clientes" onclick="showInternalTab('clientes')">Clientes</button>
@@ -1318,6 +1318,10 @@
                         <th>Quantidade</th>
                         <th>Orçamento</th>
                         <th>Prazo</th>
+                        <th>País / Mercado</th>
+                        <th>Descrição / Especificações</th>
+                        <th>Observações</th>
+                        <th>Referência</th>
                         <th>Estado</th>
                         <th>Ações</th>
                       </tr>
@@ -6646,24 +6650,32 @@
       tbody.innerHTML = "";
 
       if (!produtosCache.length) {
-        tbody.innerHTML = `<tr><td colspan="7">Sem pedidos de produto.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11">Sem pedidos de produto.</td></tr>`;
         return;
       }
 
       produtosCache.forEach(p => {
         const tr = document.createElement("tr");
+        const isRecusado = (p.status || "") === "Recusado";
+        const isConvertido = !!(p.convertido_em_cotacao || p.cotacao_id);
         tr.innerHTML = `
-          <td><strong>${escapeHtml(p.cliente_nome || "")}</strong><div class="small">${escapeHtml(p.cliente_email || "")}</div></td>
-          <td>${escapeHtml(p.produto || "")}<div class="small">${escapeHtml(p.descricao || "")}</div>${p.anexo_path ? `<div class="small" style="margin-top:6px;"><button class="link-btn" onclick="openSignedFromBucket('processos','${escapeHtml(p.anexo_path)}')">Abrir referência</button></div>` : ``}</td>
+          <td><strong>${escapeHtml(p.cliente_nome || "")}</strong><div class="small">${escapeHtml(p.cliente_email || "")}</div><div class="small">${escapeHtml(p.contacto || "")}</div></td>
+          <td>${escapeHtml(p.produto || "")}</td>
           <td>${escapeHtml(String(p.quantidade || "-"))}</td>
           <td>${Number(p.orcamento || 0) ? formatMoney(p.orcamento) : "-"}</td>
           <td>${escapeHtml(p.prazo || "-")}</td>
+          <td>${escapeHtml(p.pais_preferencial || "-")}</td>
+          <td>${escapeHtml(p.descricao || "-")}</td>
+          <td>${escapeHtml(p.observacoes || "-")}</td>
+          <td>${p.anexo_path ? `<button class="link-btn" onclick="openSignedFromBucket('processos','${escapeHtml(p.anexo_path)}')">${escapeHtml(p.anexo_filename || 'Abrir referência')}</button>` : "-"}</td>
           <td>${badgeEstado(p.status || "Recebido")}</td>
           <td>
-            ${p.convertido_em_cotacao ? `<span class="badge green">Convertido</span>` : `
+            ${isConvertido ? `<span class="badge green">Convertido</span>` : ``}
+            ${(!isConvertido && !isRecusado) ? `
               <button class="btn-mini green" onclick="transformarProdutoEmCotacao('${p.id}')">Transformar em cotação</button>
               <button class="btn-mini danger" onclick="recusarPedidoProduto('${p.id}')">Recusar</button>
-            `}
+            ` : ``}
+            ${isRecusado ? `<button class="btn-mini danger" onclick="apagarPedidoProduto('${p.id}')">Apagar</button>` : ``}
           </td>
         `;
         tbody.appendChild(tr);
@@ -6776,6 +6788,27 @@
         await loadInternal();
       } catch (e) {
         alert(e.message || "Erro ao recusar pedido de produto.");
+      }
+    }
+
+    async function apagarPedidoProduto(produtoId) {
+      if (!confirm("Apagar este pedido recusado?")) return;
+      try {
+        const pedido = produtosCache.find(p => String(p.id) === String(produtoId));
+        const path = String(pedido?.anexo_path || "").trim();
+        if (path) {
+          try {
+            await withTimeout(supabaseClient.storage.from("processos").remove([path]), 10000);
+          } catch (_) {}
+        }
+        const { error } = await withTimeout(
+          supabaseClient.from("pedidos_produto").delete().eq("id", produtoId),
+          10000
+        );
+        if (error) throw error;
+        await loadInternal();
+      } catch (e) {
+        alert(e.message || "Erro ao apagar pedido de produto.");
       }
     }
 
