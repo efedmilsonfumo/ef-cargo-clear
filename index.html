@@ -6,6 +6,7 @@
   <title>EF Cargo Clear</title>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <style>
     :root{
       --bg:#f4f6f8;
@@ -912,6 +913,25 @@
       box-shadow:0 0 0 4px rgba(190,0,26,.08);
     }
 
+
+.processo-timeline{display:flex;align-items:flex-start;gap:0;margin:0 0 16px;overflow-x:auto;padding:4px 0 10px}
+.tl-step{display:flex;flex-direction:column;align-items:center;flex:1;min-width:76px;position:relative}
+.tl-step:not(:last-child)::after{content:'';position:absolute;top:17px;left:calc(50% + 20px);right:calc(-50% + 20px);height:3px;background:#e5e7eb;z-index:0}
+.tl-step.done:not(:last-child)::after{background:var(--primary)}
+.tl-step.active:not(:last-child)::after{background:linear-gradient(90deg,var(--primary),#e5e7eb)}
+.tl-step.blocked:not(:last-child)::after{background:#fbbf24}
+.tl-dot{width:36px;height:36px;border-radius:50%;border:3px solid #e5e7eb;background:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;z-index:1;position:relative}
+.tl-step.done .tl-dot{border-color:var(--primary);background:var(--primary);color:#fff}
+.tl-step.active .tl-dot{border-color:var(--primary);background:#fff;color:var(--primary);box-shadow:0 0 0 5px rgba(190,0,26,.12)}
+.tl-step.blocked .tl-dot{border-color:#f59e0b;background:#fef3c7;color:#92400e;box-shadow:0 0 0 5px rgba(245,158,11,.12)}
+.tl-label{font-size:10px;font-weight:700;text-align:center;margin-top:8px;color:var(--muted);line-height:1.3;max-width:74px}
+.tl-step.done .tl-label{color:var(--primary)}
+.tl-step.active .tl-label{color:#111827}
+.tl-step.blocked .tl-label{color:#92400e}
+.timeline-warning{background:#fffbeb;border:1px solid #fde68a;color:#92400e;padding:10px 12px;border-radius:14px;margin:0 0 12px;font-size:13px;font-weight:700}
+.calc-fab{position:fixed;bottom:28px;right:28px;width:50px;height:50px;border-radius:50%;background:linear-gradient(180deg,#1d4ed8 0%,#1e40af 100%);color:#fff;border:none;cursor:pointer;font-size:22px;box-shadow:0 8px 20px rgba(29,78,216,.32);display:none;align-items:center;justify-content:center;z-index:999}
+.calc-fab:hover{transform:translateY(-2px)}
+
     hr{border:none;border-top:1px solid var(--line)}
 
     @media (max-width:1180px){
@@ -940,6 +960,38 @@
   </style>
 </head>
 <body>
+
+
+<button class="calc-fab" id="calcFab" onclick="openCalc()" title="Calculadora Aduaneira">🧮</button>
+
+<div id="calcBackdrop" class="modal-backdrop" onclick="if(event.target===this)closeCalc()" style="z-index:1100;">
+  <div class="modal" style="max-width:540px;" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <h3 style="margin:0;">🧮 Calculadora Aduaneira</h3>
+      <button class="link-btn" onclick="closeCalc()">✕</button>
+    </div>
+    <p class="small" style="margin:0 0 16px;">Simulação rápida de encargos de importação.</p>
+    <div class="grid" style="gap:12px;">
+      <div class="grid grid-2">
+        <div><label>Valor CIF (USD)</label><input id="calc_cif" type="number" step="0.01" placeholder="Ex: 10000" oninput="calcAduaneiro()" /></div>
+        <div><label>Taxa câmbio (1 USD = ? MT)</label><input id="calc_cambio" type="number" step="0.01" value="64" oninput="calcAduaneiro()" /></div>
+      </div>
+      <div class="grid grid-2">
+        <div><label>Direitos aduaneiros (%)</label><input id="calc_direitos" type="number" step="0.01" value="7.5" oninput="calcAduaneiro()" /></div>
+        <div><label>IVA (%)</label><input id="calc_iva" type="number" step="0.01" value="17" oninput="calcAduaneiro()" /></div>
+      </div>
+      <div class="grid grid-2">
+        <div><label>Taxa de selos (%)</label><input id="calc_selos" type="number" step="0.01" value="0.3" oninput="calcAduaneiro()" /></div>
+        <div><label>Honorários EF (MT)</label><input id="calc_honorarios" type="number" step="0.01" value="0" oninput="calcAduaneiro()" /></div>
+      </div>
+    </div>
+    <div id="calc_result" style="margin-top:16px;background:#fafafa;border:1px solid #e5e7eb;border-radius:16px;padding:16px;display:none;"></div>
+    <div style="margin-top:14px;display:flex;gap:10px;">
+      <button class="btn" onclick="calcAduaneiro()">Calcular</button>
+      <button class="btn btn-outline" onclick="closeCalc()">Fechar</button>
+    </div>
+  </div>
+</div>
 
   <div id="loginView" class="login-shell">
     <div class="login-welcome">
@@ -1342,6 +1394,7 @@
                   </div>
                   <div class="panel-actions no-print">
                     <button class="btn-mini green" onclick="exportFinanceiroCSV()">Excel/CSV</button>
+                    <button class="btn-mini info" onclick="gerarRelatorioMensal()">📋 Relatório Mensal</button>
                     <button class="btn-mini secondary" onclick="printSection('internal-financeiro','Painel Financeiro')">PDF</button>
                   </div>
                 </div>
@@ -2496,6 +2549,9 @@
     const SUPABASE_KEY = "sb_publishable_uOowmqEhVdq8h0uzagYPEA_DXXpGOgA";
     const ADMIN_EMAIL = "ef.edmilsonfumo@gmail.com";
     const COMPANY_LOGO_URL = "COLE_AQUI_O_LINK_DO_LOGO";
+    const EMAILJS_PUBLIC_KEY = "SUA_PUBLIC_KEY_AQUI";
+    const EMAILJS_SERVICE_ID = "SEU_SERVICE_ID_AQUI";
+    const EMAILJS_TEMPLATE_ID = "SEU_TEMPLATE_ID_AQUI";
 
     const tabSessionKey = (() => {
       const keyName = "ef-cargo-clear-tab-id";
@@ -2549,6 +2605,7 @@
       setupCompanyLogo();
       detectRecoveryMode();
       initLanguageSystem();
+      if (window.emailjs && EMAILJS_PUBLIC_KEY && EMAILJS_PUBLIC_KEY !== "SUA_PUBLIC_KEY_AQUI") { try { emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); } catch(_) {} }
       setTimeout(() => applyLanguage(), 50);
     });
 
@@ -3041,28 +3098,53 @@
       }
     }
 
-    async function sendEmail(to, subject, html) {
+
+async function sendEmail(to, subject, html) {
   try {
+    if (
+      EMAILJS_PUBLIC_KEY &&
+      EMAILJS_PUBLIC_KEY !== "SUA_PUBLIC_KEY_AQUI" &&
+      EMAILJS_SERVICE_ID &&
+      EMAILJS_SERVICE_ID !== "SEU_SERVICE_ID_AQUI" &&
+      EMAILJS_TEMPLATE_ID &&
+      EMAILJS_TEMPLATE_ID !== "SEU_TEMPLATE_ID_AQUI" &&
+      window.emailjs
+    ) {
+      try { emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); } catch (_) {}
+      const plainMessage = String(html || "")
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<[^>]*>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      const result = await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        {
+          to_email: to,
+          subject,
+          message: plainMessage
+        }
+      );
+      return { ok: true, data: result };
+    }
+
     const res = await fetch('/api/send-email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ to: ADMIN_EMAIL, subject, html })
+      body: JSON.stringify({ to, subject, html })
     });
 
     const data = await res.json().catch(() => ({}));
-    console.log("EMAIL RESULT:", data);
-
     if (!res.ok) {
-      console.warn("Falha no envio de email:", data?.error || data?.message || res.status);
       return { ok: false, error: data?.error || data?.message || 'Falha ao enviar email.' };
     }
-
     return { ok: true, data };
   } catch (e) {
-    console.warn("Erro ao enviar email:", e);
     return { ok: false, error: e?.message || 'Erro ao enviar email.' };
   }
 }
+
 
     function buildMessageEmailHtml({
       title = 'Nova mensagem',
@@ -3125,8 +3207,8 @@
   });
 
   return await sendEmail(
-    ADMIN_EMAIL,
-    `Nova resposta enviada ao cliente${processoNumero ? ' - ' + processoNumero : ''}`,
+    clienteEmail,
+    `Nova resposta da EF Cargo Clear${processoNumero ? " - " + processoNumero : ""}`,
     html
   );
 }
@@ -3528,6 +3610,134 @@
       }
     }
 
+
+function getProcessTimelineSteps() {
+  return ["Recebido","Em análise","Submetido","Em desembaraço","Liberado","Entregue"];
+}
+
+function renderProcessTimeline(estado) {
+  const steps = getProcessTimelineSteps();
+  const current = steps.indexOf(estado);
+  const isBlocked = estado === "Documentos em falta";
+  const activeIndex = isBlocked ? 1 : (current >= 0 ? current : 0);
+  const warning = isBlocked ? `<div class="timeline-warning">⚠️ Documentos em falta — o processo está pendente até regularização.</div>` : "";
+  const html = steps.map((step, index) => {
+    const cls = isBlocked && index === 1 ? "blocked" : index < activeIndex ? "done" : index === activeIndex ? "active" : "";
+    const icon = isBlocked && index === 1 ? "!" : index < activeIndex ? "✓" : index + 1;
+    return `<div class="tl-step ${cls}"><div class="tl-dot">${icon}</div><div class="tl-label">${step}</div></div>`;
+  }).join("");
+  return `${warning}<div class="processo-timeline">${html}</div>`;
+}
+
+function renderMiniProcessTimeline(estado) {
+  return `<div style="transform:scale(.92);transform-origin:left top;">${renderProcessTimeline(estado)}</div>`;
+}
+
+function toggleCalcFab() {
+  const el = document.getElementById("calcFab");
+  if (!el) return;
+  el.style.display = (currentUserRole === "admin" || currentUserRole === "employee") ? "flex" : "none";
+}
+
+function openCalc() {
+  const el = document.getElementById("calcBackdrop");
+  if (el) el.style.display = "flex";
+  calcAduaneiro();
+}
+
+function closeCalc() {
+  const el = document.getElementById("calcBackdrop");
+  if (el) el.style.display = "none";
+}
+
+function calcAduaneiro() {
+  const cif = Number(document.getElementById("calc_cif")?.value || 0);
+  const cambio = Number(document.getElementById("calc_cambio")?.value || 0);
+  const direitosPct = Number(document.getElementById("calc_direitos")?.value || 0) / 100;
+  const ivaPct = Number(document.getElementById("calc_iva")?.value || 0) / 100;
+  const selosPct = Number(document.getElementById("calc_selos")?.value || 0) / 100;
+  const honorarios = Number(document.getElementById("calc_honorarios")?.value || 0);
+  const out = document.getElementById("calc_result");
+  if (!out) return;
+  const cifMt = cif * cambio;
+  const direitos = cifMt * direitosPct;
+  const baseIva = cifMt + direitos;
+  const iva = baseIva * ivaPct;
+  const selos = cifMt * selosPct;
+  const total = cifMt + direitos + iva + selos + honorarios;
+  out.style.display = "block";
+  out.innerHTML = `
+    <div><strong>CIF em MT:</strong> ${formatMoney(cifMt)}</div>
+    <div><strong>Direitos aduaneiros:</strong> ${formatMoney(direitos)}</div>
+    <div><strong>Base tributável:</strong> ${formatMoney(baseIva)}</div>
+    <div><strong>IVA:</strong> ${formatMoney(iva)}</div>
+    <div><strong>Taxa de selos:</strong> ${formatMoney(selos)}</div>
+    <div><strong>Honorários EF:</strong> ${formatMoney(honorarios)}</div>
+    <hr style="margin:10px 0;">
+    <div><strong>Total estimado:</strong> ${formatMoney(total)}</div>
+  `;
+}
+
+function gerarRelatorioMensal() {
+  const now = new Date();
+  const month = now.getMonth();
+  const year = now.getFullYear();
+  const registros = (processosCache || []).filter(p => {
+    const dt = p.created_at ? new Date(p.created_at) : null;
+    return dt && dt.getMonth() === month && dt.getFullYear() === year;
+  });
+  const totalCobrado = registros.reduce((s,p)=>s+Number(p.valor_cobrado||0),0);
+  const totalCustos = registros.reduce((s,p)=>s+Number(p.custos_processo||0),0);
+  const totalMargem = registros.reduce((s,p)=>s+Number(p.margem_lucro||0),0);
+  const porCliente = {};
+  const porEstado = {};
+  registros.forEach(p => {
+    const cli = p.importador_exportador || "Sem cliente";
+    porCliente[cli] = porCliente[cli] || { cobrado:0, custos:0, margem:0 };
+    porCliente[cli].cobrado += Number(p.valor_cobrado||0);
+    porCliente[cli].custos += Number(p.custos_processo||0);
+    porCliente[cli].margem += Number(p.margem_lucro||0);
+    const est = p.estado || "Sem estado";
+    porEstado[est] = (porEstado[est] || 0) + 1;
+  });
+  const clienteRows = Object.entries(porCliente).map(([nome,v]) =>
+    `<tr><td>${escapeHtml(nome)}</td><td>${formatMoney(v.cobrado)}</td><td>${formatMoney(v.custos)}</td><td>${formatMoney(v.margem)}</td></tr>`
+  ).join("") || `<tr><td colspan="4">Sem dados no mês atual.</td></tr>`;
+  const estadoRows = Object.entries(porEstado).map(([nome,qtd]) =>
+    `<tr><td>${escapeHtml(nome)}</td><td>${qtd}</td></tr>`
+  ).join("") || `<tr><td colspan="2">Sem dados no mês atual.</td></tr>`;
+  const titulo = now.toLocaleDateString('pt-PT',{month:'long', year:'numeric'});
+  const html = `
+    <html><head><title>Relatório Mensal</title>
+    <style>
+      body{font-family:Arial,sans-serif;margin:24px;color:#111827}
+      h1{color:#BE001A;margin:0 0 8px}
+      .muted{color:#6b7280;margin-bottom:18px}
+      .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}
+      .kpi{border:1px solid #e5e7eb;border-radius:16px;padding:14px;background:#fafafa}
+      table{width:100%;border-collapse:collapse;margin-top:10px}
+      th,td{border:1px solid #e5e7eb;padding:10px;text-align:left}
+      th{background:#fafafa}
+    </style></head><body>
+      <h1>Relatório Financeiro Mensal</h1>
+      <div class="muted">${titulo}</div>
+      <div class="grid">
+        <div class="kpi"><strong>Valor cobrado</strong><div>${formatMoney(totalCobrado)}</div></div>
+        <div class="kpi"><strong>Custos</strong><div>${formatMoney(totalCustos)}</div></div>
+        <div class="kpi"><strong>Margem</strong><div>${formatMoney(totalMargem)}</div></div>
+      </div>
+      <h3>Breakdown por cliente</h3>
+      <table><thead><tr><th>Cliente</th><th>Cobrado</th><th>Custos</th><th>Margem</th></tr></thead><tbody>${clienteRows}</tbody></table>
+      <h3 style="margin-top:24px;">Distribuição por estado</h3>
+      <table><thead><tr><th>Estado</th><th>Quantidade</th></tr></thead><tbody>${estadoRows}</tbody></table>
+      <script>window.onload=()=>window.print();</script>
+    </body></html>`;
+  const w = window.open("", "_blank");
+  if (!w) return;
+  w.document.write(html);
+  w.document.close();
+}
+
     async function logout() {
       await supabaseClient.auth.signOut();
       location.reload();
@@ -3549,6 +3759,7 @@
         document.getElementById("clientView").classList.add("hidden");
         applyInternalPermissions();
         setWelcomeMessage();
+        toggleCalcFab();
         setTimeout(async () => {
           await loadInternal();
           await loadInternalMessages();
@@ -3570,6 +3781,7 @@
           document.getElementById("clientView").classList.add("hidden");
           applyInternalPermissions();
           setWelcomeMessage();
+          toggleCalcFab();
           applyLanguage();
           setTimeout(async () => {
             await loadInternal();
@@ -3584,6 +3796,7 @@
       document.getElementById("clientView").classList.remove("hidden");
       document.getElementById("internalView").classList.add("hidden");
       setWelcomeMessage();
+      toggleCalcFab();
       applyLanguage();
 
       try {
@@ -4804,6 +5017,7 @@
       `).join("") : `<span class="small">Sem documentos</span>`;
 
       content.innerHTML = `
+        ${renderProcessTimeline(processo.estado || "Recebido")}
         <div class="process-summary-grid">
           <div class="process-panel"><strong>Factura</strong><div style="margin-top:6px;">${processo.numero_factura || "-"}</div></div>
           <div class="process-panel"><strong>Cliente</strong><div style="margin-top:6px;">${processo.importador_exportador || "-"}</div></div>
@@ -4899,7 +5113,7 @@
       procList.forEach(p => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td><strong>${p.numero_processo || ""}</strong></td>
+          <td><strong>${p.numero_processo || ""}</strong><div style="margin-top:8px;">${renderMiniProcessTimeline(p.estado || "Recebido")}</div></td>
           <td>${p.numero_factura || ""}</td>
           <td><strong>${p.importador_exportador || ""}</strong></td>
           <td>${p.regime || ""}</td>
@@ -5090,6 +5304,8 @@
         card.innerHTML = `
           <div class="client-name">${c.nome || "Sem nome"}</div>
           <div class="small">${c.email || "Sem email"}</div>
+
+          <div style="margin:10px 0 14px;">${renderMiniProcessTimeline(processo.estado || "Recebido")}</div>
 
           <div class="client-meta">
             <div><strong>NUIT:</strong> ${c.nuit || "-"}</div>
@@ -6501,7 +6717,7 @@ async function deleteMessageThread(clienteEmail) {
       document.getElementById("processoCard").classList.remove("hidden");
       document.getElementById("pcTitulo").textContent = "Factura " + (processo.numero_factura || "");
       document.getElementById("pcSub").textContent = (processo.numero_processo || "") + " • " + (processo.importador_exportador || "");
-      document.getElementById("pcEstado").innerHTML = badgeEstado(processo.estado || "");
+      document.getElementById("pcEstado").innerHTML = renderProcessTimeline(processo.estado || "") + badgeEstado(processo.estado || "");
       document.getElementById("pcRegime").textContent = processo.regime || "";
       document.getElementById("pcOrigem").textContent = processo.pais_origem || "";
       document.getElementById("pcDestino").textContent = processo.pais_destino || "";
