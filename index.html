@@ -1017,12 +1017,10 @@
 </head>
 <body>
 
-  <div id="loginView" class="login-shell">
-
   <!-- Scroll to top button -->
   <button class="scroll-top" id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Voltar ao topo">↑</button>
 
-  <!-- Calculator FAB -->
+  <!-- Calculator FAB (visível só após login interno) -->
   <button class="calc-fab" id="calcFab" onclick="openCalc()" title="Calculadora Aduaneira">🧮</button>
 
   <!-- Calculator Modal -->
@@ -1050,7 +1048,7 @@
       <div id="calc_result" style="margin-top:16px;background:#fafafa;border:1px solid #e5e7eb;border-radius:16px;padding:16px;display:none;"></div>
       <div style="margin-top:14px;display:flex;gap:10px;">
         <button class="btn" onclick="calcAduaneiro()">Calcular</button>
-        <button class="btn btn-outline" onclick="closeCalc()">Fechar</button>
+        <button class="btn" style="background:#6b7280" onclick="closeCalc()">Fechar</button>
       </div>
     </div>
   </div>
@@ -1061,28 +1059,7 @@
   <!-- Toast notification -->
   <div class="toast" id="toastEl"></div>
 
-  <script>
-    // Scroll to top visibility
-    window.addEventListener('scroll', function(){
-      const btn = document.getElementById('scrollTopBtn');
-      if(btn) btn.style.display = window.scrollY > 300 ? 'flex' : 'none';
-    }, {passive:true});
-
-    // Toast helper
-    function showToast(msg, type='', duration=3200){
-      const t = document.getElementById('toastEl');
-      if(!t) return;
-      t.textContent = msg;
-      t.className = 'toast' + (type ? ' ' + type : '');
-      requestAnimationFrame(()=>{ t.classList.add('show'); });
-      clearTimeout(t._tid);
-      t._tid = setTimeout(()=>{ t.classList.remove('show'); }, duration);
-    }
-
-    // Spinner helpers
-    function showSpinner(){ const s=document.getElementById('spinnerOverlay'); if(s) s.classList.remove('hidden'); }
-    function hideSpinner(){ const s=document.getElementById('spinnerOverlay'); if(s) s.classList.add('hidden'); }
-  </script>
+  <div id="loginView" class="login-shell">
     <div class="login-welcome">
       <div class="login-badge">EF Cargo Clear</div>
       <h1>Bem-vindo</h1>
@@ -2695,6 +2672,12 @@
       detectRecoveryMode();
       initLanguageSystem();
       setTimeout(() => applyLanguage(), 50);
+
+      // Scroll to top visibility
+      window.addEventListener('scroll', function(){
+        const btn = document.getElementById('scrollTopBtn');
+        if(btn) btn.style.display = window.scrollY > 300 ? 'flex' : 'none';
+      }, {passive:true});
     });
 
     function setupCompanyLogo() {
@@ -3185,6 +3168,19 @@
         msg.className = "message-err";
       }
     }
+
+    // ── Toast & Spinner helpers ──
+    function showToast(msg, type='', duration=3200){
+      const t = document.getElementById('toastEl');
+      if(!t) return;
+      t.textContent = msg;
+      t.className = 'toast' + (type ? ' '+type : '');
+      requestAnimationFrame(()=>{ t.classList.add('show'); });
+      clearTimeout(t._tid);
+      t._tid = setTimeout(()=>{ t.classList.remove('show'); }, duration);
+    }
+    function showSpinner(){ const s=document.getElementById('spinnerOverlay'); if(s) s.classList.remove('hidden'); }
+    function hideSpinner(){ const s=document.getElementById('spinnerOverlay'); if(s) s.classList.add('hidden'); }
 
     // ══════════════════════════════════════════════════════════
     // EMAIL CONFIG — EmailJS (funciona sem domínio, usa Gmail)
