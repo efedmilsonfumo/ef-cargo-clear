@@ -5990,9 +5990,101 @@
     function resetRequisicaoForm(){ ['req_de','req_para','req_referente','req_extenso','req_conferido','req_autorizado','req_recebido','req_cheque','req_banco'].forEach(id=>{const x=document.getElementById(id); if(x) x.value='';}); const d=document.getElementById('req_data'); if(d) d.value=new Date().toISOString().slice(0,10); const f=document.getElementById('req_funcionario'); if(f) f.value=currentUserName||currentUserEmail||''; const linhas=document.getElementById('req_linhas'); if(linhas) linhas.innerHTML=''; addRequisicaoLinha(); }
     async function submeterRequisicaoFundos(){ if(!canAccessInternalTab('requisicoes')){alert('Sem permissão.');return;} const linhas=getRequisicaoLinhas(); if(!linhas.length){alert('Adicione pelo menos uma linha.');return;} const total=linhas.reduce((s,l)=>s+(Number(l.valor)||0),0); const payload={data:document.getElementById('req_data')?.value||new Date().toISOString().slice(0,10),funcionario_nome:document.getElementById('req_funcionario')?.value.trim()||currentUserName||currentUserEmail,requisicao_de:document.getElementById('req_de')?.value.trim()||'',para:document.getElementById('req_para')?.value.trim()||'',referente:document.getElementById('req_referente')?.value.trim()||'',linhas,valor_total:total,valor_extenso:document.getElementById('req_extenso')?.value.trim()||'',conferido_por:document.getElementById('req_conferido')?.value.trim()||'',autorizado_por:document.getElementById('req_autorizado')?.value.trim()||'',recebido_por:document.getElementById('req_recebido')?.value.trim()||'',cheque_no:document.getElementById('req_cheque')?.value.trim()||'',banco:document.getElementById('req_banco')?.value.trim()||'',estado:'Submetido',criado_por_email:currentUserEmail}; try{ const {error}=await withTimeout(supabaseClient.from('requisicoes_fundos').insert(payload),10000); if(error){alert(error.message);return;} resetRequisicaoForm(); await loadRequisicoesFundos(); alert('Requisição submetida com sucesso.'); }catch(e){alert(e.message||'Erro ao submeter requisição.');} }
     async function loadRequisicoesFundos(render=true){ try{ const {data,error}=await withTimeout(supabaseClient.from('requisicoes_fundos').select('*').order('created_at',{ascending:false}),8000); if(!error) requisicoesCache=data||[]; }catch(_){ } if(render) renderRequisicoesFundos(); }
-    function renderRequisicoesFundos(){ const tb=document.getElementById('requisicoesTable'); if(!tb) return; if(!requisicoesCache.length){tb.innerHTML='<tr><td colspan="6" class="small">Nenhuma requisição encontrada.</td></tr>';return;} tb.innerHTML=requisicoesCache.map(r=>{ const id=String(r.id).replace(/'/g,"\\'"); return `<tr><td>${formatDate(r.data||r.created_at)}</td><td>${escapeHtml(r.funcionario_nome||'-')}</td><td>${escapeHtml(r.referente||r.requisicao_de||'-')}</td><td>${formatMoney(r.valor_total||0)}</td><td><span class="badge blue">${escapeHtml(r.estado||'Submetido')}</span></td><td><button class="btn-mini" onclick="downloadRequisicaoFundos('${id}')">Baixar</button> ${canAuthorizeRequisition()?`<button class="btn-mini info" onclick="atualizarEstadoRequisicao('${id}','Conferido')">Conferir</button><button class="btn-mini green" onclick="atualizarEstadoRequisicao('${id}','Aguardando autorização final')">Autorizar etapa</button><button class="btn-mini danger" onclick="atualizarEstadoRequisicao('${id}','Rejeitado')">Rejeitar</button>`:''} ${canFinalApproveRequisition()?`<button class="btn-mini green" onclick="atualizarEstadoRequisicao('${id}','Aprovado pelo Administrador')">Aprovação final</button>`:''}</td></tr>`; }).join(''); }
-    async function atualizarEstadoRequisicao(id,estado){ if(estado==='Aprovado pelo Administrador'&&!canFinalApproveRequisition()){alert('A decisão final é do administrador.');return;} if(!canAuthorizeRequisition()){alert('Sem permissão.');return;} try{ const {error}=await withTimeout(supabaseClient.from('requisicoes_fundos').update({estado,autorizado_por:currentUserName||currentUserEmail}).eq('id',id),10000); if(error){alert(error.message);return;} await loadRequisicoesFundos(); }catch(e){alert(e.message||'Erro ao atualizar requisição.');} }
-    function downloadRequisicaoFundos(id){ const r=requisicoesCache.find(x=>String(x.id)===String(id)); if(!r) return; const linhas=Array.isArray(r.linhas)?r.linhas:[]; const rows=[...linhas,...Array(Math.max(0,8-linhas.length)).fill({})].map(l=>`<tr><td>${escapeHtml(l.instrucao||'')}</td><td>${escapeHtml(l.cliente||'')}</td><td>${l.valor?formatMoney(l.valor):''}</td></tr>`).join(''); const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Requisição de Fundos</title><style>body{font-family:Arial,sans-serif;color:#111827;padding:28px}.top{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border:1px solid #111}.top div{padding:10px;border-right:1px solid #111}.top div:last-child{border-right:0}h1{text-align:center;font-size:22px;margin:24px 0}table{width:100%;border-collapse:collapse;margin-top:14px}th,td{border:1px solid #111;padding:10px;height:34px}.lines{line-height:2}.sign{display:grid;grid-template-columns:1fr 1fr 1fr;gap:28px;margin-top:34px;text-align:center}.foot{text-align:center;margin-top:26px;font-size:12px}@media print{button{display:none}}</style></head><body><div class="top"><div><strong>Processo</strong><br>Administrativo</div><div><strong>Departamento</strong><br>Administrativo</div><div><strong>Revisão</strong><br>00</div><div><strong>Documento</strong><br>SGQ.ADM.FR002</div></div><h1>REQUISIÇÃO DE FUNDOS</h1><div class="lines"><strong>Data:</strong> ${escapeHtml(r.data||'')}<br><strong>Nome do funcionário:</strong> ${escapeHtml(r.funcionario_nome||'')}<br><strong>Requisição de:</strong> ${escapeHtml(r.requisicao_de||'')}<br><strong>Para:</strong> ${escapeHtml(r.para||'')}<br><strong>Referente ao pagamento:</strong> ${escapeHtml(r.referente||'')}</div><table><thead><tr><th>INSTRUÇÃO</th><th>CLIENTE</th><th>VALOR TOTAL</th></tr></thead><tbody>${rows}</tbody></table><p><strong>Por extenso:</strong> ${escapeHtml(r.valor_extenso||'')}</p><div class="sign"><div>Conferido por<br><br>____________________<br>${escapeHtml(r.conferido_por||'')}</div><div>Autorizado por<br><br>____________________<br>${escapeHtml(r.autorizado_por||'')}</div><div>Recebido por<br><br>____________________<br>${escapeHtml(r.recebido_por||'')}</div></div><p><strong>Cheque nº</strong> ${escapeHtml(r.cheque_no||'')} &nbsp;&nbsp;&nbsp; <strong>Sob o Banco</strong> ${escapeHtml(r.banco||'')}</p><div class="foot">Sede: Rua do Quionga no 41, R/C Bairro Central, Maputo<br>Filiais: Ressano Garcia – Pemba - Nacala</div><script>window.onload=()=>window.print();<\/script></body></html>`; const win=window.open('', '_blank'); if(!win) return; win.document.open(); win.document.write(html); win.document.close(); }
+    function renderRequisicoesFundos(){
+      const tb=document.getElementById('requisicoesTable');
+      if(!tb) return;
+      if(!requisicoesCache.length){
+        tb.innerHTML='<tr><td colspan="6" class="small">Nenhuma requisição encontrada.</td></tr>';
+        return;
+      }
+      tb.innerHTML=requisicoesCache.map(r=>{
+        const id=String(r.id).replace(/'/g,"\\'");
+        return '<tr>'+
+          '<td>'+formatDate(r.data||r.created_at||r.criado_em)+'</td>'+
+          '<td>'+escapeHtml(r.funcionario_nome||'-')+'</td>'+
+          '<td>'+escapeHtml(r.referente||r.requisicao_de||'-')+'</td>'+
+          '<td>'+formatMoney(r.valor_total||0)+'</td>'+
+          '<td><span class="badge blue">'+escapeHtml(r.estado||'Submetido')+'</span></td>'+
+          '<td>'+
+            '<button class="btn-mini" onclick="downloadRequisicaoFundos(\''+id+'\')">Baixar</button> '+
+            (canAuthorizeRequisition()?'<button class="btn-mini info" onclick="atualizarEstadoRequisicao(\''+id+'\',\'Conferido\')">Conferir</button><button class="btn-mini green" onclick="atualizarEstadoRequisicao(\''+id+'\',\'Aguardando autorização final\')">Autorizar etapa</button><button class="btn-mini danger" onclick="atualizarEstadoRequisicao(\''+id+'\',\'Rejeitado\')">Rejeitar</button> ':'')+
+            (canFinalApproveRequisition()?'<button class="btn-mini green" onclick="atualizarEstadoRequisicao(\''+id+'\',\'Aprovado pelo Administrador\')">Aprovação final</button> ':'')+
+            '<button class="btn-mini danger" onclick="deleteRequisicaoFundos(\''+id+'\')">Eliminar</button>'+
+          '</td></tr>';
+      }).join('');
+    }
+
+    async function atualizarEstadoRequisicao(id,estado){
+      if(estado==='Aprovado pelo Administrador'&&!canFinalApproveRequisition()){alert('A decisão final é do administrador.');return;}
+      if(!canAuthorizeRequisition()){alert('Sem permissão.');return;}
+      try{
+        const {error}=await withTimeout(supabaseClient.from('requisicoes_fundos').update({estado,autorizado_por:currentUserName||currentUserEmail, atualizado_em:new Date().toISOString()}).eq('id',id),10000);
+        if(error){alert(error.message);return;}
+        await loadRequisicoesFundos();
+      }catch(e){alert(e.message||'Erro ao atualizar requisição.');}
+    }
+
+    async function deleteRequisicaoFundos(id){
+      if(!canFinalApproveRequisition() && currentUserRole !== 'admin'){
+        alert('A eliminação de requisições está reservada ao administrador.');
+        return;
+      }
+      if(!confirm('Eliminar esta requisição de fundos?')) return;
+      try{
+        const {error}=await withTimeout(supabaseClient.from('requisicoes_fundos').delete().eq('id',id),10000);
+        if(error){alert(error.message);return;}
+        await loadRequisicoesFundos();
+        alert('Requisição eliminada com sucesso.');
+      }catch(e){alert(e.message||'Erro ao eliminar requisição.');}
+    }
+
+    function downloadRequisicaoFundos(id){
+      const r=requisicoesCache.find(x=>String(x.id)===String(id));
+      if(!r) return;
+      const linhas=Array.isArray(r.linhas)?r.linhas:[];
+      const totalLinhas=8;
+      const rows=[...linhas,...Array(Math.max(0,totalLinhas-linhas.length)).fill({})].slice(0, Math.max(totalLinhas, linhas.length)).map(l=>{
+        const valor = Number(l.valor||0);
+        return '<tr><td>'+escapeHtml(l.instrucao||'')+'</td><td>'+escapeHtml(l.cliente||'')+'</td><td class="money">'+(valor?formatMoney(valor):'')+'</td></tr>';
+      }).join('');
+      const dataDoc=escapeHtml(r.data||'');
+      const nome=escapeHtml(r.funcionario_nome||'');
+      const reqDe=escapeHtml(r.requisicao_de||'');
+      const para=escapeHtml(r.para||'');
+      const referente=escapeHtml(r.referente||'');
+      const extenso=escapeHtml(r.valor_extenso||'');
+      const conferido=escapeHtml(r.conferido_por||'');
+      const autorizado=escapeHtml(r.autorizado_por||'');
+      const recebido=escapeHtml(r.recebido_por||'');
+      const cheque=escapeHtml(r.cheque_no||r.cheque_numero||'');
+      const banco=escapeHtml(r.banco||'');
+      const estado=escapeHtml(r.estado||'Submetido');
+      const html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Requisição de Fundos</title>'+
+      '<style>'+ 
+      '@page{size:A4 portrait;margin:14mm 14mm 12mm 14mm;}*{box-sizing:border-box}body{margin:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#111827}.sheet{width:210mm;min-height:297mm;margin:0 auto;background:#fff;padding:12mm 13mm 10mm 13mm;box-shadow:0 10px 35px rgba(0,0,0,.12)}.header{display:grid;grid-template-columns:1.05fr 1.1fr .65fr 1fr;border:1.4px solid #111827}.hcell{min-height:47px;border-right:1.2px solid #111827;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;line-height:1.25}.hcell:last-child{border-right:0}.hcell b{display:block;font-size:11px;text-transform:uppercase;margin-bottom:3px}.title{text-align:center;font-size:18px;font-weight:800;letter-spacing:.04em;text-decoration:underline;margin:18px 0 18px}.meta{font-size:13px;line-height:1.9;margin-top:4px}.line{display:flex;align-items:flex-end;gap:8px}.label{font-weight:700;white-space:nowrap}.fill{flex:1;border-bottom:1.1px solid #111827;min-height:19px;padding:0 4px}.fill.long{min-height:22px}.req-table{width:100%;border-collapse:collapse;margin-top:18px;font-size:13px}.req-table th{border:1.2px solid #111827;height:29px;text-align:center;font-weight:800;background:#f8fafc}.req-table td{border:1.05px solid #111827;height:32px;padding:5px 8px;vertical-align:middle}.req-table .money{text-align:right;white-space:nowrap}.extenso{margin-top:13px;font-size:13px}.extenso .fill{min-height:22px}.status{display:inline-block;border:1px solid #9ca3af;border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;color:#374151;margin-left:8px}.signs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:26px;margin-top:34px;text-align:center;font-size:13px}.sig-title{font-weight:700;margin-bottom:28px}.sig-line{border-top:1.1px solid #111827;padding-top:6px;min-height:32px}.bank{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:20px;font-size:13px}.footer{text-align:center;margin-top:28px;font-size:11px;line-height:1.45;color:#111827}.actions{position:fixed;top:14px;right:14px;display:flex;gap:8px}.actions button{border:0;border-radius:12px;background:#BE001A;color:white;padding:10px 14px;font-weight:700;cursor:pointer}.actions button.secondary{background:#374151}@media print{body{background:#fff}.sheet{width:auto;min-height:auto;margin:0;box-shadow:none;padding:0}.actions{display:none}.title{margin-top:18px}.req-table td{height:31px}.signs{margin-top:32px}.footer{margin-top:26px}}'+
+      '</style></head><body><div class="actions"><button onclick="window.print()">Imprimir / PDF</button><button class="secondary" onclick="window.close()">Fechar</button></div><main class="sheet">'+
+      '<div class="header"><div class="hcell"><div><b>Processo</b>Administrativo</div></div><div class="hcell"><div><b>Departamento</b>Administrativo</div></div><div class="hcell"><div><b>Revisão</b>00</div></div><div class="hcell"><div><b>Documento</b>SGQ.ADM.FR002</div></div></div>'+
+      '<div class="title">REQUISIÇÃO DE FUNDOS <span class="status">'+estado+'</span></div>'+
+      '<section class="meta">'+
+      '<div class="line"><span class="label">Data:</span><span class="fill">'+dataDoc+'</span></div>'+
+      '<div class="line"><span class="label">Nome do funcionário:</span><span class="fill long">'+nome+'</span></div>'+
+      '<div class="line"><span class="label">Requisição de:</span><span class="fill">'+reqDe+'</span></div>'+
+      '<div class="line"><span class="label">Para:</span><span class="fill">'+para+'</span></div>'+
+      '<div class="line"><span class="label">Referente ao pagamento:</span><span class="fill long">'+referente+'</span></div>'+
+      '</section>'+
+      '<table class="req-table"><thead><tr><th style="width:36%">INSTRUÇÃO</th><th style="width:39%">CLIENTE</th><th style="width:25%">VALOR TOTAL</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+      '<div class="extenso"><div class="line"><span class="label">Por extenso:</span><span class="fill">'+extenso+'</span></div><div class="line"><span class="fill" style="margin-left:0"></span></div></div>'+
+      '<div class="signs"><div><div class="sig-title">Conferido por</div><div class="sig-line">'+conferido+'</div></div><div><div class="sig-title">Autorizado por</div><div class="sig-line">'+autorizado+'</div></div><div><div class="sig-title">Recebido por</div><div class="sig-line">'+recebido+'</div></div></div>'+
+      '<div class="bank"><div class="line"><span class="label">Cheque nº</span><span class="fill">'+cheque+'</span></div><div class="line"><span class="label">Sob o Banco</span><span class="fill">'+banco+'</span></div></div>'+
+      '<div class="footer">Sede: Rua do Quionga nº 41, R/C Bairro Central, Maputo<br>Filiais: Ressano Garcia – Pemba - Nacala</div>'+
+      '</main></body></html>';
+      const win=window.open('', '_blank');
+      if(!win){ alert('O navegador bloqueou a abertura do documento. Permita pop-ups para esta plataforma.'); return; }
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+    }
+
     async function loadInternalMessages() {
       const { data, error } = await withTimeout(
         supabaseClient.from("mensagens").select("*").order("created_at", { ascending: true }),
