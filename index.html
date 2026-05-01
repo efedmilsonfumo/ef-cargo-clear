@@ -1556,6 +1556,19 @@
   .ef-doc-title{font-weight:900;color:#111827;font-size:15px;margin-bottom:4px}.ef-doc-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.ef-doc-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#f3f4f6;color:#374151;border:1px solid #e5e7eb;font-size:11px;font-weight:800}.ef-doc-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.ef-doc-actions .btn-mini{margin:0}.ef-doc-empty{width:100%;border:1px dashed rgba(190,0,26,.25);border-radius:22px;padding:20px;background:#fff8f8;color:#6b7280;line-height:1.5}
   @media(max-width:720px){.ef-doc-premium-card{grid-template-columns:44px 1fr}.ef-doc-icon{width:44px;height:44px;border-radius:15px;font-size:20px}.ef-doc-actions{grid-column:1 / -1;justify-content:flex-start}}
 </style>
+
+
+<!-- EF Cargo Clear - Badges reais visíveis v2 -->
+<style id="ef-real-visible-badges-v2">
+  .sidebar-btn{position:relative!important;display:flex!important;align-items:center!important;gap:10px!important;}
+  .sidebar-btn .ef-tab-badge{margin-left:auto!important;display:none;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:#ef4444;color:#fff;font-size:11px;font-weight:900;box-shadow:0 8px 18px rgba(239,68,68,.32);line-height:1;}
+  .sidebar-btn .ef-tab-badge.show{display:inline-flex!important;}
+  .sidebar-btn .ef-tab-badge.zero{display:inline-flex!important;background:#9ca3af;box-shadow:none;opacity:.72;}
+  .ef-kpi-badge{position:absolute;right:14px;top:12px;display:none;min-width:24px;height:24px;padding:0 8px;border-radius:999px;background:#ef4444;color:#fff;font-size:12px;font-weight:900;align-items:center;justify-content:center;box-shadow:0 10px 22px rgba(239,68,68,.30);z-index:5}
+  .ef-kpi-badge.show{display:inline-flex!important;}
+  .ef-doc-premium-card{border:1px solid rgba(190,0,26,.18)!important;box-shadow:0 18px 44px rgba(15,23,42,.10)!important;}
+</style>
+
 </head>
 <body>
 
@@ -1719,18 +1732,18 @@
             <div class="sidebar-title">Painel Interno</div>
             <div class="sidebar-menu">
               <button class="sidebar-btn active" id="side-dashboard" onclick="showInternalTab('dashboard')">📊 Dashboard</button>
-              <button class="sidebar-btn" id="side-processos" onclick="showInternalTab('processos')">Processos</button>
-              <button class="sidebar-btn" id="side-cotacoes" onclick="showInternalTab('cotacoes')">Pedidos de cotação</button>
-              <button class="sidebar-btn" id="side-fretes" onclick="showInternalTab('fretes')">Pedidos de frete</button>
-              <button class="sidebar-btn" id="side-produtos" onclick="showInternalTab('produtos')">Pedidos de produto</button>
+              <button class="sidebar-btn" id="side-processos" onclick="showInternalTab('processos')">Processos <span id="badge-processos" class="ef-tab-badge" data-tab="processos">0</span></button>
+              <button class="sidebar-btn" id="side-cotacoes" onclick="showInternalTab('cotacoes')">Pedidos de cotação <span id="badge-cotacoes" class="ef-tab-badge" data-tab="cotacoes">0</span></button>
+              <button class="sidebar-btn" id="side-fretes" onclick="showInternalTab('fretes')">Pedidos de frete <span id="badge-fretes" class="ef-tab-badge" data-tab="fretes">0</span></button>
+              <button class="sidebar-btn" id="side-produtos" onclick="showInternalTab('produtos')">Pedidos de produto <span id="badge-produtos" class="ef-tab-badge" data-tab="produtos">0</span></button>
               <button class="sidebar-btn" id="side-financeiro" onclick="showInternalTab('financeiro')">Financeiro</button>
               <button class="sidebar-btn" id="side-faturas" onclick="showInternalTab('faturas')">Faturas</button>
-              <button class="sidebar-btn" id="side-clientes" onclick="showInternalTab('clientes')">Clientes</button>
+              <button class="sidebar-btn" id="side-clientes" onclick="showInternalTab('clientes')">Clientes <span id="badge-clientes" class="ef-tab-badge" data-tab="clientes">0</span></button>
               <button class="sidebar-btn" id="side-equipa" onclick="showInternalTab('equipa')">Funcionários</button>
               <button class="sidebar-btn" id="side-mensagens" onclick="showInternalTab('mensagens')">
                 Mensagens <span id="internalUnreadBadge" class="unread-dot hidden">0</span>
               </button>
-              <button class="sidebar-btn" id="side-requisicoes" onclick="showInternalTab('requisicoes')">Requisição de Fundos</button>
+              <button class="sidebar-btn" id="side-requisicoes" onclick="showInternalTab('requisicoes')">Requisição de Fundos <span id="badge-requisicoes" class="ef-tab-badge" data-tab="requisicoes">0</span></button>
             </div>
           </aside>
 
@@ -3963,7 +3976,32 @@
             <h1>${title}</h1>
             ${section.innerHTML}
             <script>window.onload = () => window.print();<\/script>
-          </body>
+          
+
+<!-- EF Cargo Clear - Badges reais funcionais v2 -->
+<script id="ef-real-visible-badges-v2-script">
+(function(){
+  const TABS=["processos","cotacoes","fretes","produtos","clientes","requisicoes"];
+  const CACHE={processos:()=>window.processosCache||[],cotacoes:()=>window.cotacoesCache||[],fretes:()=>window.fretesCache||[],produtos:()=>window.produtosCache||[],clientes:()=>window.clientesCache||[],requisicoes:()=>window.requisicoesCache||[]};
+  const KPI={clientes:"clientesCount",processos:"processosCount",cotacoes:"cotacoesCount",requisicoes:"dashTotalProcessos"};
+  function key(tab){return "ef_seen_visible_"+(window.currentUserEmail||"global")+"_"+tab;}
+  function itemDate(x){const raw=x?.updated_at||x?.atualizado_em||x?.created_at||x?.criado_em||x?.uploaded_at||x?.data||x?.data_pedido; const t=raw?new Date(raw).getTime():0; return Number.isFinite(t)?t:0;}
+  function seen(tab){const raw=localStorage.getItem(key(tab)); const t=raw?new Date(raw).getTime():0; return Number.isFinite(t)?t:0;}
+  function list(tab){try{return Array.isArray(CACHE[tab]?.())?CACHE[tab]():[]}catch(e){return []}}
+  function filter(tab, rows){if(tab==="cotacoes") return rows.filter(x=>String(x.estado||"").toLowerCase()!=="convertido em processo"); if(tab==="fretes"||tab==="produtos") return rows.filter(x=>!['cancelado','recusado','rejeitado'].includes(String(x.estado||x.status||"").toLowerCase())); if(tab==="requisicoes") return rows.filter(x=>!['pago','recebido','rejeitado'].includes(String(x.estado||"").toLowerCase())); return rows;}
+  function count(tab){const rows=filter(tab,list(tab)); const last=seen(tab); if(!rows.length) return 0; if(!last) return rows.length; return rows.filter(x=>itemDate(x)>last).length;}
+  function ensureKpi(tab){const id=KPI[tab]; if(!id) return null; const v=document.getElementById(id); const card=v?.closest?.('.kpi'); if(!card) return null; let b=card.querySelector('.ef-kpi-badge[data-tab="'+tab+'"]'); if(!b){b=document.createElement('span'); b.className='ef-kpi-badge'; b.dataset.tab=tab; card.appendChild(b);} return b;}
+  function setBadge(el,n,showZero=false){ if(!el) return; el.textContent=n>99?'99+':String(n); el.classList.toggle('show',n>0); el.classList.toggle('zero',n===0 && showZero); }
+  window.efUpdateInternalBadges=function(){TABS.forEach(tab=>{const n=count(tab); setBadge(document.getElementById('badge-'+tab) || document.querySelector('#side-'+tab+' .ef-tab-badge'), n, false); setBadge(ensureKpi(tab), n, false);});};
+  window.efForceShowBadgeZeros=function(){TABS.forEach(tab=>setBadge(document.getElementById('badge-'+tab) || document.querySelector('#side-'+tab+' .ef-tab-badge'), count(tab), true));};
+  const oldShow=window.showInternalTab; if(typeof oldShow==='function'){window.showInternalTab=function(tab){const r=oldShow.apply(this,arguments); if(TABS.includes(tab)){localStorage.setItem(key(tab),new Date().toISOString()); setTimeout(window.efUpdateInternalBadges,250);} return r;};}
+  ['loadInternal','loadProcessos','loadClientes','loadCotacoes','loadFretes','loadProdutos','loadRequisicoesFundos'].forEach(fn=>{const old=window[fn]; if(typeof old==='function'){window[fn]=async function(){const r=await old.apply(this,arguments); setTimeout(window.efUpdateInternalBadges,200); return r;};}});
+  document.addEventListener('DOMContentLoaded',()=>{setTimeout(window.efUpdateInternalBadges,1000); setTimeout(window.efForceShowBadgeZeros,1800); setInterval(window.efUpdateInternalBadges,5000);});
+  window.addEventListener('focus',()=>setTimeout(window.efUpdateInternalBadges,300));
+})();
+</script>
+
+</body>
         </html>
       `;
       win.document.open();
