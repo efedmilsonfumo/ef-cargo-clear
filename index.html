@@ -4423,11 +4423,44 @@
       return alerts.slice(0, 8);
     }
 
+    function safeNumber(value) {
+      if (value === null || value === undefined || value === '') return 0;
+      if (typeof value === 'number') return isNaN(value) ? 0 : value;
+      const normalized = String(value).replace(/\s/g, '').replace(/,/g, '.');
+      const n = Number(normalized);
+      return isNaN(n) ? 0 : n;
+    }
+    function invoiceLineTotal(lines) { if (!Array.isArray(lines)) return 0; return lines.reduce((sum, line) => sum + safeNumber(line?.valor ?? line?.value ?? line?.amount ?? 0), 0); }
+    function getInvoiceEncargosTotal(f) { return invoiceLineTotal(f?.encargos_json); }
+    function getInvoiceServicosTotal(f) { return invoiceLineTotal(f?.servicos_json); }
+    function getInvoiceTotal(f) { const total = safeNumber(f?.total_mt ?? f?.total ?? f?.valor_total); return total || (getInvoiceEncargosTotal(f) + getInvoiceServicosTotal(f)); }
+    function invoiceMatchesProcess(f, p) {
+      if (!f || !p) return false;
+      const procId = String(p.id || '');
+      const fProcId = String(f.processo_id || '');
+      if (procId && fProcId && procId === fProcId) return true;
+      const procRefs = [p.numero_factura, p.numero_processo].map(x => String(x || '').trim()).filter(Boolean);
+      const fatRefs = [f.referencia, f.numero_fatura].map(x => String(x || '').trim()).filter(Boolean);
+      return procRefs.some(pr => fatRefs.some(fr => fr === pr || fr.includes(pr) || pr.includes(fr)));
+    }
+    function getFaturasForProcessos(processRows = []) {
+      const rows = Array.isArray(processRows) ? processRows : [];
+      const result = [];
+      const seen = new Set();
+      (faturasCache || []).forEach(f => { if (rows.some(p => invoiceMatchesProcess(f, p)) && !seen.has(String(f.id))) { result.push(f); seen.add(String(f.id)); } });
+      return result;
+    }
+    function getFinancialTotalsFromFaturas(faturas = []) {
+      return (Array.isArray(faturas) ? faturas : []).reduce((acc, f) => { acc.cobrado += getInvoiceTotal(f); acc.custos += getInvoiceEncargosTotal(f); acc.margem += getInvoiceServicosTotal(f); return acc; }, { cobrado: 0, custos: 0, margem: 0 });
+    }
+    function getLinkedProcessForInvoice(f) { return (processosCache || []).find(p => invoiceMatchesProcess(f, p)) || null; }
+
     function renderInternalDashboard() {
       const totalProcessos = processosCache.length;
       const liberados = processosCache.filter(p => ['Liberado','Entregue'].includes(p.estado || '')).length;
       const docsPendentes = getPendingProcessCount(processosCache);
-      const margemTotal = processosCache.reduce((sum,p) => sum + Number(p.margem_lucro || 0), 0);
+      const financeTotalsDashboard = getFinancialTotalsFromFaturas(faturasCache || []);
+      const margemTotal = financeTotalsDashboard.margem;
 
       const el = (id) => document.getElementById(id);
       if (el('dashTotalProcessos')) el('dashTotalProcessos').textContent = totalProcessos;
@@ -4474,9 +4507,18 @@
         const idx = map.get(key);
         if (idx === undefined) return;
         processosMes[idx] += 1;
-        cobradoMes[idx] += Number(p.valor_cobrado || 0);
-        custosMes[idx] += Number(p.custos_processo || 0);
       });
+
+      (faturasCache || []).forEach(f => {
+        const d = parsePossibleDate(f.data_fatura || f.created_at);
+        if (!d) return;
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        const idx = map.get(key);
+        if (idx === undefined) return;
+        cobradoMes[idx] += getInvoiceTotal(f);
+        custosMes[idx] += getInvoiceEncargosTotal(f);
+      });
+
 
       if (processosMesChart) processosMesChart.destroy();
       const procCanvas = document.getElementById('processosMesChart');
@@ -4972,24 +5014,23 @@
       });
     }
 
-    function getFinanceFilteredProcessos() {
-      let rows = [...processosCache];
+    function getFinanceFilteredFaturas() {
+      let rows = [...(faturasCache || [])];
       const fromVal = document.getElementById("financeFrom")?.value || "";
       const toVal = document.getElementById("financeTo")?.value || "";
       const clienteQ = (document.getElementById("financeCliente")?.value || "").trim().toLowerCase();
       const fromDate = fromVal ? new Date(fromVal) : null;
       const toDate = toVal ? new Date(toVal) : null;
-
-      rows = rows.filter(p => {
-        const baseDate = new Date(p.updated_at || p.created_at || Date.now());
+      return rows.filter(f => {
+        const baseDate = new Date(f.data_fatura || f.pago_at || f.created_at || Date.now());
         const okFrom = !fromDate || baseDate >= fromDate;
         const okTo = !toDate || baseDate <= toDate;
-        const okCliente = !clienteQ || String(p.importador_exportador || "").toLowerCase().includes(clienteQ);
+        const okCliente = !clienteQ || String(f.cliente_nome || "").toLowerCase().includes(clienteQ) || String(f.cliente_email || "").toLowerCase().includes(clienteQ);
         return okFrom && okTo && okCliente;
       });
-
-      return rows;
     }
+
+    function getFinanceFilteredProcessos() { return getFilteredProcessos(); }
 
     function clearFinanceFilters() {
       const ids = ["financeFrom","financeTo","financeCliente"];
@@ -5026,27 +5067,17 @@
 
     function renderFinanceiroTable() {
       const ftbody = document.getElementById("financeiroTable");
+      if (!ftbody) return;
       ftbody.innerHTML = "";
-
-      const filteredRows = getFinanceFilteredProcessos();
-      renderFinanceInsights(filteredRows);
-
-      filteredRows.forEach(p => {
-        const margem = Number(p.margem_lucro || 0);
-        const margemBadge = margem > 0
-          ? `<span class="badge green">${formatMoney(margem)}</span>`
-          : `<span class="badge amber">${formatMoney(margem)}</span>`;
-
+      renderFinanceInsights(getFilteredProcessos());
+      getFinanceFilteredFaturas().forEach(f => {
+        const p = getLinkedProcessForInvoice(f);
+        const totalCobrado = getInvoiceTotal(f);
+        const totalCustos = getInvoiceEncargosTotal(f);
+        const totalMargem = getInvoiceServicosTotal(f);
+        const margemBadge = totalMargem > 0 ? `<span class="badge green">${formatMoney(totalMargem)}</span>` : `<span class="badge amber">${formatMoney(totalMargem)}</span>`;
         const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${formatDate(p.updated_at || p.created_at || "")}</td>
-          <td><strong>${p.numero_processo || ""}</strong></td>
-          <td>${p.importador_exportador || ""}</td>
-          <td>${p.numero_factura || ""}</td>
-          <td>${formatMoney(p.valor_cobrado || 0)}</td>
-          <td>${formatMoney(p.custos_processo || 0)}</td>
-          <td>${margemBadge}</td>
-        `;
+        tr.innerHTML = `<td>${formatDate(f.data_fatura || f.pago_at || f.created_at || "")}</td><td><strong>${p?.numero_processo || f.referencia || ""}</strong></td><td>${f.cliente_nome || ""}</td><td>${f.numero_fatura || ""}</td><td>${formatMoney(totalCobrado)}</td><td>${formatMoney(totalCustos)}</td><td>${margemBadge}</td>`;
         ftbody.appendChild(tr);
       });
     }
@@ -6113,19 +6144,8 @@ async function deleteMessageThread(clienteEmail) {
     }
 
     function exportFinanceiroCSV() {
-      const rows = getFinanceFilteredProcessos().map(p => [
-        formatDate(p.updated_at || p.created_at || ""),
-        p.numero_processo || "",
-        p.importador_exportador || "",
-        p.numero_factura || "",
-        p.valor_cobrado || 0,
-        p.custos_processo || 0,
-        p.margem_lucro || 0
-      ]);
-      downloadCSV("financeiro.csv",
-        ["Data","Processo","Cliente","Factura","Valor cobrado","Custos","Margem"],
-        rows
-      );
+      const rows = getFinanceFilteredFaturas().map(f => { const p = getLinkedProcessForInvoice(f); return [formatDate(f.data_fatura || f.pago_at || f.created_at || ""), p?.numero_processo || f.referencia || "", f.cliente_nome || "", f.numero_fatura || "", getInvoiceTotal(f), getInvoiceEncargosTotal(f), getInvoiceServicosTotal(f)]; });
+      downloadCSV("financeiro.csv", ["Data","Processo","Cliente","Factura","Valor cobrado","Custos","Margem"], rows);
     }
 
     function exportCotacoesCSV() {
@@ -6216,9 +6236,10 @@ async function deleteMessageThread(clienteEmail) {
         cotacaoDocsCache = cotacaoDocs || [];
         faturasCache = faturas || [];
 
-        const totalCobrado = processosCache.reduce((s, p) => s + Number(p.valor_cobrado || 0), 0);
-        const totalCustos = processosCache.reduce((s, p) => s + Number(p.custos_processo || 0), 0);
-        const totalMargem = processosCache.reduce((s, p) => s + Number(p.margem_lucro || 0), 0);
+        const totaisFaturas = getFinancialTotalsFromFaturas(faturasCache || []);
+        const totalCobrado = totaisFaturas.cobrado;
+        const totalCustos = totaisFaturas.custos;
+        const totalMargem = totaisFaturas.margem;
         const liberados = processosCache.filter(p => ["Liberado", "Entregue"].includes(p.estado)).length;
 
         document.getElementById("clientesCount").textContent = clientesCache.length;
@@ -8088,53 +8109,23 @@ async function deleteMessageThread(clienteEmail) {
     }
 
     function renderFinanceInsights(rows) {
-  const box = document.getElementById('financeInsights');
-  if (!box) return;
-  const totalCobrado = rows.reduce((s,p)=>s+Number(p.valor_cobrado||0),0);
-  const totalCustos = rows.reduce((s,p)=>s+Number(p.custos_processo||0),0);
-  const totalMargem = rows.reduce((s,p)=>s+Number(p.margem_lucro||0),0);
-  const clientes = [...new Set(rows.map(p => String(p.importador_exportador || '').trim()).filter(Boolean))];
-
-  const procIds = new Set(rows.map(p => String(p.id || '')).filter(Boolean));
-  const invoiceRefs = new Set(rows.map(p => String(p.numero_factura || '').trim()).filter(Boolean));
-  const clientNames = new Set(rows.map(p => String(p.importador_exportador || '').trim().toLowerCase()).filter(Boolean));
-
-  const breakdown = {};
-  (faturasCache || []).forEach(f => {
-    const matchByProc = f.processo_id && procIds.has(String(f.processo_id));
-    const matchByRef = String(f.referencia || f.numero_fatura || '').trim() && invoiceRefs.has(String(f.referencia || f.numero_fatura || '').trim());
-    const matchByClient = String(f.cliente_nome || '').trim().toLowerCase() && clientNames.has(String(f.cliente_nome || '').trim().toLowerCase());
-
-    if (!(matchByProc || matchByRef || matchByClient)) return;
-
-    const lines = [
-      ...(Array.isArray(f.encargos_json) ? f.encargos_json : []),
-      ...(Array.isArray(f.servicos_json) ? f.servicos_json : [])
-    ];
-
-    lines.forEach(line => {
-      const key = line.nome || 'Outros';
-      breakdown[key] = (breakdown[key] || 0) + Number(line.valor || 0);
-    });
-  });
-
-  const top = Object.entries(breakdown).sort((a,b)=>b[1]-a[1]).slice(0,6);
-  box.innerHTML = `
-    <div class="progress-card">
-      <div class="kpi-title">Resumo filtrado</div>
-      <div class="grid grid-3">
-        <div><strong>Cobrado</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:#BE001A;">${formatMoney(totalCobrado)}</div></div>
-        <div><strong>Custos</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:#111827;">${formatMoney(totalCustos)}</div></div>
-        <div><strong>Margem</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:${totalMargem >= 0 ? '#166534' : '#b91c1c'};">${formatMoney(totalMargem)}</div></div>
-      </div>
-      <div class="small" style="margin-top:12px;">Clientes no filtro: ${clientes.length} • Processos: ${rows.length}</div>
-    </div>
-    <div class="progress-card">
-      <div class="kpi-title">Em que foi gasto / cobrado</div>
-      ${top.length ? top.map(([nome,valor]) => `<div style="display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #eee;"><span>${escapeHtml(nome)}</span><strong>${formatMoney(valor)}</strong></div>`).join("") : `<div class="small">Sem valores ligados ao filtro atual.</div>`}
-    </div>
-  `;
-}
+      const box = document.getElementById('financeInsights');
+      if (!box) return;
+      const processRows = Array.isArray(rows) ? rows : [];
+      const linkedFaturas = getFaturasForProcessos(processRows);
+      const totals = getFinancialTotalsFromFaturas(linkedFaturas);
+      const totalCobrado = totals.cobrado;
+      const totalCustos = totals.custos;
+      const totalMargem = totals.margem;
+      const clientes = [...new Set(processRows.map(p => String(p.importador_exportador || '').trim()).filter(Boolean))];
+      const breakdown = {};
+      linkedFaturas.forEach(f => {
+        const lines = [...(Array.isArray(f.encargos_json) ? f.encargos_json : []), ...(Array.isArray(f.servicos_json) ? f.servicos_json : [])];
+        lines.forEach(line => { const key = line.nome || 'Outros'; breakdown[key] = (breakdown[key] || 0) + safeNumber(line.valor || 0); });
+      });
+      const top = Object.entries(breakdown).sort((a,b)=>b[1]-a[1]).slice(0,6);
+      box.innerHTML = `<div class="progress-card"><div class="kpi-title">Resumo filtrado</div><div class="grid grid-3"><div><strong>Cobrado</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:#BE001A;">${formatMoney(totalCobrado)}</div></div><div><strong>Custos</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:#111827;">${formatMoney(totalCustos)}</div></div><div><strong>Margem</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:${totalMargem >= 0 ? '#166534' : '#b91c1c'};">${formatMoney(totalMargem)}</div></div></div><div class="small" style="margin-top:12px;">Fonte: tabela faturas • Clientes no filtro: ${clientes.length} • Processos: ${processRows.length} • Faturas ligadas: ${linkedFaturas.length}</div></div><div class="progress-card"><div class="kpi-title">Em que foi gasto / cobrado</div>${top.length ? top.map(([nome,valor]) => `<div style="display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #eee;"><span>${escapeHtml(nome)}</span><strong>${formatMoney(valor)}</strong></div>`).join("") : `<div class="small">Sem faturas ligadas ao filtro atual.</div>`}</div>`;
+    }
 
     window.addEventListener("load", async () => {
       try {
