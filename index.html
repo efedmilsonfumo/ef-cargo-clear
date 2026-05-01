@@ -5915,9 +5915,75 @@
 
     function refreshFuncionarioSelects(){ const sel=document.getElementById('doc_funcionario_select'); if(!sel) return; sel.innerHTML='<option value="">Selecione</option>'+(equipaCache||[]).map(e=>`<option value="${e.id}">${escapeHtml(e.nome||e.email||'Funcionário')}</option>`).join(''); }
     function selectFuncionarioDocs(id){ showInternalTab('equipa'); const sel=document.getElementById('doc_funcionario_select'); if(sel) sel.value=id; renderFuncionarioDocumentos(); document.getElementById('doc_funcionario_select')?.scrollIntoView({behavior:'smooth',block:'center'}); }
-    async function loadFuncionarioDocumentos(render=true){ try{ const {data,error}=await withTimeout(supabaseClient.from('funcionarios_documentos').select('*').order('created_at',{ascending:false}),8000); if(!error) funcionarioDocsCache=data||[]; }catch(_){ } refreshFuncionarioSelects(); if(render) renderFuncionarioDocumentos(); }
-    function renderFuncionarioDocumentos(){ const list=document.getElementById('funcionarioDocsList'); if(!list) return; const selected=document.getElementById('doc_funcionario_select')?.value||''; const docs=(funcionarioDocsCache||[]).filter(d=>!selected||String(d.funcionario_id)===String(selected)); list.innerHTML=docs.length?docs.map(d=>`<span class="doc-chip">📎 ${escapeHtml(d.tipo||d.nome_arquivo||'Documento')} ${d.url?`<a href="${d.url}" target="_blank">Abrir</a>`:''}</span>`).join(''):'<span class="small">Nenhum documento carregado.</span>'; }
-    async function uploadFuncionarioDocumento(){ if(!canAccessInternalTab('equipa')){alert('Sem permissão.');return;} const funcionarioId=document.getElementById('doc_funcionario_select')?.value||''; const tipo=document.getElementById('doc_funcionario_tipo')?.value.trim()||''; const file=document.getElementById('doc_funcionario_file')?.files?.[0]; if(!funcionarioId||!file){alert('Selecione o funcionário e o documento.');return;} try{ const path=`funcionarios/${funcionarioId}/${Date.now()}_${safeFileName(file.name)}`; const up=await withTimeout(supabaseClient.storage.from('funcionarios').upload(path,file,{upsert:false}),20000); if(up.error){alert(up.error.message);return;} const pub=supabaseClient.storage.from('funcionarios').getPublicUrl(path); const url=pub?.data?.publicUrl||''; const {error}=await withTimeout(supabaseClient.from('funcionarios_documentos').insert({funcionario_id:funcionarioId,tipo,nome_arquivo:file.name,url,storage_path:path,uploaded_by:currentUserEmail}),10000); if(error){alert(error.message);return;} document.getElementById('doc_funcionario_tipo').value=''; document.getElementById('doc_funcionario_file').value=''; await loadFuncionarioDocumentos(true); alert('Documento carregado com sucesso.'); }catch(e){alert(e.message||'Erro ao carregar documento.');} }
+    async function loadFuncionarioDocumentos(render=true){
+      try{
+        const {data,error}=await withTimeout(supabaseClient.from('funcionarios_documentos').select('*'),8000);
+        if(error){ console.warn('Erro ao carregar documentos dos funcionários:', error.message); return; }
+        funcionarioDocsCache=(data||[]).sort((a,b)=>new Date(b.uploaded_at||b.criado_em||b.created_at||0)-new Date(a.uploaded_at||a.criado_em||a.created_at||0));
+      }catch(e){ console.warn('Erro ao carregar documentos dos funcionários:', e.message||e); }
+      refreshFuncionarioSelects();
+      if(render) renderFuncionarioDocumentos();
+    }
+
+    function getFuncionarioNomeById(id){
+      const f=(equipaCache||[]).find(x=>String(x.id)===String(id));
+      return f ? (f.nome||f.email||'Funcionário') : 'Funcionário';
+    }
+
+    function renderFuncionarioDocumentos(){
+      const list=document.getElementById('funcionarioDocsList');
+      if(!list) return;
+      const selected=document.getElementById('doc_funcionario_select')?.value||'';
+      if(!selected){
+        list.innerHTML='<div class="muted-box" style="width:100%;">Selecione um funcionário para ver apenas os documentos vinculados a ele.</div>';
+        return;
+      }
+      const docs=(funcionarioDocsCache||[]).filter(d=>String(d.funcionario_id)===String(selected));
+      if(!docs.length){
+        list.innerHTML=`<div class="muted-box" style="width:100%;">Nenhum documento carregado para <strong>${escapeHtml(getFuncionarioNomeById(selected))}</strong>.</div>`;
+        return;
+      }
+      list.innerHTML=docs.map(d=>{
+        const tipo=d.tipo||d.tipo_documento||'Documento';
+        const nome=d.nome_arquivo||d.nome||d.name||'Ficheiro';
+        const url=d.url||d.ficheiro_url||'';
+        const storagePath=d.storage_path||'';
+        const dataDoc=d.uploaded_at||d.criado_em||d.created_at||'';
+        const safeId=String(d.id||'').replace(/'/g,'\\\'');
+        const safePath=String(storagePath||'').replace(/'/g,'\\\'');
+        return `
+          <div class="doc-chip" style="width:100%;border-radius:16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 14px;">
+            <div style="min-width:220px;flex:1;">
+              <strong>📎 ${escapeHtml(tipo)}</strong><br>
+              <span class="small">${escapeHtml(nome)}</span><br>
+              <span class="small">Funcionário: ${escapeHtml(getFuncionarioNomeById(selected))}${dataDoc?' • '+escapeHtml(formatDate(dataDoc)):''}</span>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+              ${url?`<a class="btn-mini info" href="${url}" target="_blank" rel="noopener noreferrer">Ver</a>`:''}
+              ${url?`<a class="btn-mini green" href="${url}" download>Baixar</a>`:''}
+              <button class="btn-mini danger" onclick="eliminarDocumentoFuncionario('${safeId}','${safePath}')">Eliminar</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function eliminarDocumentoFuncionario(id, storagePath){
+      if(!canAccessInternalTab('equipa')){ alert('Sem permissão.'); return; }
+      if(!id){ alert('Documento inválido.'); return; }
+      if(!confirm('Tem certeza que deseja eliminar este documento do funcionário?')) return;
+      try{
+        if(storagePath){
+          const removed=await withTimeout(supabaseClient.storage.from('funcionarios').remove([storagePath]),10000);
+          if(removed.error){ console.warn('Erro ao remover ficheiro do Storage:', removed.error.message); }
+        }
+        const {error}=await withTimeout(supabaseClient.from('funcionarios_documentos').delete().eq('id',id),10000);
+        if(error){ alert(error.message); return; }
+        await loadFuncionarioDocumentos(true);
+        alert('Documento eliminado com sucesso.');
+      }catch(e){ alert(e.message||'Erro ao eliminar documento.'); }
+    }
+
+    async function uploadFuncionarioDocumento(){ if(!canAccessInternalTab('equipa')){alert('Sem permissão.');return;} const funcionarioId=document.getElementById('doc_funcionario_select')?.value||''; const tipo=document.getElementById('doc_funcionario_tipo')?.value.trim()||''; const file=document.getElementById('doc_funcionario_file')?.files?.[0]; if(!funcionarioId||!file){alert('Selecione o funcionário e o documento.');return;} try{ const path=`funcionarios/${funcionarioId}/${Date.now()}_${safeFileName(file.name)}`; const up=await withTimeout(supabaseClient.storage.from('funcionarios').upload(path,file,{upsert:false}),20000); if(up.error){alert(up.error.message);return;} const pub=supabaseClient.storage.from('funcionarios').getPublicUrl(path); const url=pub?.data?.publicUrl||''; const {error}=await withTimeout(supabaseClient.from('funcionarios_documentos').insert({funcionario_id:funcionarioId,funcionario_nome:getFuncionarioNomeById(funcionarioId),tipo,tipo_documento:tipo,nome_arquivo:file.name,nome:file.name,url,ficheiro_url:url,storage_path:path,uploaded_by:currentUserEmail,criado_por:currentUserEmail}),10000); if(error){alert(error.message);return;} document.getElementById('doc_funcionario_tipo').value=''; document.getElementById('doc_funcionario_file').value=''; await loadFuncionarioDocumentos(true); alert('Documento carregado com sucesso.'); }catch(e){alert(e.message||'Erro ao carregar documento.');} }
 
     function addRequisicaoLinha(){ const box=document.getElementById('req_linhas'); if(!box) return; const row=document.createElement('div'); row.className='invoice-line'; row.style.gridTemplateColumns='1fr 1fr 160px 40px'; row.innerHTML='<input class="req_instrucao" placeholder="Instrução" /><input class="req_cliente" placeholder="Cliente" /><input class="req_valor" type="number" step="0.01" placeholder="Valor total" /><button class="btn-mini danger" type="button" onclick="this.parentElement.remove()">×</button>'; box.appendChild(row); }
     function getRequisicaoLinhas(){ return Array.from(document.querySelectorAll('#req_linhas .invoice-line')).map(r=>({instrucao:r.querySelector('.req_instrucao')?.value.trim()||'',cliente:r.querySelector('.req_cliente')?.value.trim()||'',valor:Number(r.querySelector('.req_valor')?.value||0)})).filter(x=>x.instrucao||x.cliente||x.valor); }
