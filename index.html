@@ -1547,28 +1547,41 @@
 </style>
 
 
-<!-- EF Cargo Clear - Badges e documentos premium (patch seguro) -->
-<style id="ef-badges-docs-premium-safe">
-  .ef-tab-badge{display:none;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;margin-left:auto;border-radius:999px;background:#ef4444;color:#fff;font-size:11px;font-weight:900;line-height:1;box-shadow:0 8px 18px rgba(239,68,68,.28)}
-  .ef-tab-badge.show{display:inline-flex}.kpi{position:relative}.ef-kpi-badge{position:absolute;right:14px;top:12px;display:none;min-width:24px;height:24px;padding:0 8px;border-radius:999px;background:#ef4444;color:#fff;font-size:12px;font-weight:900;align-items:center;justify-content:center;box-shadow:0 10px 22px rgba(239,68,68,.30);z-index:3}.ef-kpi-badge.show{display:inline-flex}
-  .ef-doc-premium-wrap{width:100%;display:grid;gap:14px}.ef-doc-premium-card{width:100%;display:grid;grid-template-columns:56px 1fr auto;gap:14px;align-items:center;padding:16px;border:1px solid rgba(190,0,26,.12);border-radius:22px;background:radial-gradient(circle at 96% 12%, rgba(190,0,26,.08), transparent 26%),linear-gradient(180deg,#fff 0%, #fbfcff 100%);box-shadow:0 16px 36px rgba(15,23,42,.08)}
-  .ef-doc-icon{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(180deg,#fff3f5,#ffe3e8);border:1px solid rgba(190,0,26,.14);color:#BE001A;font-size:24px;box-shadow:0 12px 26px rgba(190,0,26,.12)}
-  .ef-doc-title{font-weight:900;color:#111827;font-size:15px;margin-bottom:4px}.ef-doc-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.ef-doc-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#f3f4f6;color:#374151;border:1px solid #e5e7eb;font-size:11px;font-weight:800}.ef-doc-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.ef-doc-actions .btn-mini{margin:0}.ef-doc-empty{width:100%;border:1px dashed rgba(190,0,26,.25);border-radius:22px;padding:20px;background:#fff8f8;color:#6b7280;line-height:1.5}
-  @media(max-width:720px){.ef-doc-premium-card{grid-template-columns:44px 1fr}.ef-doc-icon{width:44px;height:44px;border-radius:15px;font-size:20px}.ef-doc-actions{grid-column:1 / -1;justify-content:flex-start}}
+
+
+<!-- EF Cargo Clear - Patch VISÍVEL e seguro para badges + documentos -->
+<style id="ef-visible-badges-docs-final">
+  .ef-real-badge{
+    display:none;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 7px;margin-left:auto;
+    border-radius:999px;background:#ef4444;color:#fff;font-size:11px;font-weight:900;line-height:1;
+    box-shadow:0 8px 18px rgba(239,68,68,.35);border:2px solid rgba(255,255,255,.85);
+  }
+  .ef-real-badge.show{display:inline-flex;animation:efBadgePulse 1.2s ease-in-out infinite;}
+  @keyframes efBadgePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+  .sidebar-btn{position:relative;gap:10px!important;}
+  .sidebar-btn .ef-real-badge{margin-left:auto!important;flex:0 0 auto;}
+  .kpi .ef-real-badge{position:absolute;right:14px;top:12px;margin:0;z-index:5;}
+  #funcionarioDocsList .doc-chip,
+  #funcionarioDocsList .ef-doc-premium-card{
+    width:100%!important;display:grid!important;grid-template-columns:56px 1fr auto!important;gap:14px!important;align-items:center!important;
+    padding:16px!important;border:1px solid rgba(190,0,26,.14)!important;border-radius:22px!important;
+    background:radial-gradient(circle at 96% 12%, rgba(190,0,26,.08), transparent 26%),linear-gradient(180deg,#fff 0%, #fbfcff 100%)!important;
+    box-shadow:0 16px 36px rgba(15,23,42,.08)!important;
+  }
+  #funcionarioDocsList .doc-chip::before{
+    content:'📄';width:56px;height:56px;border-radius:18px;display:grid;place-items:center;
+    background:linear-gradient(180deg,#fff3f5,#ffe3e8);border:1px solid rgba(190,0,26,.14);color:#BE001A;font-size:24px;
+    box-shadow:0 12px 26px rgba(190,0,26,.12);
+  }
+  #funcionarioDocsList .doc-chip > div:first-child{min-width:0;}
+  #funcionarioDocsList .doc-chip strong{font-size:15px;color:#111827;font-weight:900;}
+  #funcionarioDocsList .doc-chip .btn-mini{margin:0 4px 4px 0;}
+  @media(max-width:720px){
+    #funcionarioDocsList .doc-chip,#funcionarioDocsList .ef-doc-premium-card{grid-template-columns:44px 1fr!important;}
+    #funcionarioDocsList .doc-chip::before{width:44px;height:44px;border-radius:15px;font-size:20px;}
+    #funcionarioDocsList .doc-chip > div:last-child,#funcionarioDocsList .ef-doc-actions{grid-column:1/-1;justify-content:flex-start!important;}
+  }
 </style>
-
-
-<!-- EF Cargo Clear - Badges reais visíveis v2 -->
-<style id="ef-real-visible-badges-v2">
-  .sidebar-btn{position:relative!important;display:flex!important;align-items:center!important;gap:10px!important;}
-  .sidebar-btn .ef-tab-badge{margin-left:auto!important;display:none;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:#ef4444;color:#fff;font-size:11px;font-weight:900;box-shadow:0 8px 18px rgba(239,68,68,.32);line-height:1;}
-  .sidebar-btn .ef-tab-badge.show{display:inline-flex!important;}
-  .sidebar-btn .ef-tab-badge.zero{display:inline-flex!important;background:#9ca3af;box-shadow:none;opacity:.72;}
-  .ef-kpi-badge{position:absolute;right:14px;top:12px;display:none;min-width:24px;height:24px;padding:0 8px;border-radius:999px;background:#ef4444;color:#fff;font-size:12px;font-weight:900;align-items:center;justify-content:center;box-shadow:0 10px 22px rgba(239,68,68,.30);z-index:5}
-  .ef-kpi-badge.show{display:inline-flex!important;}
-  .ef-doc-premium-card{border:1px solid rgba(190,0,26,.18)!important;box-shadow:0 18px 44px rgba(15,23,42,.10)!important;}
-</style>
-
 </head>
 <body>
 
@@ -1732,18 +1745,18 @@
             <div class="sidebar-title">Painel Interno</div>
             <div class="sidebar-menu">
               <button class="sidebar-btn active" id="side-dashboard" onclick="showInternalTab('dashboard')">📊 Dashboard</button>
-              <button class="sidebar-btn" id="side-processos" onclick="showInternalTab('processos')">Processos <span id="badge-processos" class="ef-tab-badge" data-tab="processos">0</span></button>
-              <button class="sidebar-btn" id="side-cotacoes" onclick="showInternalTab('cotacoes')">Pedidos de cotação <span id="badge-cotacoes" class="ef-tab-badge" data-tab="cotacoes">0</span></button>
-              <button class="sidebar-btn" id="side-fretes" onclick="showInternalTab('fretes')">Pedidos de frete <span id="badge-fretes" class="ef-tab-badge" data-tab="fretes">0</span></button>
-              <button class="sidebar-btn" id="side-produtos" onclick="showInternalTab('produtos')">Pedidos de produto <span id="badge-produtos" class="ef-tab-badge" data-tab="produtos">0</span></button>
+              <button class="sidebar-btn" id="side-processos" onclick="showInternalTab('processos')">Processos</button>
+              <button class="sidebar-btn" id="side-cotacoes" onclick="showInternalTab('cotacoes')">Pedidos de cotação</button>
+              <button class="sidebar-btn" id="side-fretes" onclick="showInternalTab('fretes')">Pedidos de frete</button>
+              <button class="sidebar-btn" id="side-produtos" onclick="showInternalTab('produtos')">Pedidos de produto</button>
               <button class="sidebar-btn" id="side-financeiro" onclick="showInternalTab('financeiro')">Financeiro</button>
               <button class="sidebar-btn" id="side-faturas" onclick="showInternalTab('faturas')">Faturas</button>
-              <button class="sidebar-btn" id="side-clientes" onclick="showInternalTab('clientes')">Clientes <span id="badge-clientes" class="ef-tab-badge" data-tab="clientes">0</span></button>
+              <button class="sidebar-btn" id="side-clientes" onclick="showInternalTab('clientes')">Clientes</button>
               <button class="sidebar-btn" id="side-equipa" onclick="showInternalTab('equipa')">Funcionários</button>
               <button class="sidebar-btn" id="side-mensagens" onclick="showInternalTab('mensagens')">
                 Mensagens <span id="internalUnreadBadge" class="unread-dot hidden">0</span>
               </button>
-              <button class="sidebar-btn" id="side-requisicoes" onclick="showInternalTab('requisicoes')">Requisição de Fundos <span id="badge-requisicoes" class="ef-tab-badge" data-tab="requisicoes">0</span></button>
+              <button class="sidebar-btn" id="side-requisicoes" onclick="showInternalTab('requisicoes')">Requisição de Fundos</button>
             </div>
           </aside>
 
@@ -3976,32 +3989,7 @@
             <h1>${title}</h1>
             ${section.innerHTML}
             <script>window.onload = () => window.print();<\/script>
-          
-
-<!-- EF Cargo Clear - Badges reais funcionais v2 -->
-<script id="ef-real-visible-badges-v2-script">
-(function(){
-  const TABS=["processos","cotacoes","fretes","produtos","clientes","requisicoes"];
-  const CACHE={processos:()=>window.processosCache||[],cotacoes:()=>window.cotacoesCache||[],fretes:()=>window.fretesCache||[],produtos:()=>window.produtosCache||[],clientes:()=>window.clientesCache||[],requisicoes:()=>window.requisicoesCache||[]};
-  const KPI={clientes:"clientesCount",processos:"processosCount",cotacoes:"cotacoesCount",requisicoes:"dashTotalProcessos"};
-  function key(tab){return "ef_seen_visible_"+(window.currentUserEmail||"global")+"_"+tab;}
-  function itemDate(x){const raw=x?.updated_at||x?.atualizado_em||x?.created_at||x?.criado_em||x?.uploaded_at||x?.data||x?.data_pedido; const t=raw?new Date(raw).getTime():0; return Number.isFinite(t)?t:0;}
-  function seen(tab){const raw=localStorage.getItem(key(tab)); const t=raw?new Date(raw).getTime():0; return Number.isFinite(t)?t:0;}
-  function list(tab){try{return Array.isArray(CACHE[tab]?.())?CACHE[tab]():[]}catch(e){return []}}
-  function filter(tab, rows){if(tab==="cotacoes") return rows.filter(x=>String(x.estado||"").toLowerCase()!=="convertido em processo"); if(tab==="fretes"||tab==="produtos") return rows.filter(x=>!['cancelado','recusado','rejeitado'].includes(String(x.estado||x.status||"").toLowerCase())); if(tab==="requisicoes") return rows.filter(x=>!['pago','recebido','rejeitado'].includes(String(x.estado||"").toLowerCase())); return rows;}
-  function count(tab){const rows=filter(tab,list(tab)); const last=seen(tab); if(!rows.length) return 0; if(!last) return rows.length; return rows.filter(x=>itemDate(x)>last).length;}
-  function ensureKpi(tab){const id=KPI[tab]; if(!id) return null; const v=document.getElementById(id); const card=v?.closest?.('.kpi'); if(!card) return null; let b=card.querySelector('.ef-kpi-badge[data-tab="'+tab+'"]'); if(!b){b=document.createElement('span'); b.className='ef-kpi-badge'; b.dataset.tab=tab; card.appendChild(b);} return b;}
-  function setBadge(el,n,showZero=false){ if(!el) return; el.textContent=n>99?'99+':String(n); el.classList.toggle('show',n>0); el.classList.toggle('zero',n===0 && showZero); }
-  window.efUpdateInternalBadges=function(){TABS.forEach(tab=>{const n=count(tab); setBadge(document.getElementById('badge-'+tab) || document.querySelector('#side-'+tab+' .ef-tab-badge'), n, false); setBadge(ensureKpi(tab), n, false);});};
-  window.efForceShowBadgeZeros=function(){TABS.forEach(tab=>setBadge(document.getElementById('badge-'+tab) || document.querySelector('#side-'+tab+' .ef-tab-badge'), count(tab), true));};
-  const oldShow=window.showInternalTab; if(typeof oldShow==='function'){window.showInternalTab=function(tab){const r=oldShow.apply(this,arguments); if(TABS.includes(tab)){localStorage.setItem(key(tab),new Date().toISOString()); setTimeout(window.efUpdateInternalBadges,250);} return r;};}
-  ['loadInternal','loadProcessos','loadClientes','loadCotacoes','loadFretes','loadProdutos','loadRequisicoesFundos'].forEach(fn=>{const old=window[fn]; if(typeof old==='function'){window[fn]=async function(){const r=await old.apply(this,arguments); setTimeout(window.efUpdateInternalBadges,200); return r;};}});
-  document.addEventListener('DOMContentLoaded',()=>{setTimeout(window.efUpdateInternalBadges,1000); setTimeout(window.efForceShowBadgeZeros,1800); setInterval(window.efUpdateInternalBadges,5000);});
-  window.addEventListener('focus',()=>setTimeout(window.efUpdateInternalBadges,300));
-})();
-</script>
-
-</body>
+          </body>
         </html>
       `;
       win.document.open();
@@ -9125,28 +9113,92 @@ async function deleteMessageThread(clienteEmail) {
   </script>
 
 
-<!-- EF Cargo Clear - Badges internos e documentos premium (patch seguro) -->
-<script id="ef-badges-docs-premium-safe-script">
+
+
+<!-- EF Cargo Clear - Badges reais visíveis SAFE SCRIPT -->
+<script id="ef-visible-badges-final-script">
 (function(){
-  const EF_BADGE_TABS=["processos","cotacoes","fretes","produtos","clientes","requisicoes"];
-  const EF_BADGE_LABELS={processos:"Processos novos",cotacoes:"Cotações novas",fretes:"Fretes novos",produtos:"Produtos novos",clientes:"Clientes novos",requisicoes:"Requisições novas"};
-  const EF_KPI_TARGETS={clientes:"clientesCount",processos:"processosCount",cotacoes:"cotacoesCount",requisicoes:"dashTotalProcessos"};
-  function efStorageKey(tab){const email=(typeof currentUserEmail!=="undefined"&&currentUserEmail)?currentUserEmail:"global";return `ef_last_seen_${email}_${tab}`;}
-  function efGetDate(item){if(!item)return 0;const raw=item.updated_at||item.atualizado_em||item.created_at||item.criado_em||item.uploaded_at||item.data||item.data_pedido;const t=raw?new Date(raw).getTime():0;return Number.isFinite(t)?t:0;}
-  function efLastSeen(tab){const raw=localStorage.getItem(efStorageKey(tab));const t=raw?new Date(raw).getTime():0;return Number.isFinite(t)?t:0;}
-  function efMarkSeen(tab){if(EF_BADGE_TABS.includes(tab))localStorage.setItem(efStorageKey(tab),new Date().toISOString());}
-  function efCountAfter(list,tab,filterFn){const rows=Array.isArray(list)?list:[];const last=efLastSeen(tab);const filtered=filterFn?rows.filter(filterFn):rows;if(!last)return filtered.length;return filtered.filter(x=>efGetDate(x)>last).length;}
-  function efCountNew(tab){try{if(tab==="processos")return efCountAfter(typeof processosCache!=="undefined"?processosCache:[],tab);if(tab==="cotacoes")return efCountAfter(typeof cotacoesCache!=="undefined"?cotacoesCache:[],tab,c=>String(c.estado||"").toLowerCase()!=="convertido em processo");if(tab==="fretes")return efCountAfter(typeof fretesCache!=="undefined"?fretesCache:[],tab,f=>!["cancelado","recusado"].includes(String(f.estado||f.status||"").toLowerCase()));if(tab==="produtos")return efCountAfter(typeof produtosCache!=="undefined"?produtosCache:[],tab,p=>!["cancelado","recusado"].includes(String(p.estado||p.status||"").toLowerCase()));if(tab==="clientes")return efCountAfter(typeof clientesCache!=="undefined"?clientesCache:[],tab);if(tab==="requisicoes")return efCountAfter(typeof requisicoesCache!=="undefined"?requisicoesCache:[],tab,r=>!["pago","recebido","rejeitado"].includes(String(r.estado||"").toLowerCase()));}catch(e){console.warn("EF badge count error",tab,e)}return 0;}
-  function efEnsureBadge(sideBtn,tab){if(!sideBtn)return null;let b=sideBtn.querySelector(`.ef-tab-badge[data-tab="${tab}"]`);if(!b){b=document.createElement("span");b.className="ef-tab-badge";b.dataset.tab=tab;b.title=EF_BADGE_LABELS[tab]||"Novidades";sideBtn.appendChild(b);}return b;}
-  function efEnsureKpiBadge(tab){const id=EF_KPI_TARGETS[tab];if(!id)return null;const valueEl=document.getElementById(id);const card=valueEl?valueEl.closest(".kpi"):null;if(!card)return null;let b=card.querySelector(`.ef-kpi-badge[data-tab="${tab}"]`);if(!b){b=document.createElement("span");b.className="ef-kpi-badge";b.dataset.tab=tab;b.title=EF_BADGE_LABELS[tab]||"Novidades";card.appendChild(b);}return b;}
-  window.efUpdateInternalBadges=function(){EF_BADGE_TABS.forEach(tab=>{const count=efCountNew(tab);const badge=efEnsureBadge(document.getElementById(`side-${tab}`),tab);if(badge){badge.textContent=count>99?"99+":String(count);badge.classList.toggle("show",count>0);}const kpiBadge=efEnsureKpiBadge(tab);if(kpiBadge){kpiBadge.textContent=count>99?"99+":String(count);kpiBadge.classList.toggle("show",count>0);}});};
-  const originalShowInternalTab=window.showInternalTab;if(typeof originalShowInternalTab==="function"){window.showInternalTab=function(tab){const result=originalShowInternalTab.apply(this,arguments);if(EF_BADGE_TABS.includes(tab)){efMarkSeen(tab);setTimeout(window.efUpdateInternalBadges,250);}return result;};}
-  const originalLoadInternal=window.loadInternal;if(typeof originalLoadInternal==="function"){window.loadInternal=async function(){const result=await originalLoadInternal.apply(this,arguments);setTimeout(window.efUpdateInternalBadges,200);return result;};}
-  const originalLoadRequisicoes=window.loadRequisicoesFundos;if(typeof originalLoadRequisicoes==="function"){window.loadRequisicoesFundos=async function(){const result=await originalLoadRequisicoes.apply(this,arguments);setTimeout(window.efUpdateInternalBadges,200);return result;};}
-  const originalRenderFuncionarioDocumentos=window.renderFuncionarioDocumentos;
-  window.renderFuncionarioDocumentos=function(){const list=document.getElementById('funcionarioDocsList');if(!list){if(typeof originalRenderFuncionarioDocumentos==="function")return originalRenderFuncionarioDocumentos.apply(this,arguments);return;}const selected=document.getElementById('doc_funcionario_select')?.value||'';if(!selected){list.innerHTML='<div class="ef-doc-empty"><strong>Selecione um funcionário.</strong><br>Depois de selecionar, o sistema mostra apenas os documentos vinculados a esse colaborador.</div>';return;}const docs=(typeof funcionarioDocsCache!=="undefined"&&Array.isArray(funcionarioDocsCache)?funcionarioDocsCache:[]).filter(d=>String(d.funcionario_id)===String(selected));const funcionarioNome=(typeof getFuncionarioNomeById==="function")?getFuncionarioNomeById(selected):"Funcionário";if(!docs.length){list.innerHTML=`<div class="ef-doc-empty"><strong>Nenhum documento encontrado.</strong><br>Ainda não existem documentos carregados para <strong>${escapeHtml(funcionarioNome)}</strong>.</div>`;return;}list.innerHTML='<div class="ef-doc-premium-wrap">'+docs.map(d=>{const tipo=d.tipo||d.tipo_documento||'Documento';const nome=d.nome_arquivo||d.nome||d.name||'Ficheiro';const url=d.url||d.ficheiro_url||'';const storagePath=d.storage_path||'';const dataDoc=d.uploaded_at||d.criado_em||d.created_at||'';const safeId=String(d.id||'').replace(/'/g,'\\\'');const safePath=String(storagePath||'').replace(/'/g,'\\\'');const dataTxt=dataDoc&&typeof formatDate==="function"?formatDate(dataDoc):(dataDoc?String(dataDoc).slice(0,10):'-');return `<div class="ef-doc-premium-card"><div class="ef-doc-icon">📄</div><div><div class="ef-doc-title">${escapeHtml(tipo)}</div><div class="small">${escapeHtml(nome)}</div><div class="ef-doc-meta"><span class="ef-doc-pill">👤 ${escapeHtml(funcionarioNome)}</span><span class="ef-doc-pill">📅 ${escapeHtml(dataTxt)}</span>${storagePath?`<span class="ef-doc-pill">🔗 Vinculado</span>`:''}</div></div><div class="ef-doc-actions">${url?`<a class="btn-mini info" href="${url}" target="_blank" rel="noopener noreferrer">Ver</a>`:''}${url?`<a class="btn-mini green" href="${url}" download>Baixar</a>`:''}<button class="btn-mini danger" onclick="eliminarDocumentoFuncionario('${safeId}','${safePath}')">Eliminar</button></div></div>`;}).join('')+'</div>';};
-  document.addEventListener("DOMContentLoaded",function(){setTimeout(window.efUpdateInternalBadges,800);setInterval(window.efUpdateInternalBadges,6000);});
-  window.addEventListener("focus",function(){setTimeout(window.efUpdateInternalBadges,300);});
+  const EF_URL = "https://fefkyzutcouoklbiwybs.supabase.co";
+  const EF_KEY = "sb_publishable_uOowmqEhVdq8h0uzagYPEA_DXXpGOgA";
+  const MAP = {
+    processos: { btn:"side-processos", kpi:"processosCount", tables:["processos"] },
+    cotacoes: { btn:"side-cotacoes", kpi:"cotacoesCount", tables:["cotacoes","pedidos_cotacao"] },
+    fretes: { btn:"side-fretes", kpi:null, tables:["pedidos_frete"] },
+    produtos: { btn:"side-produtos", kpi:null, tables:["pedidos_produto"] },
+    clientes: { btn:"side-clientes", kpi:"clientesCount", tables:["clientes"] },
+    requisicoes: { btn:"side-requisicoes", kpi:null, tables:["requisicoes_fundos"] }
+  };
+  const DATE_FIELDS = ["created_at","criado_em","updated_at","atualizado_em","data","data_pedido"];
+  let client = null;
+  function getClient(){
+    if(client) return client;
+    if(!window.supabase || !window.supabase.createClient) return null;
+    client = window.supabase.createClient(EF_URL, EF_KEY, { auth:{ persistSession:false, autoRefreshToken:false } });
+    return client;
+  }
+  function key(tab){
+    let email = "global";
+    try { email = document.getElementById("welcome")?.textContent?.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] || window.sessionStorage.getItem("ef_user_email") || "global"; } catch(e){}
+    return "ef_badge_seen_" + email + "_" + tab;
+  }
+  function getSeen(tab){ return localStorage.getItem(key(tab)) || ""; }
+  function markSeen(tab){ localStorage.setItem(key(tab), new Date().toISOString()); setBadge(tab,0); }
+  function ensureBadgeOn(el, tab){
+    if(!el) return null;
+    let b = el.querySelector('.ef-real-badge[data-tab="'+tab+'"]');
+    if(!b){ b=document.createElement('span'); b.className='ef-real-badge'; b.dataset.tab=tab; b.textContent='0'; el.appendChild(b); }
+    return b;
+  }
+  function ensureBadges(){
+    Object.keys(MAP).forEach(tab=>{
+      const cfg=MAP[tab];
+      const btn=document.getElementById(cfg.btn);
+      ensureBadgeOn(btn,tab);
+      if(btn && !btn.dataset.efBadgeClick){ btn.dataset.efBadgeClick='1'; btn.addEventListener('click',()=>markSeen(tab), true); }
+      if(cfg.kpi){ const value=document.getElementById(cfg.kpi); const card=value?value.closest('.kpi'):null; ensureBadgeOn(card,tab); }
+    });
+  }
+  function setBadge(tab,count){
+    count = Number(count||0);
+    document.querySelectorAll('.ef-real-badge[data-tab="'+tab+'"]').forEach(b=>{
+      b.textContent = count > 99 ? '99+' : String(count);
+      b.classList.toggle('show', count > 0);
+      b.title = count > 0 ? (count + ' novo(s)') : 'Sem novidades';
+    });
+  }
+  async function countTable(table, since){
+    const c=getClient(); if(!c) return 0;
+    if(!since){
+      const res = await c.from(table).select('id', { count:'exact', head:true });
+      return res.error ? 0 : (res.count || 0);
+    }
+    for(const field of DATE_FIELDS){
+      const res = await c.from(table).select('id', { count:'exact', head:true }).gte(field, since);
+      if(!res.error) return res.count || 0;
+    }
+    return 0;
+  }
+  async function updateBadges(){
+    ensureBadges();
+    for(const tab of Object.keys(MAP)){
+      let total=0; const since=getSeen(tab);
+      for(const table of MAP[tab].tables){ total += await countTable(table, since); }
+      setBadge(tab,total);
+    }
+  }
+  function boot(){
+    ensureBadges();
+    setTimeout(updateBadges, 900);
+    setInterval(updateBadges, 20000);
+    window.addEventListener('focus',()=>setTimeout(updateBadges,400));
+    const original = window.showInternalTab;
+    if(typeof original === 'function' && !original.__efBadgeWrapped){
+      const wrapped = function(tab){ const r=original.apply(this,arguments); if(MAP[tab]) setTimeout(()=>markSeen(tab),300); return r; };
+      wrapped.__efBadgeWrapped = true;
+      window.showInternalTab = wrapped;
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();
 </script>
 </body>
