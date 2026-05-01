@@ -1183,6 +1183,7 @@
   #side-clientes::before{content:"\f0c0";}
   #side-equipa::before{content:"\f508";}
   #side-mensagens::before{content:"\f4ad";}
+  #side-requisicoes::before{content:"\f570";}
 
   .sidebar-btn:hover{
     transform:translateX(5px);
@@ -1718,6 +1719,7 @@
               <button class="sidebar-btn" id="side-mensagens" onclick="showInternalTab('mensagens')">
                 Mensagens <span id="internalUnreadBadge" class="unread-dot hidden">0</span>
               </button>
+              <button class="sidebar-btn" id="side-requisicoes" onclick="showInternalTab('requisicoes')">Requisição de Fundos</button>
             </div>
           </aside>
 
@@ -2191,6 +2193,7 @@
                       <label>Nível</label>
                       <select id="eq_nivel">
                         <option value="operador">Operador</option>
+                        <option value="procurador">Procurador</option>
                         <option value="supervisor">Supervisor</option>
                         <option value="assistente_administrativa">Assistente Administrativa</option>
                         <option value="gestao_documental">Gestão Documental</option>
@@ -2206,6 +2209,14 @@
                         <option value="false">Inactivo</option>
                       </select>
                     </div>
+                    <div>
+                      <label>Função / Cargo</label>
+                      <input id="eq_funcao" placeholder="Ex: Procurador, Financeiro, Logística" />
+                    </div>
+                    <div>
+                      <label>Responsabilidades</label>
+                      <textarea id="eq_responsabilidades" placeholder="Descreva as responsabilidades principais deste colaborador"></textarea>
+                    </div>
                   </div>
                   <button class="btn" style="margin-top:14px;" onclick="criarFuncionario()">Criar funcionário</button>
                 </div>
@@ -2215,6 +2226,17 @@
                     <label>Pesquisar funcionário</label>
                     <input id="teamSearch" placeholder="Nome ou email" oninput="renderEquipaGrid()" />
                   </div>
+                </div>
+
+                <div class="card" style="background:#fafafa;border-radius:20px;margin-top:18px;">
+                  <h3 style="margin-top:0;">Documentos do funcionário</h3>
+                  <div class="grid grid-3">
+                    <div><label>Funcionário</label><select id="doc_funcionario_select"></select></div>
+                    <div><label>Tipo de documento</label><input id="doc_funcionario_tipo" placeholder="Ex: BI, Contrato, Certificado, CV" /></div>
+                    <div><label>Documento</label><input id="doc_funcionario_file" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" /></div>
+                  </div>
+                  <button class="btn" style="margin-top:14px;" onclick="uploadFuncionarioDocumento()">Carregar documento</button>
+                  <div id="funcionarioDocsList" class="doc-list" style="margin-top:12px;"></div>
                 </div>
 
                 <div id="equipaGrid" class="grid grid-2"></div>
@@ -2255,6 +2277,29 @@
           </div>
         </div>
       </div>
+
+            <div id="internal-requisicoes" class="tab-content hidden" style="margin-top:18px;">
+              <div class="card">
+                <div class="panel-head"><div><h2 class="section-title">Requisição de Fundos</h2><div class="section-sub">Preencha, submeta, acompanhe autorizações e baixe a requisição no layout da empresa.</div></div></div>
+                <div class="card" style="background:#fafafa;border-radius:20px;">
+                  <h3 style="margin-top:0;">Nova requisição</h3>
+                  <div class="grid grid-3">
+                    <div><label>Data</label><input id="req_data" type="date" /></div>
+                    <div><label>Nome do funcionário</label><input id="req_funcionario" /></div>
+                    <div><label>Requisição de</label><input id="req_de" /></div>
+                    <div><label>Para</label><input id="req_para" /></div>
+                    <div><label>Referente ao pagamento</label><input id="req_referente" /></div>
+                    <div><label>Valor por extenso</label><input id="req_extenso" /></div>
+                  </div>
+                  <div style="margin-top:14px;"><label>Linhas da requisição</label><div id="req_linhas"></div><button class="btn-mini info" onclick="addRequisicaoLinha()">Adicionar linha</button></div>
+                  <div class="grid grid-3" style="margin-top:14px;">
+                    <div><label>Conferido por</label><input id="req_conferido" /></div><div><label>Autorizado por</label><input id="req_autorizado" /></div><div><label>Recebido por</label><input id="req_recebido" /></div><div><label>Cheque nº</label><input id="req_cheque" /></div><div><label>Banco</label><input id="req_banco" /></div><div><label>Estado</label><input value="Rascunho" readonly /></div>
+                  </div>
+                  <button class="btn" style="margin-top:14px;" onclick="submeterRequisicaoFundos()">Submeter requisição</button>
+                </div>
+                <div class="table-scroll"><table><thead><tr><th>Data</th><th>Funcionário</th><th>Referência</th><th>Total</th><th>Estado</th><th>Ações</th></tr></thead><tbody id="requisicoesTable"></tbody></table></div>
+              </div>
+            </div>
 
       <div id="clientView" class="hidden">
         <div class="card hero-card">
@@ -2946,6 +2991,14 @@
             <option value="false">Inactivo</option>
           </select>
         </div>
+        <div>
+          <label>Função / Cargo</label>
+          <input id="edit_eq_funcao" />
+        </div>
+        <div>
+          <label>Responsabilidades</label>
+          <textarea id="edit_eq_responsabilidades"></textarea>
+        </div>
       </div>
 
       <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;">
@@ -3173,6 +3226,9 @@
     let clientFretesCache = [];
     let produtosCache = [];
     let clientProdutosCache = [];
+    let currentEmployeeProfile = null;
+    let requisicoesCache = [];
+    let funcionarioDocsCache = [];
     let currentInvoiceExtraCounter = 0;
     let estadoDonutChart = null;
     let processosMesChart = null;
@@ -3183,6 +3239,7 @@
       detectRecoveryMode();
       initLanguageSystem();
       setTimeout(() => applyLanguage(), 50);
+      setTimeout(() => { document.getElementById('doc_funcionario_select')?.addEventListener('change', renderFuncionarioDocumentos); if (document.getElementById('req_data')) resetRequisicaoForm(); }, 100);
     });
 
     function setupCompanyLogo() {
@@ -3903,7 +3960,27 @@
       win.document.close();
     }
 
+
+
+    const INTERNAL_ROLE_RULES = {
+      admin: { tabs: ['dashboard','processos','cotacoes','fretes','produtos','financeiro','faturas','clientes','equipa','mensagens','requisicoes'], values: true, authorizeReq: true, finalReq: true },
+      operador: { tabs: ['dashboard','processos','cotacoes','fretes','produtos','mensagens','requisicoes'], values: false, authorizeReq: false, finalReq: false },
+      procurador: { tabs: ['dashboard','processos','cotacoes','fretes','produtos','mensagens','requisicoes'], values: false, authorizeReq: false, finalReq: false },
+      supervisor: { tabs: ['dashboard','processos','cotacoes','fretes','produtos','mensagens','requisicoes'], values: false, authorizeReq: true, finalReq: false },
+      assistente_administrativa: { tabs: ['dashboard','processos','cotacoes','fretes','produtos','clientes','equipa','requisicoes','mensagens'], values: false, authorizeReq: true, finalReq: false },
+      gestao_documental: { tabs: ['dashboard','clientes','equipa','requisicoes','mensagens'], values: false, authorizeReq: false, finalReq: false },
+      financeiro: { tabs: ['dashboard','processos','financeiro','faturas','requisicoes','mensagens'], values: true, authorizeReq: true, finalReq: false },
+      comercial: { tabs: ['dashboard','clientes','cotacoes','produtos','mensagens','requisicoes'], values: false, authorizeReq: false, finalReq: false },
+      logistica: { tabs: ['dashboard','processos','fretes','produtos','mensagens','requisicoes'], values: false, authorizeReq: false, finalReq: false }
+    };
+    function getInternalNivel(){ return currentUserRole === 'admin' ? 'admin' : (currentEmployeeProfile?.nivel || 'operador').toLowerCase(); }
+    function getRoleRules(){ return INTERNAL_ROLE_RULES[getInternalNivel()] || INTERNAL_ROLE_RULES.operador; }
+    function canAccessInternalTab(tab){ return getRoleRules().tabs.includes(tab); }
+    function canSeeInternalValues(){ return !!getRoleRules().values; }
+    function canAuthorizeRequisition(){ return currentUserRole === 'admin' || !!getRoleRules().authorizeReq; }
+    function canFinalApproveRequisition(){ return currentUserRole === 'admin' || !!getRoleRules().finalReq; }
     function showInternalTab(tab) {
+      if (!canAccessInternalTab(tab)) { alert("Sem permissão para aceder a esta área."); return; }
       document.querySelectorAll(".sidebar-btn").forEach(b => b.classList.remove("active"));
       if (tab === "dashboard") document.getElementById("side-dashboard")?.classList.add("active");
       if (tab === "processos") document.getElementById("side-processos")?.classList.add("active");
@@ -3915,6 +3992,7 @@
       if (tab === "clientes") document.getElementById("side-clientes")?.classList.add("active");
       if (tab === "equipa") document.getElementById("side-equipa")?.classList.add("active");
       if (tab === "mensagens") document.getElementById("side-mensagens")?.classList.add("active");
+      if (tab === "requisicoes") document.getElementById("side-requisicoes")?.classList.add("active");
 
       document.getElementById("internal-dashboard").classList.toggle("hidden", tab !== "dashboard");
       document.getElementById("internal-processos").classList.toggle("hidden", tab !== "processos");
@@ -3926,10 +4004,12 @@
       document.getElementById("internal-clientes").classList.toggle("hidden", tab !== "clientes");
       document.getElementById("internal-equipa").classList.toggle("hidden", tab !== "equipa");
       document.getElementById("internal-mensagens").classList.toggle("hidden", tab !== "mensagens");
+      document.getElementById("internal-requisicoes").classList.toggle("hidden", tab !== "requisicoes");
 
       if (tab === "mensagens") {
         loadInternalMessages();
       }
+      if (tab === "requisicoes") loadRequisicoesFundos();
     }
 
     function activateClientTab(tab) {
@@ -4002,31 +4082,16 @@
     }
 
     function applyInternalPermissions() {
-      const isAdmin = currentUserRole === "admin";
-      const isEmployee = currentUserRole === "employee";
-
-      document.getElementById("side-financeiro").style.display = isAdmin ? "block" : "none";
-      document.getElementById("side-clientes").style.display = isAdmin ? "block" : "none";
-      document.getElementById("side-faturas").style.display = isAdmin ? "block" : "none";
-      document.getElementById("side-equipa").style.display = isAdmin ? "block" : "none";
-
-      const adminFinanceSummaryRow = document.getElementById("adminFinanceSummaryRow");
-      const dashMargemCard = document.getElementById("dashMargemCard");
-      const financeiroChartCard = document.getElementById("financeiroChartCard");
-      const financeInsights = document.getElementById("financeInsights");
-
-      if (adminFinanceSummaryRow) adminFinanceSummaryRow.style.display = isAdmin ? "grid" : "none";
-      if (dashMargemCard) dashMargemCard.style.display = isAdmin ? "block" : "none";
-      if (financeiroChartCard) financeiroChartCard.style.display = isAdmin ? "block" : "none";
-      if (financeInsights) financeInsights.style.display = isAdmin ? "grid" : "none";
-
-      if (isEmployee) {
-        document.getElementById("internal-financeiro").classList.add("hidden");
-        document.getElementById("internal-clientes").classList.add("hidden");
-        document.getElementById("internal-faturas").classList.add("hidden");
-        document.getElementById("internal-equipa").classList.add("hidden");
-        showInternalTab("processos");
-      }
+      const allowed = getRoleRules().tabs;
+      ['dashboard','processos','cotacoes','fretes','produtos','financeiro','faturas','clientes','equipa','mensagens','requisicoes'].forEach(tab => {
+        const btn = document.getElementById(`side-${tab}`);
+        if (btn) btn.style.display = allowed.includes(tab) ? 'block' : 'none';
+      });
+      const showValues = canSeeInternalValues();
+      const ids = ['adminFinanceSummaryRow','dashMargemCard','financeiroChartCard','financeInsights'];
+      ids.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = showValues ? (id === 'adminFinanceSummaryRow' || id === 'financeInsights' ? 'grid' : 'block') : 'none'; });
+      const visible = ['dashboard','processos','cotacoes','fretes','produtos','financeiro','faturas','clientes','equipa','mensagens','requisicoes'].find(tab => !document.getElementById(`internal-${tab}`)?.classList.contains('hidden'));
+      if (visible && !allowed.includes(visible)) showInternalTab(allowed[0] || 'dashboard');
     }
 
     async function registerClient() {
@@ -4176,6 +4241,7 @@
 
       if (currentUserEmail === ADMIN_EMAIL.toLowerCase()) {
         currentUserRole = "admin";
+        currentEmployeeProfile = null;
         currentUserName = "Administrador";
         document.getElementById("welcome").textContent = "Edmilson Fumo • administrador";
         document.getElementById("internalView").classList.remove("hidden");
@@ -4197,6 +4263,7 @@
 
         if (membro) {
           currentUserRole = "employee";
+          currentEmployeeProfile = membro;
           currentUserName = membro.nome || "Funcionário";
           document.getElementById("welcome").textContent = `${membro.nome || "Funcionário"} • ${membro.nivel || "operador"}`;
           document.getElementById("internalView").classList.remove("hidden");
@@ -4214,6 +4281,7 @@
       } catch (_) {}
 
       currentUserRole = "client";
+      currentEmployeeProfile = null;
       document.getElementById("clientView").classList.remove("hidden");
       document.getElementById("internalView").classList.add("hidden");
       setWelcomeMessage();
@@ -4780,6 +4848,8 @@
   const password = document.getElementById("eq_password")?.value.trim() || "";
   const nivel = document.getElementById("eq_nivel").value;
   const activo = document.getElementById("eq_activo").value === "true";
+  const funcao = document.getElementById("eq_funcao")?.value.trim() || "";
+  const responsabilidades = document.getElementById("eq_responsabilidades")?.value.trim() || "";
 
   if (!nome || !email || !password) {
     alert("Nome, email e password obrigatórios.");
@@ -4802,19 +4872,28 @@
       return;
     }
 
-    const { error } = await withTimeout(
+    let insertResult = await withTimeout(
       supabaseClient.from("equipa").insert({
         nome,
         email,
         password,
         nivel,
-        activo
+        activo,
+        funcao,
+        responsabilidades
       }),
       10000
     );
 
-    if (error) {
-      alert(error.message);
+    if (insertResult.error && String(insertResult.error.message || "").toLowerCase().includes("column")) {
+      insertResult = await withTimeout(
+        supabaseClient.from("equipa").insert({ nome, email, password, nivel, activo }),
+        10000
+      );
+    }
+
+    if (insertResult.error) {
+      alert(insertResult.error.message);
       return;
     }
 
@@ -4824,6 +4903,8 @@
     if (document.getElementById("eq_password")) document.getElementById("eq_password").value = "";
     document.getElementById("eq_nivel").value = "operador";
     document.getElementById("eq_activo").value = "true";
+    if (document.getElementById("eq_funcao")) document.getElementById("eq_funcao").value = "";
+    if (document.getElementById("eq_responsabilidades")) document.getElementById("eq_responsabilidades").value = "";
 
     await loadInternal();
   } catch (e) {
@@ -4840,6 +4921,8 @@
       document.getElementById("edit_eq_email").value = m.email || "";
       document.getElementById("edit_eq_nivel").value = m.nivel || "operador";
       document.getElementById("edit_eq_activo").value = String(!!m.activo);
+      if (document.getElementById("edit_eq_funcao")) document.getElementById("edit_eq_funcao").value = m.funcao || "";
+      if (document.getElementById("edit_eq_responsabilidades")) document.getElementById("edit_eq_responsabilidades").value = m.responsabilidades || "";
 
       document.getElementById("equipaModalBackdrop").style.display = "flex";
     }
@@ -4859,20 +4942,29 @@
       const email = document.getElementById("edit_eq_email").value.trim().toLowerCase();
       const nivel = document.getElementById("edit_eq_nivel").value;
       const activo = document.getElementById("edit_eq_activo").value === "true";
+      const funcao = document.getElementById("edit_eq_funcao")?.value.trim() || "";
+      const responsabilidades = document.getElementById("edit_eq_responsabilidades")?.value.trim() || "";
 
       if (!id) return;
 
       try {
-        const { error } = await withTimeout(
+        let updateResult = await withTimeout(
           supabaseClient
             .from("equipa")
-            .update({ nome, email, nivel, activo })
+            .update({ nome, email, nivel, activo, funcao, responsabilidades })
             .eq("id", id),
           10000
         );
 
-        if (error) {
-          alert(error.message);
+        if (updateResult.error && String(updateResult.error.message || "").toLowerCase().includes("column")) {
+          updateResult = await withTimeout(
+            supabaseClient.from("equipa").update({ nome, email, nivel, activo }).eq("id", id),
+            10000
+          );
+        }
+
+        if (updateResult.error) {
+          alert(updateResult.error.message);
           return;
         }
 
@@ -5099,7 +5191,7 @@
       if (el('dashTotalProcessos')) el('dashTotalProcessos').textContent = totalProcessos;
       if (el('dashLiberados')) el('dashLiberados').textContent = liberados;
       if (el('dashPendenciasDocs')) el('dashPendenciasDocs').textContent = docsPendentes;
-      if (currentUserRole === "admin" && el('dashMargemTotal')) {
+      if (canSeeInternalValues() && el('dashMargemTotal')) {
         el('dashMargemTotal').textContent = formatMoney(margemTotal);
       }
 
@@ -5168,7 +5260,7 @@
         financeiroMesChart = null;
       }
       const finCanvas = document.getElementById('financeiroMesChart');
-      if (currentUserRole === "admin" && finCanvas) {
+      if (canSeeInternalValues() && finCanvas) {
         financeiroMesChart = new Chart(finCanvas, {
           type: 'bar',
           data: { labels: labelsMes, datasets: [
@@ -5447,7 +5539,7 @@
       title.textContent = `Processo ${processo.numero_processo || '-'}`;
       sub.textContent = `${processo.importador_exportador || '-'} • Factura ${processo.numero_factura || '-'}`;
 
-      const financeiroHtml = currentUserRole === "admin" ? `
+      const financeiroHtml = canSeeInternalValues() ? `
         <label style="margin-top:0;">Valor cobrado</label>
         <input id="cobrado_${processo.id}" type="number" step="0.01" value="${Number(processo.valor_cobrado || 0)}" />
         <label style="margin-top:8px;">Custos</label>
@@ -5799,19 +5891,42 @@
           <div class="client-meta">
             <div><strong>Nível:</strong> ${e.nivel || "-"}</div>
             <div><strong>Estado:</strong> ${e.activo ? "Activo" : "Inactivo"}</div>
+            <div><strong>Função:</strong> ${e.funcao || "-"}</div>
+            <div><strong>Responsabilidades:</strong> ${e.responsabilidades || "-"}</div>
             <div><strong>Criado:</strong> ${formatDate(e.created_at) || "-"}</div>
             <div><strong>Portal:</strong> Interno EF</div>
           </div>
 
           <div class="client-actions">
             <button class="btn-mini" onclick="openEquipaModal('${String(e.id).replace(/'/g, "\\'")}')">Editar</button>
+            <button class="btn-mini info" onclick="selectFuncionarioDocs('${String(e.id).replace(/'/g, "\\'")}')">Documentos</button>
             <button class="btn-mini danger" onclick="deleteFuncionario('${String(e.id).replace(/'/g, "\\'")}')">Eliminar</button>
           </div>
         `;
         grid.appendChild(card);
       });
+      refreshFuncionarioSelects();
+      renderFuncionarioDocumentos();
     }
 
+
+
+    function safeFileName(name){ return String(name || 'ficheiro').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9._-]/g,'_'); }
+
+    function refreshFuncionarioSelects(){ const sel=document.getElementById('doc_funcionario_select'); if(!sel) return; sel.innerHTML='<option value="">Selecione</option>'+(equipaCache||[]).map(e=>`<option value="${e.id}">${escapeHtml(e.nome||e.email||'Funcionário')}</option>`).join(''); }
+    function selectFuncionarioDocs(id){ showInternalTab('equipa'); const sel=document.getElementById('doc_funcionario_select'); if(sel) sel.value=id; renderFuncionarioDocumentos(); document.getElementById('doc_funcionario_select')?.scrollIntoView({behavior:'smooth',block:'center'}); }
+    async function loadFuncionarioDocumentos(render=true){ try{ const {data,error}=await withTimeout(supabaseClient.from('funcionarios_documentos').select('*').order('created_at',{ascending:false}),8000); if(!error) funcionarioDocsCache=data||[]; }catch(_){ } refreshFuncionarioSelects(); if(render) renderFuncionarioDocumentos(); }
+    function renderFuncionarioDocumentos(){ const list=document.getElementById('funcionarioDocsList'); if(!list) return; const selected=document.getElementById('doc_funcionario_select')?.value||''; const docs=(funcionarioDocsCache||[]).filter(d=>!selected||String(d.funcionario_id)===String(selected)); list.innerHTML=docs.length?docs.map(d=>`<span class="doc-chip">📎 ${escapeHtml(d.tipo||d.nome_arquivo||'Documento')} ${d.url?`<a href="${d.url}" target="_blank">Abrir</a>`:''}</span>`).join(''):'<span class="small">Nenhum documento carregado.</span>'; }
+    async function uploadFuncionarioDocumento(){ if(!canAccessInternalTab('equipa')){alert('Sem permissão.');return;} const funcionarioId=document.getElementById('doc_funcionario_select')?.value||''; const tipo=document.getElementById('doc_funcionario_tipo')?.value.trim()||''; const file=document.getElementById('doc_funcionario_file')?.files?.[0]; if(!funcionarioId||!file){alert('Selecione o funcionário e o documento.');return;} try{ const path=`funcionarios/${funcionarioId}/${Date.now()}_${safeFileName(file.name)}`; const up=await withTimeout(supabaseClient.storage.from('funcionarios').upload(path,file,{upsert:false}),20000); if(up.error){alert(up.error.message);return;} const pub=supabaseClient.storage.from('funcionarios').getPublicUrl(path); const url=pub?.data?.publicUrl||''; const {error}=await withTimeout(supabaseClient.from('funcionarios_documentos').insert({funcionario_id:funcionarioId,tipo,nome_arquivo:file.name,url,storage_path:path,uploaded_by:currentUserEmail}),10000); if(error){alert(error.message);return;} document.getElementById('doc_funcionario_tipo').value=''; document.getElementById('doc_funcionario_file').value=''; await loadFuncionarioDocumentos(true); alert('Documento carregado com sucesso.'); }catch(e){alert(e.message||'Erro ao carregar documento.');} }
+
+    function addRequisicaoLinha(){ const box=document.getElementById('req_linhas'); if(!box) return; const row=document.createElement('div'); row.className='invoice-line'; row.style.gridTemplateColumns='1fr 1fr 160px 40px'; row.innerHTML='<input class="req_instrucao" placeholder="Instrução" /><input class="req_cliente" placeholder="Cliente" /><input class="req_valor" type="number" step="0.01" placeholder="Valor total" /><button class="btn-mini danger" type="button" onclick="this.parentElement.remove()">×</button>'; box.appendChild(row); }
+    function getRequisicaoLinhas(){ return Array.from(document.querySelectorAll('#req_linhas .invoice-line')).map(r=>({instrucao:r.querySelector('.req_instrucao')?.value.trim()||'',cliente:r.querySelector('.req_cliente')?.value.trim()||'',valor:Number(r.querySelector('.req_valor')?.value||0)})).filter(x=>x.instrucao||x.cliente||x.valor); }
+    function resetRequisicaoForm(){ ['req_de','req_para','req_referente','req_extenso','req_conferido','req_autorizado','req_recebido','req_cheque','req_banco'].forEach(id=>{const x=document.getElementById(id); if(x) x.value='';}); const d=document.getElementById('req_data'); if(d) d.value=new Date().toISOString().slice(0,10); const f=document.getElementById('req_funcionario'); if(f) f.value=currentUserName||currentUserEmail||''; const linhas=document.getElementById('req_linhas'); if(linhas) linhas.innerHTML=''; addRequisicaoLinha(); }
+    async function submeterRequisicaoFundos(){ if(!canAccessInternalTab('requisicoes')){alert('Sem permissão.');return;} const linhas=getRequisicaoLinhas(); if(!linhas.length){alert('Adicione pelo menos uma linha.');return;} const total=linhas.reduce((s,l)=>s+(Number(l.valor)||0),0); const payload={data:document.getElementById('req_data')?.value||new Date().toISOString().slice(0,10),funcionario_nome:document.getElementById('req_funcionario')?.value.trim()||currentUserName||currentUserEmail,requisicao_de:document.getElementById('req_de')?.value.trim()||'',para:document.getElementById('req_para')?.value.trim()||'',referente:document.getElementById('req_referente')?.value.trim()||'',linhas,valor_total:total,valor_extenso:document.getElementById('req_extenso')?.value.trim()||'',conferido_por:document.getElementById('req_conferido')?.value.trim()||'',autorizado_por:document.getElementById('req_autorizado')?.value.trim()||'',recebido_por:document.getElementById('req_recebido')?.value.trim()||'',cheque_no:document.getElementById('req_cheque')?.value.trim()||'',banco:document.getElementById('req_banco')?.value.trim()||'',estado:'Submetido',criado_por_email:currentUserEmail}; try{ const {error}=await withTimeout(supabaseClient.from('requisicoes_fundos').insert(payload),10000); if(error){alert(error.message);return;} resetRequisicaoForm(); await loadRequisicoesFundos(); alert('Requisição submetida com sucesso.'); }catch(e){alert(e.message||'Erro ao submeter requisição.');} }
+    async function loadRequisicoesFundos(render=true){ try{ const {data,error}=await withTimeout(supabaseClient.from('requisicoes_fundos').select('*').order('created_at',{ascending:false}),8000); if(!error) requisicoesCache=data||[]; }catch(_){ } if(render) renderRequisicoesFundos(); }
+    function renderRequisicoesFundos(){ const tb=document.getElementById('requisicoesTable'); if(!tb) return; if(!requisicoesCache.length){tb.innerHTML='<tr><td colspan="6" class="small">Nenhuma requisição encontrada.</td></tr>';return;} tb.innerHTML=requisicoesCache.map(r=>{ const id=String(r.id).replace(/'/g,"\\'"); return `<tr><td>${formatDate(r.data||r.created_at)}</td><td>${escapeHtml(r.funcionario_nome||'-')}</td><td>${escapeHtml(r.referente||r.requisicao_de||'-')}</td><td>${formatMoney(r.valor_total||0)}</td><td><span class="badge blue">${escapeHtml(r.estado||'Submetido')}</span></td><td><button class="btn-mini" onclick="downloadRequisicaoFundos('${id}')">Baixar</button> ${canAuthorizeRequisition()?`<button class="btn-mini info" onclick="atualizarEstadoRequisicao('${id}','Conferido')">Conferir</button><button class="btn-mini green" onclick="atualizarEstadoRequisicao('${id}','Aguardando autorização final')">Autorizar etapa</button><button class="btn-mini danger" onclick="atualizarEstadoRequisicao('${id}','Rejeitado')">Rejeitar</button>`:''} ${canFinalApproveRequisition()?`<button class="btn-mini green" onclick="atualizarEstadoRequisicao('${id}','Aprovado pelo Administrador')">Aprovação final</button>`:''}</td></tr>`; }).join(''); }
+    async function atualizarEstadoRequisicao(id,estado){ if(estado==='Aprovado pelo Administrador'&&!canFinalApproveRequisition()){alert('A decisão final é do administrador.');return;} if(!canAuthorizeRequisition()){alert('Sem permissão.');return;} try{ const {error}=await withTimeout(supabaseClient.from('requisicoes_fundos').update({estado,autorizado_por:currentUserName||currentUserEmail}).eq('id',id),10000); if(error){alert(error.message);return;} await loadRequisicoesFundos(); }catch(e){alert(e.message||'Erro ao atualizar requisição.');} }
+    function downloadRequisicaoFundos(id){ const r=requisicoesCache.find(x=>String(x.id)===String(id)); if(!r) return; const linhas=Array.isArray(r.linhas)?r.linhas:[]; const rows=[...linhas,...Array(Math.max(0,8-linhas.length)).fill({})].map(l=>`<tr><td>${escapeHtml(l.instrucao||'')}</td><td>${escapeHtml(l.cliente||'')}</td><td>${l.valor?formatMoney(l.valor):''}</td></tr>`).join(''); const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Requisição de Fundos</title><style>body{font-family:Arial,sans-serif;color:#111827;padding:28px}.top{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border:1px solid #111}.top div{padding:10px;border-right:1px solid #111}.top div:last-child{border-right:0}h1{text-align:center;font-size:22px;margin:24px 0}table{width:100%;border-collapse:collapse;margin-top:14px}th,td{border:1px solid #111;padding:10px;height:34px}.lines{line-height:2}.sign{display:grid;grid-template-columns:1fr 1fr 1fr;gap:28px;margin-top:34px;text-align:center}.foot{text-align:center;margin-top:26px;font-size:12px}@media print{button{display:none}}</style></head><body><div class="top"><div><strong>Processo</strong><br>Administrativo</div><div><strong>Departamento</strong><br>Administrativo</div><div><strong>Revisão</strong><br>00</div><div><strong>Documento</strong><br>SGQ.ADM.FR002</div></div><h1>REQUISIÇÃO DE FUNDOS</h1><div class="lines"><strong>Data:</strong> ${escapeHtml(r.data||'')}<br><strong>Nome do funcionário:</strong> ${escapeHtml(r.funcionario_nome||'')}<br><strong>Requisição de:</strong> ${escapeHtml(r.requisicao_de||'')}<br><strong>Para:</strong> ${escapeHtml(r.para||'')}<br><strong>Referente ao pagamento:</strong> ${escapeHtml(r.referente||'')}</div><table><thead><tr><th>INSTRUÇÃO</th><th>CLIENTE</th><th>VALOR TOTAL</th></tr></thead><tbody>${rows}</tbody></table><p><strong>Por extenso:</strong> ${escapeHtml(r.valor_extenso||'')}</p><div class="sign"><div>Conferido por<br><br>____________________<br>${escapeHtml(r.conferido_por||'')}</div><div>Autorizado por<br><br>____________________<br>${escapeHtml(r.autorizado_por||'')}</div><div>Recebido por<br><br>____________________<br>${escapeHtml(r.recebido_por||'')}</div></div><p><strong>Cheque nº</strong> ${escapeHtml(r.cheque_no||'')} &nbsp;&nbsp;&nbsp; <strong>Sob o Banco</strong> ${escapeHtml(r.banco||'')}</p><div class="foot">Sede: Rua do Quionga no 41, R/C Bairro Central, Maputo<br>Filiais: Ressano Garcia – Pemba - Nacala</div><script>window.onload=()=>window.print();<\/script></body></html>`; const win=window.open('', '_blank'); if(!win) return; win.document.open(); win.document.write(html); win.document.close(); }
     async function loadInternalMessages() {
       const { data, error } = await withTimeout(
         supabaseClient.from("mensagens").select("*").order("created_at", { ascending: true }),
@@ -6898,6 +7013,8 @@ async function deleteMessageThread(clienteEmail) {
         tarefasCache = tarefas || [];
         cotacaoDocsCache = cotacaoDocs || [];
         faturasCache = faturas || [];
+        await loadFuncionarioDocumentos(false);
+        await loadRequisicoesFundos(false);
 
         const totaisFaturas = getFinancialTotalsFromFaturas(faturasCache || []);
         const totalCobrado = totaisFaturas.cobrado;
