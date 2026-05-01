@@ -6,6 +6,7 @@
   <title>EF Cargo Clear</title>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <style>
     :root{
       --bg:#f4f6f8;
@@ -937,6 +938,273 @@
       th,td{padding:14px 8px;font-size:14px}
       .chat-bubble{max-width:92%}
     }
+
+
+    /* ===== EF CARGO CLEAR — LEVEL 2 PREMIUM UI UPGRADE ===== */
+    .ef-premium-ready body{}
+
+    @keyframes efFadeUp{
+      from{opacity:0;transform:translateY(22px) scale(.985)}
+      to{opacity:1;transform:translateY(0) scale(1)}
+    }
+    @keyframes efSoftPulse{
+      0%,100%{box-shadow:0 18px 40px rgba(15,23,42,.08)}
+      50%{box-shadow:0 22px 46px rgba(190,0,26,.12)}
+    }
+    @keyframes efShine{
+      from{transform:translateX(-130%) skewX(-14deg)}
+      to{transform:translateX(130%) skewX(-14deg)}
+    }
+    @keyframes efIconFloat{
+      0%,100%{transform:translateY(0)}
+      50%{transform:translateY(-3px)}
+    }
+
+    .card,.kpi,.process-panel,.client-card,.contact-card,.chart-card,.progress-card,.highlight-pill,.quick-btn,.modal{
+      animation:efFadeUp .55s ease both;
+      transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease, background .22s ease;
+    }
+
+    .card:hover,.process-panel:hover,.client-card:hover,.contact-card:hover,.chart-card:hover,.progress-card:hover,.highlight-pill:hover{
+      transform:translateY(-4px);
+      box-shadow:0 22px 52px rgba(15,23,42,.10);
+      border-color:rgba(190,0,26,.18);
+    }
+
+    .hero-card{
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.98) 0%, rgba(255,247,248,.94) 100%),
+        radial-gradient(circle at 92% 0%, rgba(190,0,26,.10), transparent 32%);
+    }
+    .hero-card::after{
+      content:"";
+      position:absolute;
+      right:28px;
+      bottom:18px;
+      width:170px;
+      height:90px;
+      opacity:.055;
+      background:linear-gradient(135deg,var(--primary),transparent);
+      border-radius:999px;
+      filter:blur(6px);
+      pointer-events:none;
+    }
+
+    .brand-logo-wrap,.brand-badge{
+      animation:efSoftPulse 3.8s ease-in-out infinite;
+    }
+
+    .kpi{
+      min-height:126px;
+      padding:22px 22px 22px 86px;
+      background:
+        linear-gradient(145deg,#fff 0%,#fffafa 45%,#f8fafc 100%);
+    }
+    .kpi::before{
+      width:6px;
+      border-radius:999px;
+    }
+    .kpi::after{
+      content:"\f201";
+      font-family:"Font Awesome 6 Free";
+      font-weight:900;
+      position:absolute;
+      left:22px;
+      top:24px;
+      width:42px;
+      height:42px;
+      border-radius:16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--primary);
+      background:linear-gradient(180deg,#fff 0%,#fff2f4 100%);
+      box-shadow:0 12px 28px rgba(190,0,26,.14);
+      font-size:18px;
+      opacity:1;
+      animation:efIconFloat 3s ease-in-out infinite;
+    }
+    .kpi:hover{
+      transform:translateY(-7px) scale(1.015);
+      box-shadow:0 28px 60px rgba(15,23,42,.13);
+    }
+    .kpi-title{
+      text-transform:uppercase;
+      letter-spacing:.06em;
+      font-size:12px;
+    }
+    .kpi-value{
+      font-size:36px;
+      line-height:1;
+      text-shadow:0 8px 24px rgba(190,0,26,.10);
+    }
+
+    #clientesCount::after,#processosCount::after,#liberadosCount::after,#pendenciasCount::after,#cotacoesCount::after,
+    #valorCobradoTotal::after,#custosTotal::after,#margemTotal::after{content:"";}
+
+    .sidebar{
+      background:
+        linear-gradient(180deg,#ffffff 0%,#fffafa 100%);
+      border:1px solid rgba(190,0,26,.08);
+    }
+    .sidebar-title{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .sidebar-title::before{
+      content:"\f0e8";
+      font-family:"Font Awesome 6 Free";
+      font-weight:900;
+      color:var(--primary);
+    }
+    .sidebar-btn{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      position:relative;
+      overflow:hidden;
+    }
+    .sidebar-btn i{
+      width:20px;
+      text-align:center;
+      color:var(--primary);
+      transition:transform .2s ease, color .2s ease;
+    }
+    .sidebar-btn:hover{
+      transform:translateX(5px);
+      background:#fff7f8;
+    }
+    .sidebar-btn:hover i{transform:scale(1.12)}
+    .sidebar-btn.active i{color:#fff;}
+    .sidebar-btn.active{
+      box-shadow:0 16px 28px rgba(190,0,26,.18);
+    }
+
+    .btn,.btn-mini,.tab-btn,.quick-btn,.link-btn{
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+    }
+    .btn,.btn-mini,.tab-btn{
+      position:relative;
+      overflow:hidden;
+    }
+    .btn:hover,.btn-mini:hover,.tab-btn:hover,.quick-btn:hover{
+      transform:translateY(-2px);
+    }
+    .btn:active,.btn-mini:active,.tab-btn:active,.quick-btn:active,.sidebar-btn:active{
+      transform:scale(.98);
+    }
+    .btn::after,.btn-mini::after,.quick-btn::after,.tab-btn::after{
+      content:"";
+      position:absolute;
+      inset:-20% -60%;
+      background:linear-gradient(120deg, transparent, rgba(255,255,255,.45), transparent);
+      transform:translateX(-130%) skewX(-14deg);
+      opacity:0;
+      pointer-events:none;
+    }
+    .btn:hover::after,.btn-mini:hover::after,.quick-btn:hover::after,.tab-btn:hover::after{
+      opacity:1;
+      animation:efShine .8s ease;
+    }
+
+    input,select,textarea{
+      transition:border-color .2s ease, box-shadow .2s ease, background .2s ease, transform .2s ease;
+    }
+    input:focus,select:focus,textarea:focus{
+      transform:translateY(-1px);
+    }
+
+    .badge,.unread-dot,.pill,.responsavel-chip,.doc-chip{
+      box-shadow:0 8px 18px rgba(15,23,42,.06);
+    }
+
+    .progress-fill{
+      transition:width 1s cubic-bezier(.2,.8,.2,1);
+      position:relative;
+      overflow:hidden;
+    }
+    .progress-fill::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);
+      animation:efShine 2.6s ease-in-out infinite;
+    }
+
+    .table-scroll table{
+      border-radius:18px;
+    }
+    tbody tr{
+      transition:background .18s ease, transform .18s ease;
+    }
+    tbody tr:hover{
+      background:#fff7f8;
+      transform:scale(1.002);
+    }
+
+    .chat-bubble{
+      animation:efFadeUp .35s ease both;
+    }
+
+    .quick-btn{
+      padding:18px;
+      min-height:112px;
+      background:
+        linear-gradient(145deg,#ffffff 0%,#fff8f9 100%);
+    }
+    .quick-btn::before{
+      content:"\f054";
+      font-family:"Font Awesome 6 Free";
+      font-weight:900;
+      position:absolute;
+      right:16px;
+      top:16px;
+      color:var(--primary);
+      opacity:.28;
+    }
+
+    .section-title{
+      position:relative;
+      display:inline-block;
+    }
+    .section-title::after{
+      content:"";
+      position:absolute;
+      left:0;
+      bottom:-8px;
+      width:48px;
+      height:4px;
+      border-radius:999px;
+      background:linear-gradient(90deg,var(--primary),rgba(190,0,26,.15));
+    }
+    .section-sub{margin-top:12px;}
+
+    .ef-toast{
+      position:fixed;
+      right:20px;
+      bottom:20px;
+      z-index:3000;
+      display:none;
+      min-width:260px;
+      max-width:360px;
+      padding:14px 16px;
+      border-radius:18px;
+      background:#111827;
+      color:#fff;
+      box-shadow:0 20px 50px rgba(15,23,42,.25);
+      font-weight:700;
+      animation:efFadeUp .35s ease both;
+    }
+
+    @media (max-width:640px){
+      .kpi{padding:18px 18px 18px 76px;min-height:112px;}
+      .kpi::after{left:18px;top:22px;width:38px;height:38px;font-size:16px;}
+      .kpi-value{font-size:30px;}
+      .quick-btn{min-height:auto;}
+      .ef-toast{left:14px;right:14px;bottom:14px;max-width:none;}
+    }
+
   </style>
 </head>
 <body>
@@ -964,12 +1232,12 @@
             <input id="password" type="password" placeholder="Digite a password" />
           </div>
           <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;">
-    <button class="btn" onclick="login()">Entrar</button>
+    <button class="btn" onclick="login()"><i class="fas fa-right-to-bracket"></i> Entrar</button>
     <a href="https://www.dropbox.com/scl/fi/2ws6abpqp0eo63rz8dcxh/EF-Cargo-Clear.apk?rlkey=s8scvdu563aovgnd04ajfxktc&st=z0p9c0k1&dl=1"
        target="_blank" rel="noopener noreferrer"
        class="btn btn-outline"
        style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">
-       📥 Baixar App
+       <i class="fas fa-download"></i> Baixar App
     </a>
   </div>
 
@@ -1100,17 +1368,17 @@
           <aside class="sidebar no-print">
             <div class="sidebar-title">Painel Interno</div>
             <div class="sidebar-menu">
-              <button class="sidebar-btn active" id="side-dashboard" onclick="showInternalTab('dashboard')">📊 Dashboard</button>
-              <button class="sidebar-btn" id="side-processos" onclick="showInternalTab('processos')">Processos</button>
-              <button class="sidebar-btn" id="side-cotacoes" onclick="showInternalTab('cotacoes')">Pedidos de cotação</button>
-              <button class="sidebar-btn" id="side-fretes" onclick="showInternalTab('fretes')">Pedidos de frete</button>
-              <button class="sidebar-btn" id="side-produtos" onclick="showInternalTab('produtos')">Pedidos de produto</button>
-              <button class="sidebar-btn" id="side-financeiro" onclick="showInternalTab('financeiro')">Financeiro</button>
-              <button class="sidebar-btn" id="side-faturas" onclick="showInternalTab('faturas')">Faturas</button>
-              <button class="sidebar-btn" id="side-clientes" onclick="showInternalTab('clientes')">Clientes</button>
-              <button class="sidebar-btn" id="side-equipa" onclick="showInternalTab('equipa')">Funcionários</button>
+              <button class="sidebar-btn active" id="side-dashboard" onclick="showInternalTab('dashboard')"><i class="fas fa-chart-line"></i> Dashboard</button>
+              <button class="sidebar-btn" id="side-processos" onclick="showInternalTab('processos')"><i class="fas fa-folder-open"></i> Processos</button>
+              <button class="sidebar-btn" id="side-cotacoes" onclick="showInternalTab('cotacoes')"><i class="fas fa-file-signature"></i> Pedidos de cotação</button>
+              <button class="sidebar-btn" id="side-fretes" onclick="showInternalTab('fretes')"><i class="fas fa-truck-fast"></i> Pedidos de frete</button>
+              <button class="sidebar-btn" id="side-produtos" onclick="showInternalTab('produtos')"><i class="fas fa-boxes-stacked"></i> Pedidos de produto</button>
+              <button class="sidebar-btn" id="side-financeiro" onclick="showInternalTab('financeiro')"><i class="fas fa-coins"></i> Financeiro</button>
+              <button class="sidebar-btn" id="side-faturas" onclick="showInternalTab('faturas')"><i class="fas fa-file-invoice-dollar"></i> Faturas</button>
+              <button class="sidebar-btn" id="side-clientes" onclick="showInternalTab('clientes')"><i class="fas fa-users"></i> Clientes</button>
+              <button class="sidebar-btn" id="side-equipa" onclick="showInternalTab('equipa')"><i class="fas fa-user-tie"></i> Funcionários</button>
               <button class="sidebar-btn" id="side-mensagens" onclick="showInternalTab('mensagens')">
-                Mensagens <span id="internalUnreadBadge" class="unread-dot hidden">0</span>
+                <i class="fas fa-comments"></i> Mensagens <span id="internalUnreadBadge" class="unread-dot hidden">0</span>
               </button>
             </div>
           </aside>
@@ -3262,7 +3530,53 @@
             <h1>${title}</h1>
             ${section.innerHTML}
             <script>window.onload = () => window.print();<\/script>
-          </body>
+          
+
+<script>
+(function(){
+  function enhancePremiumUI(){
+    var animated = document.querySelectorAll('.card,.kpi,.process-panel,.client-card,.contact-card,.chart-card,.progress-card,.highlight-pill,.quick-btn,.modal');
+    animated.forEach(function(el, i){
+      if(!el.dataset.efAnimated){
+        el.dataset.efAnimated = '1';
+        el.style.animationDelay = Math.min(i * 0.025, 0.45) + 's';
+      }
+    });
+
+    document.querySelectorAll('.btn,.btn-mini,.tab-btn,.quick-btn,.sidebar-btn').forEach(function(btn){
+      if(btn.dataset.efRipple) return;
+      btn.dataset.efRipple = '1';
+      btn.addEventListener('click', function(){
+        btn.style.transform = 'scale(.98)';
+        setTimeout(function(){ btn.style.transform = ''; }, 120);
+      });
+    });
+  }
+
+  window.efShowToast = function(message){
+    var toast = document.getElementById('efPremiumToast');
+    if(!toast){
+      toast = document.createElement('div');
+      toast.id = 'efPremiumToast';
+      toast.className = 'ef-toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = message || 'Ação realizada';
+    toast.style.display = 'block';
+    clearTimeout(window.__efToastTimer);
+    window.__efToastTimer = setTimeout(function(){ toast.style.display = 'none'; }, 2600);
+  };
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', enhancePremiumUI);
+  }else{
+    enhancePremiumUI();
+  }
+  setInterval(enhancePremiumUI, 1800);
+})();
+</script>
+
+</body>
         </html>
       `;
       win.document.open();
