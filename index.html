@@ -6,7 +6,6 @@
   <title>EF Cargo Clear</title>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <style>
     :root{
       --bg:#f4f6f8;
@@ -940,183 +939,296 @@
     }
 
 
-    /* ===== EF CARGO CLEAR — LEVEL 2 PREMIUM UI UPGRADE ===== */
-    .ef-premium-ready body{}
+    /* ==========================================================
+       EF CARGO CLEAR — PREMIUM VISUAL LEVEL 2 SAFE PATCH
+       Apenas camada visual: CSS puro. Não altera IDs, funções,
+       eventos onclick, Supabase, login, faturas ou qualquer lógica.
+       ========================================================== */
+
+    :root{
+      --premium-glow: 0 24px 55px rgba(190,0,26,.10);
+      --premium-card: linear-gradient(180deg,#ffffff 0%,#fffafa 100%);
+      --premium-soft-red: rgba(190,0,26,.08);
+      --premium-dark: #111827;
+    }
 
     @keyframes efFadeUp{
-      from{opacity:0;transform:translateY(22px) scale(.985)}
-      to{opacity:1;transform:translateY(0) scale(1)}
+      from{opacity:0; transform:translateY(18px)}
+      to{opacity:1; transform:translateY(0)}
     }
-    @keyframes efSoftPulse{
-      0%,100%{box-shadow:0 18px 40px rgba(15,23,42,.08)}
-      50%{box-shadow:0 22px 46px rgba(190,0,26,.12)}
+
+    @keyframes efPulseSoft{
+      0%,100%{box-shadow:0 0 0 rgba(190,0,26,0)}
+      50%{box-shadow:0 0 0 8px rgba(190,0,26,.06)}
     }
+
     @keyframes efShine{
-      from{transform:translateX(-130%) skewX(-14deg)}
-      to{transform:translateX(130%) skewX(-14deg)}
+      from{transform:translateX(-140%)}
+      to{transform:translateX(140%)}
     }
-    @keyframes efIconFloat{
+
+    @keyframes efFloat{
       0%,100%{transform:translateY(0)}
-      50%{transform:translateY(-3px)}
+      50%{transform:translateY(-4px)}
     }
 
-    .card,.kpi,.process-panel,.client-card,.contact-card,.chart-card,.progress-card,.highlight-pill,.quick-btn,.modal{
+    body{
+      background:
+        radial-gradient(circle at 8% 0%, rgba(190,0,26,.08), transparent 26%),
+        radial-gradient(circle at 100% 12%, rgba(15,23,42,.06), transparent 24%),
+        linear-gradient(180deg,#fff 0%,#f4f6f8 100%);
+    }
+
+    .card, .kpi, .sidebar, .login-card, .client-card, .process-panel, .chart-card,
+    .progress-card, .highlight-pill, .contact-card, .quick-btn{
       animation:efFadeUp .55s ease both;
-      transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease, background .22s ease;
     }
 
-    .card:hover,.process-panel:hover,.client-card:hover,.contact-card:hover,.chart-card:hover,.progress-card:hover,.highlight-pill:hover{
-      transform:translateY(-4px);
-      box-shadow:0 22px 52px rgba(15,23,42,.10);
-      border-color:rgba(190,0,26,.18);
+    .card{
+      background:var(--premium-card);
+      transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+    }
+
+    .card:hover{
+      transform:translateY(-2px);
+      box-shadow:var(--premium-glow), var(--shadow);
+      border-color:rgba(190,0,26,.12);
     }
 
     .hero-card{
       background:
-        linear-gradient(135deg, rgba(255,255,255,.98) 0%, rgba(255,247,248,.94) 100%),
-        radial-gradient(circle at 92% 0%, rgba(190,0,26,.10), transparent 32%);
+        linear-gradient(135deg,#ffffff 0%,#fff 60%,#fff2f4 100%);
     }
+
     .hero-card::after{
       content:"";
       position:absolute;
-      right:28px;
-      bottom:18px;
-      width:170px;
-      height:90px;
-      opacity:.055;
-      background:linear-gradient(135deg,var(--primary),transparent);
-      border-radius:999px;
-      filter:blur(6px);
+      width:210px;height:210px;
+      right:-70px;top:-80px;
+      border-radius:50%;
+      background:radial-gradient(circle,rgba(190,0,26,.10),transparent 65%);
       pointer-events:none;
     }
 
-    .brand-logo-wrap,.brand-badge{
-      animation:efSoftPulse 3.8s ease-in-out infinite;
+    .brand-badge, .brand-logo-wrap{
+      animation:efFloat 4s ease-in-out infinite;
     }
 
-    .kpi{
-      min-height:126px;
-      padding:22px 22px 22px 86px;
-      background:
-        linear-gradient(145deg,#fff 0%,#fffafa 45%,#f8fafc 100%);
+    .section-title{
+      font-size:clamp(22px,2.1vw,31px);
+      letter-spacing:-.04em;
     }
-    .kpi::before{
-      width:6px;
+
+    .section-title::after{
+      content:"";
+      display:block;
+      width:48px;height:4px;
+      margin-top:8px;
       border-radius:999px;
-    }
-    .kpi::after{
-      content:"\f201";
-      font-family:"Font Awesome 6 Free";
-      font-weight:900;
-      position:absolute;
-      left:22px;
-      top:24px;
-      width:42px;
-      height:42px;
-      border-radius:16px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:var(--primary);
-      background:linear-gradient(180deg,#fff 0%,#fff2f4 100%);
-      box-shadow:0 12px 28px rgba(190,0,26,.14);
-      font-size:18px;
-      opacity:1;
-      animation:efIconFloat 3s ease-in-out infinite;
-    }
-    .kpi:hover{
-      transform:translateY(-7px) scale(1.015);
-      box-shadow:0 28px 60px rgba(15,23,42,.13);
-    }
-    .kpi-title{
-      text-transform:uppercase;
-      letter-spacing:.06em;
-      font-size:12px;
-    }
-    .kpi-value{
-      font-size:36px;
-      line-height:1;
-      text-shadow:0 8px 24px rgba(190,0,26,.10);
+      background:linear-gradient(90deg,var(--primary),rgba(190,0,26,.18));
     }
 
-    #clientesCount::after,#processosCount::after,#liberadosCount::after,#pendenciasCount::after,#cotacoesCount::after,
-    #valorCobradoTotal::after,#custosTotal::after,#margemTotal::after{content:"";}
-
-    .sidebar{
-      background:
-        linear-gradient(180deg,#ffffff 0%,#fffafa 100%);
-      border:1px solid rgba(190,0,26,.08);
-    }
-    .sidebar-title{
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-    .sidebar-title::before{
-      content:"\f0e8";
-      font-family:"Font Awesome 6 Free";
-      font-weight:900;
-      color:var(--primary);
-    }
+    /* Sidebar com ícones por ID, sem mexer no HTML */
     .sidebar-btn{
-      display:flex;
-      align-items:center;
-      gap:10px;
       position:relative;
+      padding-left:48px;
       overflow:hidden;
+      transition:transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
     }
-    .sidebar-btn i{
-      width:20px;
-      text-align:center;
+
+    .sidebar-btn::before{
+      position:absolute;
+      left:16px;
+      top:50%;
+      transform:translateY(-50%);
+      width:22px;height:22px;
+      display:flex;align-items:center;justify-content:center;
+      border-radius:8px;
+      background:rgba(190,0,26,.08);
       color:var(--primary);
-      transition:transform .2s ease, color .2s ease;
+      font-size:15px;
     }
+
+    #side-dashboard::before{content:"📊"}
+    #side-processos::before{content:"📦"}
+    #side-cotacoes::before{content:"📄"}
+    #side-fretes::before{content:"🚚"}
+    #side-produtos::before{content:"🛒"}
+    #side-financeiro::before{content:"💰"}
+    #side-faturas::before{content:"🧾"}
+    #side-clientes::before{content:"👥"}
+    #side-equipa::before{content:"🧑‍💼"}
+    #side-mensagens::before{content:"💬"}
+
     .sidebar-btn:hover{
       transform:translateX(5px);
-      background:#fff7f8;
-    }
-    .sidebar-btn:hover i{transform:scale(1.12)}
-    .sidebar-btn.active i{color:#fff;}
-    .sidebar-btn.active{
-      box-shadow:0 16px 28px rgba(190,0,26,.18);
+      box-shadow:0 12px 22px rgba(15,23,42,.06);
     }
 
-    .btn,.btn-mini,.tab-btn,.quick-btn,.link-btn{
-      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+    .sidebar-btn.active::before{
+      background:rgba(255,255,255,.16);
+      color:#fff;
     }
-    .btn,.btn-mini,.tab-btn{
+
+    /* KPI premium com ícones automáticos */
+    .kpi{
+      min-height:118px;
+      padding:24px 22px 22px 74px;
+      background:
+        radial-gradient(circle at 100% 0%,rgba(190,0,26,.09),transparent 36%),
+        linear-gradient(180deg,#ffffff 0%,#fffafa 100%);
+      transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+    }
+
+    .kpi:hover{
+      transform:translateY(-6px) scale(1.01);
+      box-shadow:0 25px 55px rgba(15,23,42,.10), 0 12px 28px rgba(190,0,26,.08);
+      border-color:rgba(190,0,26,.18);
+    }
+
+    .kpi::after{
+      content:"📈";
+      position:absolute;
+      left:20px;
+      top:24px;
+      width:38px;height:38px;
+      display:flex;align-items:center;justify-content:center;
+      border-radius:15px;
+      background:linear-gradient(180deg,rgba(190,0,26,.11),rgba(190,0,26,.05));
+      font-size:21px;
+    }
+
+    .kpi-title{
+      text-transform:uppercase;
+      letter-spacing:.055em;
+      font-size:12px;
+    }
+
+    .kpi-value{
+      font-size:clamp(26px,3vw,40px);
+      line-height:1;
+      text-shadow:0 8px 20px rgba(190,0,26,.10);
+    }
+
+    #clientesCount.closest, #processosCount.closest{display:block}
+    .kpi:has(#clientesCount)::after{content:"👥"}
+    .kpi:has(#processosCount)::after,.kpi:has(#dashTotalProcessos)::after{content:"📦"}
+    .kpi:has(#liberadosCount)::after,.kpi:has(#dashLiberados)::after{content:"✅"}
+    .kpi:has(#pendenciasCount)::after,.kpi:has(#dashPendenciasDocs)::after{content:"⚠️"}
+    .kpi:has(#cotacoesCount)::after,.kpi:has(#clientDashCotacoes)::after{content:"📄"}
+    .kpi:has(#valorCobradoTotal)::after{content:"💳"}
+    .kpi:has(#custosTotal)::after{content:"📉"}
+    .kpi:has(#margemTotal)::after,.kpi:has(#dashMargemTotal)::after{content:"💰"}
+    .kpi:has(#clientDashUnread)::after{content:"💬"}
+    .kpi:has(#clientDashDocs)::after{content:"📎"}
+    .kpi:has(#clientDashEstado)::after{content:"📍"}
+
+    /* Botões e microinterações */
+    .btn, .btn-mini, .tab-btn, .quick-btn, .link-btn{
+      transition:transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
+    }
+
+    .btn, .btn-mini, .quick-btn{
       position:relative;
       overflow:hidden;
     }
-    .btn:hover,.btn-mini:hover,.tab-btn:hover,.quick-btn:hover{
-      transform:translateY(-2px);
-    }
-    .btn:active,.btn-mini:active,.tab-btn:active,.quick-btn:active,.sidebar-btn:active{
-      transform:scale(.98);
-    }
-    .btn::after,.btn-mini::after,.quick-btn::after,.tab-btn::after{
+
+    .btn::after, .btn-mini::after, .quick-btn::after{
       content:"";
       position:absolute;
-      inset:-20% -60%;
-      background:linear-gradient(120deg, transparent, rgba(255,255,255,.45), transparent);
-      transform:translateX(-130%) skewX(-14deg);
-      opacity:0;
+      inset:0;
+      background:linear-gradient(115deg,transparent 0%,rgba(255,255,255,.35) 45%,transparent 70%);
+      transform:translateX(-140%);
       pointer-events:none;
     }
-    .btn:hover::after,.btn-mini:hover::after,.quick-btn:hover::after,.tab-btn:hover::after{
-      opacity:1;
-      animation:efShine .8s ease;
+
+    .btn:hover::after, .btn-mini:hover::after, .quick-btn:hover::after{
+      animation:efShine .75s ease;
     }
 
-    input,select,textarea{
-      transition:border-color .2s ease, box-shadow .2s ease, background .2s ease, transform .2s ease;
+    .btn:hover, .btn-mini:hover, .tab-btn:hover, .quick-btn:hover{
+      transform:translateY(-2px);
     }
-    input:focus,select:focus,textarea:focus{
+
+    .btn:active, .btn-mini:active, .tab-btn:active, .quick-btn:active{
+      transform:scale(.98);
+    }
+
+    .tab-btn.active, .sidebar-btn.active{
+      box-shadow:0 14px 30px rgba(190,0,26,.22);
+    }
+
+    .badge, .unread-dot{
+      animation:efPulseSoft 2.6s ease-in-out infinite;
+    }
+
+    .quick-btn{
+      padding-left:58px;
+      min-height:92px;
+      background:
+        radial-gradient(circle at 100% 0%,rgba(190,0,26,.08),transparent 38%),
+        #fff;
+    }
+
+    .quick-btn::before{
+      position:absolute;
+      left:16px;top:18px;
+      width:32px;height:32px;
+      display:flex;align-items:center;justify-content:center;
+      border-radius:13px;
+      background:rgba(190,0,26,.09);
+      color:var(--primary);
+      font-size:18px;
+    }
+
+    .quick-actions .quick-btn:nth-child(1)::before{content:"📥"}
+    .quick-actions .quick-btn:nth-child(2)::before{content:"🚚"}
+    .quick-actions .quick-btn:nth-child(3)::before{content:"🔔"}
+    .quick-actions .quick-btn:nth-child(4)::before{content:"📞"}
+
+    /* Formulários mais premium */
+    input, select, textarea{
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+    }
+
+    input:focus, select:focus, textarea:focus{
       transform:translateY(-1px);
     }
 
-    .badge,.unread-dot,.pill,.responsavel-chip,.doc-chip{
-      box-shadow:0 8px 18px rgba(15,23,42,.06);
+    /* Tables mais elegantes */
+    tbody tr{
+      transition:background .18s ease, transform .18s ease;
+    }
+
+    tbody tr:hover{
+      background:#fff7f8;
+    }
+
+    th{
+      background:linear-gradient(180deg,#ffffff,#fafafa);
+    }
+
+    /* Chat estilo app */
+    .chat-window,.chat-sidebar{
+      box-shadow:var(--shadow-soft);
+    }
+
+    .chat-bubble{
+      animation:efFadeUp .28s ease both;
+    }
+
+    .chat-bubble.mine{
+      background:linear-gradient(180deg,#fee2e2,#fff1f2);
+    }
+
+    .chat-bubble.other{
+      background:linear-gradient(180deg,#fff,#fafafa);
+    }
+
+    /* Progress premium */
+    .progress-track{
+      height:14px;
+      box-shadow:inset 0 2px 8px rgba(15,23,42,.08);
     }
 
     .progress-fill{
@@ -1124,85 +1236,27 @@
       position:relative;
       overflow:hidden;
     }
+
     .progress-fill::after{
       content:"";
       position:absolute;
       inset:0;
       background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);
-      animation:efShine 2.6s ease-in-out infinite;
+      animation:efShine 1.6s linear infinite;
     }
 
-    .table-scroll table{
-      border-radius:18px;
-    }
-    tbody tr{
-      transition:background .18s ease, transform .18s ease;
-    }
-    tbody tr:hover{
-      background:#fff7f8;
-      transform:scale(1.002);
-    }
-
-    .chat-bubble{
-      animation:efFadeUp .35s ease both;
-    }
-
-    .quick-btn{
-      padding:18px;
-      min-height:112px;
-      background:
-        linear-gradient(145deg,#ffffff 0%,#fff8f9 100%);
-    }
-    .quick-btn::before{
-      content:"\f054";
-      font-family:"Font Awesome 6 Free";
-      font-weight:900;
-      position:absolute;
-      right:16px;
-      top:16px;
-      color:var(--primary);
-      opacity:.28;
-    }
-
-    .section-title{
-      position:relative;
-      display:inline-block;
-    }
-    .section-title::after{
-      content:"";
-      position:absolute;
-      left:0;
-      bottom:-8px;
-      width:48px;
-      height:4px;
-      border-radius:999px;
-      background:linear-gradient(90deg,var(--primary),rgba(190,0,26,.15));
-    }
-    .section-sub{margin-top:12px;}
-
-    .ef-toast{
-      position:fixed;
-      right:20px;
-      bottom:20px;
-      z-index:3000;
-      display:none;
-      min-width:260px;
-      max-width:360px;
-      padding:14px 16px;
-      border-radius:18px;
-      background:#111827;
-      color:#fff;
-      box-shadow:0 20px 50px rgba(15,23,42,.25);
-      font-weight:700;
-      animation:efFadeUp .35s ease both;
-    }
-
+    /* Mobile com sensação de app */
     @media (max-width:640px){
-      .kpi{padding:18px 18px 18px 76px;min-height:112px;}
-      .kpi::after{left:18px;top:22px;width:38px;height:38px;font-size:16px;}
-      .kpi-value{font-size:30px;}
-      .quick-btn{min-height:auto;}
-      .ef-toast{left:14px;right:14px;bottom:14px;max-width:none;}
+      .login-shell{justify-content:flex-start;padding-top:56px}
+      .login-welcome h1{font-size:34px}
+      .login-card{border-radius:26px}
+      .sidebar-menu{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+      .sidebar-btn{padding:13px 12px 13px 42px;font-size:13px}
+      .kpi{min-height:104px;padding:20px 16px 18px 64px}
+      .kpi::after{left:16px;top:20px;width:34px;height:34px}
+      .quick-actions{grid-template-columns:1fr}
+      .tabs{display:flex;overflow:auto;flex-wrap:nowrap;padding-bottom:6px}
+      .tab-btn{white-space:nowrap}
     }
 
   </style>
@@ -1232,12 +1286,12 @@
             <input id="password" type="password" placeholder="Digite a password" />
           </div>
           <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;">
-    <button class="btn" onclick="login()"><i class="fas fa-right-to-bracket"></i> Entrar</button>
+    <button class="btn" onclick="login()">Entrar</button>
     <a href="https://www.dropbox.com/scl/fi/2ws6abpqp0eo63rz8dcxh/EF-Cargo-Clear.apk?rlkey=s8scvdu563aovgnd04ajfxktc&st=z0p9c0k1&dl=1"
        target="_blank" rel="noopener noreferrer"
        class="btn btn-outline"
        style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">
-       <i class="fas fa-download"></i> Baixar App
+       📥 Baixar App
     </a>
   </div>
 
@@ -1368,17 +1422,17 @@
           <aside class="sidebar no-print">
             <div class="sidebar-title">Painel Interno</div>
             <div class="sidebar-menu">
-              <button class="sidebar-btn active" id="side-dashboard" onclick="showInternalTab('dashboard')"><i class="fas fa-chart-line"></i> Dashboard</button>
-              <button class="sidebar-btn" id="side-processos" onclick="showInternalTab('processos')"><i class="fas fa-folder-open"></i> Processos</button>
-              <button class="sidebar-btn" id="side-cotacoes" onclick="showInternalTab('cotacoes')"><i class="fas fa-file-signature"></i> Pedidos de cotação</button>
-              <button class="sidebar-btn" id="side-fretes" onclick="showInternalTab('fretes')"><i class="fas fa-truck-fast"></i> Pedidos de frete</button>
-              <button class="sidebar-btn" id="side-produtos" onclick="showInternalTab('produtos')"><i class="fas fa-boxes-stacked"></i> Pedidos de produto</button>
-              <button class="sidebar-btn" id="side-financeiro" onclick="showInternalTab('financeiro')"><i class="fas fa-coins"></i> Financeiro</button>
-              <button class="sidebar-btn" id="side-faturas" onclick="showInternalTab('faturas')"><i class="fas fa-file-invoice-dollar"></i> Faturas</button>
-              <button class="sidebar-btn" id="side-clientes" onclick="showInternalTab('clientes')"><i class="fas fa-users"></i> Clientes</button>
-              <button class="sidebar-btn" id="side-equipa" onclick="showInternalTab('equipa')"><i class="fas fa-user-tie"></i> Funcionários</button>
+              <button class="sidebar-btn active" id="side-dashboard" onclick="showInternalTab('dashboard')">📊 Dashboard</button>
+              <button class="sidebar-btn" id="side-processos" onclick="showInternalTab('processos')">Processos</button>
+              <button class="sidebar-btn" id="side-cotacoes" onclick="showInternalTab('cotacoes')">Pedidos de cotação</button>
+              <button class="sidebar-btn" id="side-fretes" onclick="showInternalTab('fretes')">Pedidos de frete</button>
+              <button class="sidebar-btn" id="side-produtos" onclick="showInternalTab('produtos')">Pedidos de produto</button>
+              <button class="sidebar-btn" id="side-financeiro" onclick="showInternalTab('financeiro')">Financeiro</button>
+              <button class="sidebar-btn" id="side-faturas" onclick="showInternalTab('faturas')">Faturas</button>
+              <button class="sidebar-btn" id="side-clientes" onclick="showInternalTab('clientes')">Clientes</button>
+              <button class="sidebar-btn" id="side-equipa" onclick="showInternalTab('equipa')">Funcionários</button>
               <button class="sidebar-btn" id="side-mensagens" onclick="showInternalTab('mensagens')">
-                <i class="fas fa-comments"></i> Mensagens <span id="internalUnreadBadge" class="unread-dot hidden">0</span>
+                Mensagens <span id="internalUnreadBadge" class="unread-dot hidden">0</span>
               </button>
             </div>
           </aside>
@@ -3530,53 +3584,7 @@
             <h1>${title}</h1>
             ${section.innerHTML}
             <script>window.onload = () => window.print();<\/script>
-          
-
-<script>
-(function(){
-  function enhancePremiumUI(){
-    var animated = document.querySelectorAll('.card,.kpi,.process-panel,.client-card,.contact-card,.chart-card,.progress-card,.highlight-pill,.quick-btn,.modal');
-    animated.forEach(function(el, i){
-      if(!el.dataset.efAnimated){
-        el.dataset.efAnimated = '1';
-        el.style.animationDelay = Math.min(i * 0.025, 0.45) + 's';
-      }
-    });
-
-    document.querySelectorAll('.btn,.btn-mini,.tab-btn,.quick-btn,.sidebar-btn').forEach(function(btn){
-      if(btn.dataset.efRipple) return;
-      btn.dataset.efRipple = '1';
-      btn.addEventListener('click', function(){
-        btn.style.transform = 'scale(.98)';
-        setTimeout(function(){ btn.style.transform = ''; }, 120);
-      });
-    });
-  }
-
-  window.efShowToast = function(message){
-    var toast = document.getElementById('efPremiumToast');
-    if(!toast){
-      toast = document.createElement('div');
-      toast.id = 'efPremiumToast';
-      toast.className = 'ef-toast';
-      document.body.appendChild(toast);
-    }
-    toast.textContent = message || 'Ação realizada';
-    toast.style.display = 'block';
-    clearTimeout(window.__efToastTimer);
-    window.__efToastTimer = setTimeout(function(){ toast.style.display = 'none'; }, 2600);
-  };
-
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', enhancePremiumUI);
-  }else{
-    enhancePremiumUI();
-  }
-  setInterval(enhancePremiumUI, 1800);
-})();
-</script>
-
-</body>
+          </body>
         </html>
       `;
       win.document.open();
