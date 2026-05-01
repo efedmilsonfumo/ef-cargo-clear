@@ -2285,13 +2285,21 @@
               🚚 Solicitar frete
               <small>Peça transporte para a sua carga e acompanhe a resposta.</small>
             </button>
+            <button class="quick-btn" onclick="openFaleConnosco()">
+              💬 Fale Connosco
+              <small>Abra a mensagem direta dentro da plataforma.</small>
+            </button>
+            <button class="quick-btn" onclick="openWhatsAppSupport()">
+              🟢 Ajuda via WhatsApp
+              <small>Fale diretamente com a equipa pelo WhatsApp.</small>
+            </button>
+            <button class="quick-btn" onclick="openCallDialer()">
+              📞 Ligar agora
+              <small>Abre o discador do telefone para chamada direta.</small>
+            </button>
             <button class="quick-btn" onclick="requestClientUpdate()">
               🔔 Pedir atualização
               <small>Solicita à equipa uma atualização rápida do seu processo.</small>
-            </button>
-            <button class="quick-btn" onclick="requestClientContact()">
-              📞 Solicitar contacto
-              <small>Pede que a nossa equipa entre em contacto consigo.</small>
             </button>
           </div>
 
@@ -2338,7 +2346,7 @@
           <button class="tab-btn" data-client-tab="mensagens" onclick="showClientTab('mensagens', this)">
             Mensagens <span id="clientUnreadBadge" class="unread-dot hidden">0</span>
           </button>
-          <button class="tab-btn" data-client-tab="contactos" onclick="showClientTab('contactos', this)">Contactos</button>
+          <button class="tab-btn" data-client-tab="contactos" onclick="showClientTab('contactos', this)">Contactos / WhatsApp</button>
         </div>
 
         <div id="client-consulta" class="tab-content">
@@ -2799,25 +2807,40 @@
           <div class="card">
             <div class="panel-head">
               <div>
-                <h2 class="section-title">Contactos e localização</h2>
-                <div class="section-sub">Informações úteis da empresa.</div>
+                <h2 class="section-title">Contactos e suporte imediato</h2>
+                <div class="section-sub">Fale connosco por mensagem direta na plataforma, WhatsApp ou chamada telefónica.</div>
               </div>
+            </div>
+
+            <div class="quick-actions no-print" style="margin-top:0;margin-bottom:18px;">
+              <button class="quick-btn" onclick="openFaleConnosco()">
+                💬 Fale Connosco no App
+                <small>Abre o chat interno da plataforma.</small>
+              </button>
+              <button class="quick-btn" onclick="openWhatsAppSupport()">
+                🟢 WhatsApp
+                <small>Abre o WhatsApp com mensagem pronta.</small>
+              </button>
+              <button class="quick-btn" onclick="openCallDialer()">
+                📞 Ligar agora
+                <small>Abre o discador para chamada direta.</small>
+              </button>
             </div>
 
             <div class="contact-grid">
               <div class="contact-card">
                 <div class="detail-grid" style="grid-template-columns:1fr;">
                   <div class="detail-item"><strong>Empresa</strong><div id="cfgEmpresa">EF Cargo Clear</div></div>
-                  <div class="detail-item"><strong>Telefone</strong><div id="cfgTelefone">-</div></div>
-                  <div class="detail-item"><strong>Email</strong><div id="cfgEmail">-</div></div>
-                  <div class="detail-item"><strong>WhatsApp</strong><div id="cfgWhatsapp">-</div></div>
-                  <div class="detail-item"><strong>Endereço</strong><div id="cfgEndereco">-</div></div>
-                  <div class="detail-item"><strong>Horário</strong><div id="cfgHorario">-</div></div>
+                  <div class="detail-item"><strong>Telefone</strong><div id="cfgTelefone">+258 845178833 / +258 865178833</div></div>
+                  <div class="detail-item"><strong>Email</strong><div id="cfgEmail">ef.associadoslda@gmail.com</div></div>
+                  <div class="detail-item"><strong>WhatsApp</strong><div id="cfgWhatsapp">+258 845178833</div></div>
+                  <div class="detail-item"><strong>Endereço</strong><div id="cfgEndereco">Avenida Karl Marx nº 1881, Maputo</div></div>
+                  <div class="detail-item"><strong>Horário</strong><div id="cfgHorario">Horário comercial</div></div>
                 </div>
               </div>
 
               <div class="contact-card">
-                <iframe id="cfgMapa" class="map-frame" src="" loading="lazy"></iframe>
+                <iframe id="cfgMapa" class="map-frame" src="https://www.google.com/maps?q=Avenida%20Karl%20Marx%201881%20Maputo&output=embed" loading="lazy"></iframe>
               </div>
             </div>
           </div>
@@ -3101,6 +3124,10 @@
     const SUPABASE_URL = "https://fefkyzutcouoklbiwybs.supabase.co";
     const SUPABASE_KEY = "sb_publishable_uOowmqEhVdq8h0uzagYPEA_DXXpGOgA";
     const ADMIN_EMAIL = "ef.edmilsonfumo@gmail.com";
+    const SUPPORT_PHONE_PRIMARY = "+258845178833";
+    const SUPPORT_PHONE_SECONDARY = "+258865178833";
+    const SUPPORT_WHATSAPP_NUMBER = "258845178833";
+    const SUPPORT_EMAIL = "ef.associadoslda@gmail.com";
     const COMPANY_LOGO_URL = "COLE_AQUI_O_LINK_DO_LOGO";
 
     const tabSessionKey = (() => {
@@ -3652,7 +3679,7 @@
     const res = await fetch('/api/send-email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ to: ADMIN_EMAIL, subject, html })
+      body: JSON.stringify({ to, subject, html })
     });
 
     const data = await res.json().catch(() => ({}));
@@ -3731,8 +3758,8 @@
   });
 
   return await sendEmail(
-    ADMIN_EMAIL,
-    `Nova resposta enviada ao cliente${processoNumero ? ' - ' + processoNumero : ''}`,
+    clienteEmail,
+    `Nova mensagem da EF Cargo Clear${processoNumero ? ' - ' + processoNumero : ''}`,
     html
   );
 }
@@ -4243,15 +4270,15 @@
       };
 
       setText("cfgEmpresa", cfg.nome_empresa || "EF Cargo Clear");
-      setText("cfgTelefone", cfg.telefone || "-");
-      setText("cfgEmail", cfg.email || "-");
-      setText("cfgWhatsapp", cfg.whatsapp || "-");
-      setText("cfgEndereco", cfg.endereco || "-");
-      setText("cfgHorario", cfg.horario || "-");
+      setText("cfgTelefone", cfg.telefone || `${SUPPORT_PHONE_PRIMARY} / ${SUPPORT_PHONE_SECONDARY}`);
+      setText("cfgEmail", cfg.email || SUPPORT_EMAIL);
+      setText("cfgWhatsapp", cfg.whatsapp || SUPPORT_PHONE_PRIMARY);
+      setText("cfgEndereco", cfg.endereco || "Avenida Karl Marx nº 1881, Maputo");
+      setText("cfgHorario", cfg.horario || "Horário comercial");
 
       const mapa = document.getElementById("cfgMapa");
       if (mapa) {
-        mapa.src = cfg.google_maps_embed || "https://www.google.com/maps?q=Maputo&output=embed";
+        mapa.src = cfg.google_maps_embed || "https://www.google.com/maps?q=Avenida%20Karl%20Marx%201881%20Maputo&output=embed";
       }
     }
 
@@ -6262,6 +6289,36 @@ async function deleteMessageThread(clienteEmail) {
 
     async function requestClientUpdate() {
       await sendPresetClientMessage('Solicito uma atualização do meu processo.');
+    }
+
+    function openFaleConnosco() {
+      showClientTab('mensagens');
+      loadClientMessages();
+      setTimeout(() => {
+        const text = document.getElementById('clientMessageText');
+        const box = document.getElementById('clientMessagesBox');
+        if (box) box.scrollTop = box.scrollHeight;
+        if (text) text.focus();
+      }, 250);
+    }
+
+    function getSupportWhatsappUrl() {
+      const cfg = companyConfig || {};
+      const raw = String(cfg.whatsapp_link || cfg.whatsapp_url || cfg.whatsapp || SUPPORT_WHATSAPP_NUMBER || '').trim();
+      const defaultMsg = encodeURIComponent('Olá, estou a usar o EF Cargo Clear e preciso de assistência na plataforma.');
+      if (raw.startsWith('http')) return raw;
+      const digits = raw.replace(/\D/g, '') || SUPPORT_WHATSAPP_NUMBER;
+      return `https://wa.me/${digits}?text=${defaultMsg}`;
+    }
+
+    function openWhatsAppSupport() {
+      window.open(getSupportWhatsappUrl(), '_blank', 'noopener,noreferrer');
+    }
+
+    function openCallDialer() {
+      const cfg = companyConfig || {};
+      const phone = String(cfg.telefone || SUPPORT_PHONE_PRIMARY).split('/')[0].trim().replace(/\s/g, '');
+      window.location.href = `tel:${phone}`;
     }
 
         function escapeHtml(text) {
