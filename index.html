@@ -1864,7 +1864,7 @@
                 <div id="financeInsights" class="grid grid-2" style="margin-bottom:18px;"></div>
 
                 <div class="grid grid-3" id="financeReqSummaryRow" style="margin-bottom:18px;">
-                  <div class="kpi"><div class="kpi-title">Requisições aprovadas</div><div class="kpi-value" id="financeReqApprovedTotal">0</div></div>
+                  <div class="kpi"><div class="kpi-title">Req. custo empresa</div><div class="kpi-value" id="financeReqApprovedTotal">0</div></div>
                   <div class="kpi"><div class="kpi-title">Margem bruta</div><div class="kpi-value" id="financeMargemBrutaTotal">0</div></div>
                   <div class="kpi"><div class="kpi-title">Margem líquida</div><div class="kpi-value" id="financeMargemLiquidaTotal">0</div></div>
                 </div>
@@ -1873,13 +1873,13 @@
                   <div class="panel-head">
                     <div>
                       <h3 class="section-title" style="font-size:22px;margin-bottom:6px;">Gastos por Requisições de Fundos</h3>
-                      <div class="section-sub">Somente requisições aprovadas, pagas ou recebidas deduzem da margem líquida.</div>
+                      <div class="section-sub">Requisições aprovadas ligadas a processos entram como custos do processo/cliente; requisições sem processo entram como custos da empresa e deduzem da margem líquida.</div>
                     </div>
                     <span class="badge amber" id="financeReqCountBadge">0 requisições</span>
                   </div>
                   <div class="table-scroll">
                     <table>
-                      <thead><tr><th>Data</th><th>Funcionário</th><th>Cliente</th><th>Referência</th><th>Estado</th><th>Valor</th></tr></thead>
+                      <thead><tr><th>Data</th><th>Funcionário</th><th>Processo / Cliente</th><th>Referência</th><th>Estado</th><th>Impacto</th><th>Valor</th></tr></thead>
                       <tbody id="financeiroReqTable"></tbody>
                     </table>
                   </div>
@@ -2038,7 +2038,7 @@
                 <div class="grid grid-4" id="financeiroResumoDeducoes" style="margin:18px 0;">
                   <div class="kpi"><div class="kpi-title">Receitas</div><div class="kpi-value" id="financeiroTotalReceitas">0</div></div>
                   <div class="kpi"><div class="kpi-title">Custos</div><div class="kpi-value" id="financeiroTotalCustos">0</div></div>
-                  <div class="kpi"><div class="kpi-title">Requisições (deduções)</div><div class="kpi-value" id="financeiroTotalReqDeducoes">0</div></div>
+                  <div class="kpi"><div class="kpi-title">Req. custo empresa</div><div class="kpi-value" id="financeiroTotalReqDeducoes">0</div></div>
                   <div class="kpi"><div class="kpi-title">Margem líquida</div><div class="kpi-value" id="financeiroMargemLiquidaLinha">0</div></div>
                 </div>
 
@@ -2046,7 +2046,7 @@
                   <div class="panel-head">
                     <div>
                       <h3 class="section-title" style="font-size:22px;margin-bottom:6px;">📋 Requisições que impactaram a margem</h3>
-                      <div class="section-sub">Lista das requisições que tiraram dinheiro e explicam a diferença entre margem bruta e margem líquida.</div>
+                      <div class="section-sub">Apenas requisições sem processo selecionado, aprovadas/pagas/recebidas, deduzem diretamente da margem global da empresa.</div>
                     </div>
                     <span class="badge amber">Total deduzido: <strong id="financeiroImpactoReqTotal">0</strong></span>
                   </div>
@@ -2062,6 +2062,31 @@
                         </tr>
                       </thead>
                       <tbody id="financeiroImpactoReqTable"></tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="card" id="financeiroRequisicoesProcessosBox" style="background:#f8fbff;border-radius:22px;border:1px solid rgba(3,105,161,.14);box-shadow:var(--shadow-soft);">
+                  <div class="panel-head">
+                    <div>
+                      <h3 class="section-title" style="font-size:22px;margin-bottom:6px;">📌 Requisições vinculadas a processos</h3>
+                      <div class="section-sub">Valores pagos por conta de um processo específico. Entram como custo do processo/cliente, mas não deduzem diretamente da margem global da empresa.</div>
+                    </div>
+                    <span class="small">Total vinculado a processos: <strong id="financeiroProcessoReqTotal">0 MT</strong></span>
+                  </div>
+                  <div class="table-scroll">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Processo</th>
+                          <th>Valor</th>
+                          <th>Estado</th>
+                          <th>Motivo</th>
+                          <th>Data</th>
+                          <th>Ação</th>
+                        </tr>
+                      </thead>
+                      <tbody id="financeiroProcessoReqTable"></tbody>
                     </table>
                   </div>
                 </div>
@@ -2380,15 +2405,17 @@
                     <div><label>Requisição de</label><input id="req_de" /></div>
                     <div><label>Para</label><input id="req_para" /></div>
                     <div><label>Referente ao pagamento</label><input id="req_referente" /></div>
-                    <div><label>Valor por extenso</label><input id="req_extenso" /></div>
+                    <div><label>Processo relacionado</label><select id="req_processo_id" onchange="onRequisicaoProcessoChange()"><option value="">Nenhum — custo da empresa / deduz margem global</option></select></div>
+                    <div><label>Impacto financeiro</label><select id="req_impacto_financeiro"><option value="empresa">Custo da empresa — deduz margem global</option><option value="processo">Custo do processo/cliente — vincular ao processo</option></select></div>
+                    <div><label>Valor por extenso</label><input id="req_extenso" readonly placeholder="Preenchido automaticamente" /></div>
                   </div>
                   <div style="margin-top:14px;"><label>Linhas da requisição</label><div id="req_linhas"></div><button class="btn-mini info" onclick="addRequisicaoLinha()">Adicionar linha</button></div>
                   <div class="grid grid-3" style="margin-top:14px;">
-                    <div><label>Conferido por</label><input id="req_conferido" /></div><div><label>Autorizado por</label><input id="req_autorizado" /></div><div><label>Recebido por</label><input id="req_recebido" /></div><div><label>Cheque nº</label><input id="req_cheque" /></div><div><label>Banco</label><input id="req_banco" /></div><div><label>Estado</label><input value="Rascunho" readonly /></div>
+                    <div><label>Conferido por</label><select id="req_conferido"><option value="">Selecione</option></select></div><div><label>Autorizado por</label><select id="req_autorizado"><option value="">Selecione</option></select></div><div><label>Recebido por</label><select id="req_recebido"><option value="">Selecione</option></select></div><div><label>Cheque nº</label><input id="req_cheque" /></div><div><label>Banco</label><input id="req_banco" /></div><div><label>Estado</label><input value="Rascunho" readonly /></div>
                   </div>
                   <button class="btn" style="margin-top:14px;" onclick="submeterRequisicaoFundos()">Submeter requisição</button>
                 </div>
-                <div class="table-scroll"><table><thead><tr><th>Data</th><th>Funcionário</th><th>Referência</th><th>Total</th><th>Estado</th><th>Ações</th></tr></thead><tbody id="requisicoesTable"></tbody></table></div>
+                <div class="table-scroll"><table><thead><tr><th>Data</th><th>Funcionário</th><th>Referência</th><th>Processo / Impacto</th><th>Total</th><th>Estado</th><th>Ações</th></tr></thead><tbody id="requisicoesTable"></tbody></table></div>
               </div>
             </div>
 
@@ -5278,23 +5305,72 @@
       return 0;
     }
 
-    function requisicaoDeduzMargem(r){
-      const estado = String(r?.estado || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    function normalizarEstadoReq(r){
+      return String(r?.estado || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+    }
+
+    function requisicaoAprovadaFinanceiramente(r){
+      const estado = normalizarEstadoReq(r);
       return estado.includes('aprovado') || estado.includes('pago') || estado.includes('recebido') || estado.includes('autorizado final');
+    }
+
+    function getRequisicaoLinhasArray(r){
+      if(!r) return [];
+      if(Array.isArray(r.linhas)) return r.linhas;
+      if(typeof r.linhas === 'string'){
+        try{ const parsed = JSON.parse(r.linhas); return Array.isArray(parsed) ? parsed : []; }catch(_){ return []; }
+      }
+      return [];
+    }
+
+    function getRequisicaoProcessoId(r){
+      const direto = r?.processo_id || r?.processo || r?.processo_ref || r?.processoRelacionado;
+      if(direto) return String(direto);
+      const linha = getRequisicaoLinhasArray(r).find(l => l && (l.processo_id || l.processo_ref));
+      return linha ? String(linha.processo_id || linha.processo_ref) : '';
+    }
+
+    function getRequisicaoProcessoNumero(r){
+      const direto = r?.processo_numero || r?.numero_processo;
+      if(direto) return String(direto);
+      const linha = getRequisicaoLinhasArray(r).find(l => l && (l.processo_numero || l.numero_processo));
+      return linha ? String(linha.processo_numero || linha.numero_processo) : '';
+    }
+
+    function requisicaoEhCustoProcesso(r){
+      return requisicaoAprovadaFinanceiramente(r) && !!getRequisicaoProcessoId(r);
+    }
+
+    function requisicaoDeduzMargem(r){
+      return requisicaoAprovadaFinanceiramente(r) && !getRequisicaoProcessoId(r);
     }
 
     function getRequisicoesDedutiveis(rows = requisicoesCache){
       return (Array.isArray(rows) ? rows : []).filter(requisicaoDeduzMargem);
     }
 
+    function getRequisicoesCustoProcesso(rows = requisicoesCache){
+      return (Array.isArray(rows) ? rows : []).filter(requisicaoEhCustoProcesso);
+    }
+
     function getRequisicoesTotal(rows = requisicoesCache){
       return getRequisicoesDedutiveis(rows).reduce((sum,r)=>sum+requisicaoValor(r),0);
     }
 
+    function getRequisicoesProcessoTotal(rows = requisicoesCache){
+      return getRequisicoesCustoProcesso(rows).reduce((sum,r)=>sum+requisicaoValor(r),0);
+    }
+
+    function getRequisicoesTotalByProcesso(processoId, rows = requisicoesCache){
+      if(!processoId) return 0;
+      return getRequisicoesCustoProcesso(rows).filter(r => String(getRequisicaoProcessoId(r)) === String(processoId)).reduce((sum,r)=>sum+requisicaoValor(r),0);
+    }
+
     function getFinancialTotalsLiquidos(faturas = faturasCache, requisicoes = requisicoesCache){
       const base = getFinancialTotalsFromFaturas(faturas || []);
-      const reqTotal = getRequisicoesTotal(requisicoes || []);
-      return { ...base, requisicoes: reqTotal, margemBruta: base.margem, margemLiquida: base.margem - reqTotal };
+      const reqEmpresa = getRequisicoesTotal(requisicoes || []);
+      const reqProcessos = getRequisicoesProcessoTotal(requisicoes || []);
+      return { ...base, requisicoes: reqEmpresa, requisicoesEmpresa: reqEmpresa, requisicoesProcessos: reqProcessos, margemBruta: base.margem, margemLiquida: base.margem - reqEmpresa };
     }
 
     function getFinanceFilteredRequisicoes(){
@@ -5944,6 +6020,7 @@
       const filteredFaturas = getFinanceFilteredFaturas();
       const filteredReqs = getFinanceFilteredRequisicoes();
       const approvedReqs = getRequisicoesDedutiveis(filteredReqs);
+      const processReqs = getRequisicoesCustoProcesso(filteredReqs);
       const totals = getFinancialTotalsLiquidos(filteredFaturas, filteredReqs);
 
       const setText = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent = val; };
@@ -5955,16 +6032,17 @@
       setText('financeiroTotalReqDeducoes', formatMoney(totals.requisicoes));
       setText('financeiroMargemLiquidaLinha', formatMoney(totals.margemLiquida));
       setText('financeiroImpactoReqTotal', formatMoney(totals.requisicoes));
+      setText('financeiroProcessoReqTotal', formatMoney(totals.requisicoesProcessos || 0));
 
       const impactoReqBody = document.getElementById('financeiroImpactoReqTable');
       if (impactoReqBody) {
         if (!approvedReqs.length) {
-          impactoReqBody.innerHTML = '<tr><td colspan="5" class="small">Nenhuma requisição aprovada/paga/recebida a deduzir neste período.</td></tr>';
+          impactoReqBody.innerHTML = '<tr><td colspan="5" class="small">Nenhuma requisição sem processo aprovada/paga/recebida a deduzir neste período.</td></tr>';
         } else {
           impactoReqBody.innerHTML = approvedReqs.map(r => {
-            const id = String(r.id || '').replace(/'/g, "\\'");
+            const id = String(r.id || '').replace(/'/g, "\'");
             const valor = requisicaoValor(r);
-            const linhas = Array.isArray(r.linhas) ? r.linhas : [];
+            const linhas = getRequisicaoLinhasArray(r);
             const motivo = r.motivo || r.observacao || r.referente || r.requisicao_de || r.para || linhas.map(l => l.instrucao || l.cliente).filter(Boolean).join(' / ') || '-';
             const dataReq = r.data || r.created_at || r.criado_em || r.atualizado_em || '';
             return `<tr>
@@ -5981,18 +6059,52 @@
         }
       }
 
+      const processoReqBody = document.getElementById('financeiroProcessoReqTable');
+      if(processoReqBody){
+        if(!processReqs.length){
+          processoReqBody.innerHTML = '<tr><td colspan="6" class="small">Nenhuma requisição aprovada vinculada a processo neste período.</td></tr>';
+        } else {
+          processoReqBody.innerHTML = processReqs.map(r=>{
+            const id = String(r.id || '').replace(/'/g,"\'");
+            const procId = getRequisicaoProcessoId(r);
+            const proc = (processosCache || []).find(p => String(p.id) === String(procId));
+            const linhas = getRequisicaoLinhasArray(r);
+            const motivo = r.motivo || r.observacao || r.referente || r.requisicao_de || r.para || linhas.map(l => l.instrucao || l.cliente).filter(Boolean).join(' / ') || '-';
+            const procLabel = escapeHtml(getRequisicaoProcessoNumero(r) || proc?.numero_processo || procId || '-');
+            const clienteLabel = escapeHtml(proc?.importador_exportador || proc?.cliente_nome || r.cliente || '-');
+            return `<tr>
+              <td><strong>${procLabel}</strong><div class="small">${clienteLabel}</div></td>
+              <td><strong>${formatMoney(requisicaoValor(r))}</strong></td>
+              <td><span class="badge blue">${escapeHtml(r.estado || 'Aprovado')}</span></td>
+              <td>${escapeHtml(motivo)}</td>
+              <td>${formatDate(r.data || r.created_at || r.criado_em || '')}</td>
+              <td>
+                <button class="btn-mini info" onclick="abrirRequisicaoFinanceiro('${id}')">Ver</button>
+                <button class="btn-mini" onclick="downloadRequisicaoFundos('${id}')">Baixar</button>
+              </td>
+            </tr>`;
+          }).join('');
+        }
+      }
+
       const reqBadge = document.getElementById('financeReqCountBadge');
-      if(reqBadge) reqBadge.textContent = `${approvedReqs.length} aprovadas / ${filteredReqs.length} total`;
+      if(reqBadge) reqBadge.textContent = `${approvedReqs.length} empresa • ${processReqs.length} processo`;
 
       const reqBody = document.getElementById('financeiroReqTable');
       if(reqBody){
         if(!filteredReqs.length){
-          reqBody.innerHTML = '<tr><td colspan="6" class="small">Sem requisições no período/filtro atual.</td></tr>';
+          reqBody.innerHTML = '<tr><td colspan="7" class="small">Sem requisições no período/filtro atual.</td></tr>';
         }else{
           reqBody.innerHTML = filteredReqs.map(r=>{
             const deduct = requisicaoDeduzMargem(r);
-            const estadoClass = deduct ? 'green' : (String(r.estado||'').toLowerCase().includes('rejeit') ? 'amber' : 'blue');
-            return `<tr><td>${formatDate(r.data || r.created_at || r.criado_em || '')}</td><td>${escapeHtml(r.funcionario_nome || '-')}</td><td>${escapeHtml(r.cliente || '-')}</td><td>${escapeHtml(r.referente || r.requisicao_de || r.para || '-')}</td><td><span class="badge ${estadoClass}">${escapeHtml(r.estado || 'Submetido')}</span></td><td><strong>${formatMoney(requisicaoValor(r))}</strong>${deduct ? '<div class="small">Deduz da margem</div>' : '<div class="small">Ainda não deduz</div>'}</td></tr>`;
+            const procId = getRequisicaoProcessoId(r);
+            const procNumero = getRequisicaoProcessoNumero(r);
+            const proc = procId ? (processosCache || []).find(p => String(p.id) === String(procId)) : null;
+            const aprovado = requisicaoAprovadaFinanceiramente(r);
+            const estadoClass = deduct ? 'green' : (String(r.estado||'').toLowerCase().includes('rejeit') ? 'amber' : (aprovado && procId ? 'blue' : 'amber'));
+            const impacto = procId ? `Custo do processo${aprovado ? '' : ' (pendente)'}` : `Custo da empresa${aprovado ? '' : ' (pendente)'}`;
+            const procLabel = procId ? `${escapeHtml(procNumero || proc?.numero_processo || procId)}<div class="small">${escapeHtml(proc?.importador_exportador || proc?.cliente_nome || r.cliente || '-')}</div>` : `<span class="badge amber">Sem processo</span>`;
+            return `<tr><td>${formatDate(r.data || r.created_at || r.criado_em || '')}</td><td>${escapeHtml(r.funcionario_nome || '-')}</td><td>${procLabel}</td><td>${escapeHtml(r.referente || r.requisicao_de || r.para || '-')}</td><td><span class="badge ${estadoClass}">${escapeHtml(r.estado || 'Submetido')}</span></td><td>${escapeHtml(impacto)}</td><td><strong>${formatMoney(requisicaoValor(r))}</strong>${deduct ? '<div class="small">Deduz margem global</div>' : (procId ? '<div class="small">Vinculado ao processo</div>' : '<div class="small">Ainda não deduz</div>')}</td></tr>`;
           }).join('');
         }
       }
@@ -6004,11 +6116,13 @@
       filteredFaturas.forEach(f => {
         const p = getLinkedProcessForInvoice(f);
         const totalCobrado = getInvoiceTotal(f);
-        const totalCustos = getInvoiceEncargosTotal(f);
+        const custosFatura = getInvoiceEncargosTotal(f);
+        const custosReqProcesso = p?.id ? getRequisicoesTotalByProcesso(p.id, filteredReqs) : 0;
+        const totalCustos = custosFatura + custosReqProcesso;
         const totalMargem = getInvoiceServicosTotal(f);
         const margemBadge = totalMargem > 0 ? `<span class="badge green">${formatMoney(totalMargem)}</span>` : `<span class="badge amber">${formatMoney(totalMargem)}</span>`;
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${formatDate(f.data_fatura || f.pago_at || f.created_at || "")}</td><td><strong>${p?.numero_processo || f.referencia || ""}</strong></td><td>${f.cliente_nome || ""}</td><td>${f.numero_fatura || ""}</td><td>${formatMoney(totalCobrado)}</td><td>${formatMoney(totalCustos)}</td><td>${margemBadge}</td>`;
+        tr.innerHTML = `<td>${formatDate(f.data_fatura || f.pago_at || f.created_at || "")}</td><td><strong>${p?.numero_processo || f.referencia || ""}</strong></td><td>${f.cliente_nome || ""}</td><td>${f.numero_fatura || ""}</td><td>${formatMoney(totalCobrado)}</td><td>${formatMoney(totalCustos)}${custosReqProcesso ? `<div class="small">Inclui req.: ${formatMoney(custosReqProcesso)}</div>` : ''}</td><td>${margemBadge}</td>`;
         ftbody.appendChild(tr);
       });
     }
@@ -6119,7 +6233,7 @@
 
     function safeFileName(name){ return String(name || 'ficheiro').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9._-]/g,'_'); }
 
-    function refreshFuncionarioSelects(){ const sel=document.getElementById('doc_funcionario_select'); if(!sel) return; sel.innerHTML='<option value="">Selecione</option>'+(equipaCache||[]).map(e=>`<option value="${e.id}">${escapeHtml(e.nome||e.email||'Funcionário')}</option>`).join(''); }
+    function refreshFuncionarioSelects(){ const sel=document.getElementById('doc_funcionario_select'); if(sel) sel.innerHTML='<option value="">Selecione</option>'+(equipaCache||[]).map(e=>`<option value="${e.id}">${escapeHtml(e.nome||e.email||'Funcionário')}</option>`).join(''); if(typeof refreshRequisicaoResponsaveisSelects === 'function') refreshRequisicaoResponsaveisSelects(); }
     function selectFuncionarioDocs(id){ showInternalTab('equipa'); const sel=document.getElementById('doc_funcionario_select'); if(sel) sel.value=id; renderFuncionarioDocumentos(); document.getElementById('doc_funcionario_select')?.scrollIntoView({behavior:'smooth',block:'center'}); }
     async function loadFuncionarioDocumentos(render=true){
       try{
@@ -6191,24 +6305,88 @@
 
     async function uploadFuncionarioDocumento(){ if(!canAccessInternalTab('equipa')){alert('Sem permissão.');return;} const funcionarioId=document.getElementById('doc_funcionario_select')?.value||''; const tipo=document.getElementById('doc_funcionario_tipo')?.value.trim()||''; const file=document.getElementById('doc_funcionario_file')?.files?.[0]; if(!funcionarioId||!file){alert('Selecione o funcionário e o documento.');return;} try{ const path=`funcionarios/${funcionarioId}/${Date.now()}_${safeFileName(file.name)}`; const up=await withTimeout(supabaseClient.storage.from('funcionarios').upload(path,file,{upsert:false}),20000); if(up.error){alert(up.error.message);return;} const pub=supabaseClient.storage.from('funcionarios').getPublicUrl(path); const url=pub?.data?.publicUrl||''; const {error}=await withTimeout(supabaseClient.from('funcionarios_documentos').insert({funcionario_id:funcionarioId,funcionario_nome:getFuncionarioNomeById(funcionarioId),tipo,tipo_documento:tipo,nome_arquivo:file.name,nome:file.name,url,ficheiro_url:url,storage_path:path,uploaded_by:currentUserEmail,criado_por:currentUserEmail}),10000); if(error){alert(error.message);return;} document.getElementById('doc_funcionario_tipo').value=''; document.getElementById('doc_funcionario_file').value=''; await loadFuncionarioDocumentos(true); alert('Documento carregado com sucesso.'); }catch(e){alert(e.message||'Erro ao carregar documento.');} }
 
+    function valorPorExtensoPT(valor){
+      valor = Math.round((Number(valor)||0) * 100) / 100;
+      const inteiro = Math.floor(valor);
+      const centavos = Math.round((valor - inteiro) * 100);
+      const unidades = ['zero','um','dois','três','quatro','cinco','seis','sete','oito','nove','dez','onze','doze','treze','catorze','quinze','dezasseis','dezassete','dezoito','dezanove'];
+      const dezenas = ['','','vinte','trinta','quarenta','cinquenta','sessenta','setenta','oitenta','noventa'];
+      const centenas = ['','cento','duzentos','trezentos','quatrocentos','quinhentos','seiscentos','setecentos','oitocentos','novecentos'];
+      function ate999(n){
+        n = Number(n)||0;
+        if(n === 0) return '';
+        if(n === 100) return 'cem';
+        if(n < 20) return unidades[n];
+        if(n < 100) return dezenas[Math.floor(n/10)] + (n%10 ? ' e ' + unidades[n%10] : '');
+        return centenas[Math.floor(n/100)] + (n%100 ? ' e ' + ate999(n%100) : '');
+      }
+      function ext(n){
+        n = Number(n)||0;
+        if(n === 0) return 'zero';
+        const parts = [];
+        const milhoes = Math.floor(n/1000000); n %= 1000000;
+        const milhares = Math.floor(n/1000); n %= 1000;
+        if(milhoes) parts.push(milhoes === 1 ? 'um milhão' : ate999(milhoes) + ' milhões');
+        if(milhares) parts.push(milhares === 1 ? 'mil' : ate999(milhares) + ' mil');
+        if(n) parts.push(ate999(n));
+        return parts.join(' e ');
+      }
+      let texto = ext(inteiro) + (inteiro === 1 ? ' metical' : ' meticais');
+      if(centavos) texto += ' e ' + ext(centavos) + (centavos === 1 ? ' centavo' : ' centavos');
+      return texto.charAt(0).toUpperCase() + texto.slice(1);
+    }
+
+    function atualizarReqExtenso(){
+      const total = getRequisicaoLinhas().reduce((s,l)=>s+(Number(l.valor)||0),0);
+      const el = document.getElementById('req_extenso');
+      if(el) el.value = total ? valorPorExtensoPT(total) : '';
+    }
+
+    function refreshRequisicaoProcessosSelect(){
+      const sel = document.getElementById('req_processo_id');
+      if(!sel) return;
+      const current = sel.value || '';
+      sel.innerHTML = '<option value="">Nenhum — custo da empresa / deduz margem global</option>' + (processosCache || []).map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml((p.numero_processo || '-') + ' • ' + (p.importador_exportador || p.cliente_nome || p.numero_factura || 'Processo'))}</option>`).join('');
+      if(current) sel.value = current;
+      onRequisicaoProcessoChange();
+    }
+
+    function refreshRequisicaoResponsaveisSelects(){
+      const opts = '<option value="">Selecione</option>' + (equipaCache || []).map(e => `<option value="${escapeHtml(e.nome || e.email || '')}">${escapeHtml((e.nome || e.email || 'Funcionário') + (e.nivel ? ' • ' + e.nivel : ''))}</option>`).join('');
+      ['req_conferido','req_autorizado','req_recebido'].forEach(id => {
+        const sel = document.getElementById(id);
+        if(!sel || sel.tagName !== 'SELECT') return;
+        const current = sel.value || '';
+        sel.innerHTML = opts;
+        if(current) sel.value = current;
+      });
+    }
+
+    function onRequisicaoProcessoChange(){
+      const procId = document.getElementById('req_processo_id')?.value || '';
+      const impacto = document.getElementById('req_impacto_financeiro');
+      if(impacto){ impacto.value = procId ? 'processo' : 'empresa'; }
+    }
+
     function addRequisicaoLinha(){ const box=document.getElementById('req_linhas'); if(!box) return; const row=document.createElement('div'); row.className='invoice-line'; row.style.gridTemplateColumns='1fr 1fr 160px 40px'; row.innerHTML='<input class="req_instrucao" placeholder="Instrução" /><input class="req_cliente" placeholder="Cliente" /><input class="req_valor" type="number" step="0.01" placeholder="Valor total" /><button class="btn-mini danger" type="button" onclick="this.parentElement.remove()">×</button>'; box.appendChild(row); }
-    function getRequisicaoLinhas(){ return Array.from(document.querySelectorAll('#req_linhas .invoice-line')).map(r=>({instrucao:r.querySelector('.req_instrucao')?.value.trim()||'',cliente:r.querySelector('.req_cliente')?.value.trim()||'',valor:Number(r.querySelector('.req_valor')?.value||0)})).filter(x=>x.instrucao||x.cliente||x.valor); }
-    function resetRequisicaoForm(){ ['req_de','req_para','req_referente','req_extenso','req_conferido','req_autorizado','req_recebido','req_cheque','req_banco'].forEach(id=>{const x=document.getElementById(id); if(x) x.value='';}); const d=document.getElementById('req_data'); if(d) d.value=new Date().toISOString().slice(0,10); const f=document.getElementById('req_funcionario'); if(f) f.value=currentUserName||currentUserEmail||''; const linhas=document.getElementById('req_linhas'); if(linhas) linhas.innerHTML=''; addRequisicaoLinha(); }
-    async function submeterRequisicaoFundos(){ if(!canAccessInternalTab('requisicoes')){alert('Sem permissão.');return;} const linhas=getRequisicaoLinhas(); if(!linhas.length){alert('Adicione pelo menos uma linha.');return;} const total=linhas.reduce((s,l)=>s+(Number(l.valor)||0),0); const payload={data:document.getElementById('req_data')?.value||new Date().toISOString().slice(0,10),funcionario_nome:document.getElementById('req_funcionario')?.value.trim()||currentUserName||currentUserEmail,requisicao_de:document.getElementById('req_de')?.value.trim()||'',para:document.getElementById('req_para')?.value.trim()||'',referente:document.getElementById('req_referente')?.value.trim()||'',linhas,valor_total:total,valor_extenso:document.getElementById('req_extenso')?.value.trim()||'',conferido_por:document.getElementById('req_conferido')?.value.trim()||'',autorizado_por:document.getElementById('req_autorizado')?.value.trim()||'',recebido_por:document.getElementById('req_recebido')?.value.trim()||'',cheque_no:document.getElementById('req_cheque')?.value.trim()||'',banco:document.getElementById('req_banco')?.value.trim()||'',estado:'Submetido',criado_por_email:currentUserEmail}; try{ const {error}=await withTimeout(supabaseClient.from('requisicoes_fundos').insert(payload),10000); if(error){alert(error.message);return;} resetRequisicaoForm(); await loadRequisicoesFundos(); renderFinanceiroTable(); renderInternalDashboard(); alert('Requisição submetida com sucesso.'); }catch(e){alert(e.message||'Erro ao submeter requisição.');} }
+    function getRequisicaoLinhas(){ const procId=document.getElementById('req_processo_id')?.value||''; const proc=(processosCache||[]).find(p=>String(p.id)===String(procId)); const impacto=document.getElementById('req_impacto_financeiro')?.value || (procId ? 'processo' : 'empresa'); return Array.from(document.querySelectorAll('#req_linhas .invoice-line')).map(r=>({instrucao:r.querySelector('.req_instrucao')?.value.trim()||'',cliente:r.querySelector('.req_cliente')?.value.trim()||'',valor:Number(r.querySelector('.req_valor')?.value||0),processo_id:procId,processo_numero:proc?.numero_processo||'',impacto_financeiro:impacto})).filter(x=>x.instrucao||x.cliente||x.valor); }
+    function resetRequisicaoForm(){ ['req_de','req_para','req_referente','req_extenso','req_conferido','req_autorizado','req_recebido','req_cheque','req_banco'].forEach(id=>{const x=document.getElementById(id); if(x) x.value='';}); refreshRequisicaoProcessosSelect(); refreshRequisicaoResponsaveisSelects(); const proc=document.getElementById('req_processo_id'); if(proc) proc.value=''; const imp=document.getElementById('req_impacto_financeiro'); if(imp) imp.value='empresa'; const d=document.getElementById('req_data'); if(d) d.value=new Date().toISOString().slice(0,10); const f=document.getElementById('req_funcionario'); if(f) f.value=currentUserName||currentUserEmail||''; const linhas=document.getElementById('req_linhas'); if(linhas) linhas.innerHTML=''; addRequisicaoLinha(); atualizarReqExtenso(); }
+    async function submeterRequisicaoFundos(){ if(!canAccessInternalTab('requisicoes')){alert('Sem permissão.');return;} const linhas=getRequisicaoLinhas(); if(!linhas.length){alert('Adicione pelo menos uma linha.');return;} const total=linhas.reduce((s,l)=>s+(Number(l.valor)||0),0); const procId=document.getElementById('req_processo_id')?.value||''; const proc=(processosCache||[]).find(p=>String(p.id)===String(procId)); const impacto=document.getElementById('req_impacto_financeiro')?.value || (procId ? 'processo' : 'empresa'); const extensoAuto=document.getElementById('req_extenso')?.value.trim() || valorPorExtensoPT(total); const payload={data:document.getElementById('req_data')?.value||new Date().toISOString().slice(0,10),funcionario_nome:document.getElementById('req_funcionario')?.value.trim()||currentUserName||currentUserEmail,requisicao_de:document.getElementById('req_de')?.value.trim()||'',para:document.getElementById('req_para')?.value.trim()||'',referente:document.getElementById('req_referente')?.value.trim()||'',linhas,valor_total:total,valor_extenso:extensoAuto,conferido_por:document.getElementById('req_conferido')?.value.trim()||'',autorizado_por:document.getElementById('req_autorizado')?.value.trim()||'',recebido_por:document.getElementById('req_recebido')?.value.trim()||'',cheque_no:document.getElementById('req_cheque')?.value.trim()||'',banco:document.getElementById('req_banco')?.value.trim()||'',estado:'Submetido',criado_por_email:currentUserEmail}; try{ const {error}=await withTimeout(supabaseClient.from('requisicoes_fundos').insert(payload),10000); if(error){alert(error.message);return;} resetRequisicaoForm(); await loadRequisicoesFundos(); renderFinanceiroTable(); renderInternalDashboard(); alert('Requisição submetida com sucesso.'); }catch(e){alert(e.message||'Erro ao submeter requisição.');} }
     async function loadRequisicoesFundos(render=true){ try{ const {data,error}=await withTimeout(supabaseClient.from('requisicoes_fundos').select('*').order('created_at',{ascending:false}),8000); if(!error) requisicoesCache=data||[]; }catch(_){ } if(render) renderRequisicoesFundos(); }
     function renderRequisicoesFundos(){
       const tb=document.getElementById('requisicoesTable');
       if(!tb) return;
       if(!requisicoesCache.length){
-        tb.innerHTML='<tr><td colspan="6" class="small">Nenhuma requisição encontrada.</td></tr>';
+        tb.innerHTML='<tr><td colspan="7" class="small">Nenhuma requisição encontrada.</td></tr>';
         return;
       }
       tb.innerHTML=requisicoesCache.map(r=>{
         const id=String(r.id).replace(/'/g,"\\'");
-        return '<tr id="req-row-'+id+'">'+
+        const procId=getRequisicaoProcessoId(r); const proc=(processosCache||[]).find(p=>String(p.id)===String(procId)); const impactoLabel=procId ? (escapeHtml(getRequisicaoProcessoNumero(r)||proc?.numero_processo||procId)+'<div class="small">Custo do processo/cliente</div>') : '<span class="badge amber">Custo da empresa</span><div class="small">Deduz margem global quando aprovado</div>'; return '<tr id="req-row-'+id+'">'+
           '<td>'+formatDate(r.data||r.created_at||r.criado_em)+'</td>'+
           '<td>'+escapeHtml(r.funcionario_nome||'-')+'</td>'+
           '<td>'+escapeHtml(r.referente||r.requisicao_de||'-')+'</td>'+
+          '<td>'+impactoLabel+'</td>'+
           '<td>'+formatMoney(r.valor_total||0)+'</td>'+
           '<td><span class="badge blue">'+escapeHtml(r.estado||'Submetido')+'</span></td>'+
           '<td>'+
@@ -7391,6 +7569,7 @@ async function deleteMessageThread(clienteEmail) {
 
         clientesCache = clientes || [];
         processosCache = processos || [];
+        if(typeof refreshRequisicaoProcessosSelect === 'function') refreshRequisicaoProcessosSelect();
         cotacoesCache = cotacoes || [];
         docsCache = docs || [];
         equipaCache = equipa || [];
