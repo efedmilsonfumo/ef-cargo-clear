@@ -1596,6 +1596,18 @@
   @media(max-width:640px){.client-finance-summary{grid-template-columns:1fr;}}
 </style>
 
+<!-- EF Cargo Clear - Controlo profissional de pagamentos (Opção B) -->
+<style id="ef-payments-control-option-b">
+  .ef-pay-status-box{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px;}
+  .ef-pay-mini-card{border:1px solid rgba(190,0,26,.12);border-radius:18px;padding:12px;background:#fff;box-shadow:var(--shadow-soft);}
+  .ef-pay-mini-card .lbl{font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.07em;font-weight:900;margin-bottom:6px;}
+  .ef-pay-mini-card .val{font-size:18px;font-weight:900;color:#111827;}
+  .ef-payment-history{display:grid;gap:8px;margin-top:12px;}
+  .ef-payment-history-item{border:1px solid #e5e7eb;border-radius:14px;background:#fafafa;padding:10px 12px;font-size:13px;line-height:1.5;}
+  .ef-payment-modal-note{background:#fff8f8;border:1px solid rgba(190,0,26,.14);border-radius:16px;padding:12px;color:#6b7280;font-size:13px;line-height:1.45;margin-top:12px;}
+  @media(max-width:720px){.ef-pay-status-box{grid-template-columns:1fr;}}
+</style>
+
 </head>
 <body>
 
@@ -2114,6 +2126,7 @@
                         <th>Cliente</th>
                         <th>Factura</th>
                         <th>Valor cobrado</th>
+                        <th>Pago / Pendente</th>
                         <th>Custos</th>
                         <th>Margem</th>
                       </tr>
@@ -3188,6 +3201,47 @@
     <span onclick="openTermos()" style="cursor:pointer;color:#BE001A;">Termos</span> |
     <span onclick="openPrivacidade()" style="cursor:pointer;color:#BE001A;">Privacidade</span>
   </footer>
+
+
+
+  <div id="invoicePaymentModalBackdrop" class="modal-backdrop" style="z-index:1200;">
+    <div class="modal" style="max-width:860px;">
+      <div class="modal-head">
+        <div>
+          <h3 style="margin:0;">💳 Controlo de pagamento da fatura</h3>
+          <div class="small">Registe pagamentos parciais ou totais. Apenas valores confirmados entram como pagos no dashboard do cliente.</div>
+        </div>
+        <button class="btn-mini secondary" onclick="closeInvoicePaymentModal()">Fechar</button>
+      </div>
+
+      <input type="hidden" id="pay_invoice_id" />
+      <div class="ef-pay-status-box">
+        <div class="ef-pay-mini-card"><div class="lbl">Total da fatura</div><div class="val" id="pay_invoice_total">0 MT</div></div>
+        <div class="ef-pay-mini-card"><div class="lbl">Pago confirmado</div><div class="val" id="pay_invoice_paid">0 MT</div></div>
+        <div class="ef-pay-mini-card"><div class="lbl">Pendente</div><div class="val" id="pay_invoice_due">0 MT</div></div>
+      </div>
+
+      <div class="grid grid-2" style="margin-top:16px;">
+        <div><label>Valor recebido</label><input id="pay_valor" type="number" step="0.01" placeholder="Valor pago" /></div>
+        <div><label>Data do pagamento</label><input id="pay_data" type="date" /></div>
+        <div><label>Método</label><select id="pay_metodo"><option value="Transferência bancária">Transferência bancária</option><option value="Depósito bancário">Depósito bancário</option><option value="Numerário">Numerário</option><option value="MPesa/e-Mola">MPesa/e-Mola</option><option value="Outro">Outro</option></select></div>
+        <div><label>Referência / NIB / comprovativo</label><input id="pay_referencia" placeholder="Ex: TRF/BCI/12345" /></div>
+      </div>
+      <div style="margin-top:12px;"><label>Observação</label><textarea id="pay_obs" placeholder="Notas internas sobre o pagamento"></textarea></div>
+
+      <div class="row" style="margin-top:14px;align-items:center;">
+        <button class="btn" onclick="saveInvoicePaymentRecord()">Confirmar pagamento</button>
+        <button class="btn btn-outline" onclick="prefillInvoiceRemainingAmount()">Preencher valor em falta</button>
+      </div>
+
+      <div class="ef-payment-modal-note">
+        O pagamento parcial atualiza o valor pago e o pendente. A fatura só fica marcada como <strong>Pago</strong> e com recibo disponível quando o valor confirmado cobre o total da fatura.
+      </div>
+
+      <h4 style="margin:18px 0 8px;">Histórico de pagamentos confirmados</h4>
+      <div id="pay_history" class="ef-payment-history"></div>
+    </div>
+  </div>
 
   <div id="modalLegal" class="modal-backdrop" style="z-index:1100;">
     <div class="modal">
@@ -6193,19 +6247,22 @@
       }
 
       if(!filteredFaturas.length){
-        ftbody.innerHTML = '<tr><td colspan="7" class="small">Sem faturas no período/filtro atual.</td></tr>';
+        ftbody.innerHTML = '<tr><td colspan="8" class="small">Sem faturas no período/filtro atual.</td></tr>';
         return;
       }
       filteredFaturas.forEach(f => {
         const p = getLinkedProcessForInvoice(f);
         const totalCobrado = getInvoiceTotal(f);
+        const pagoConfirmado = getInvoicePaidTotal(f);
+        const pendentePagamento = getInvoiceDueAmount(f);
+        const statusPagamento = getInvoicePaymentBadge(f);
         const custosFatura = getInvoiceEncargosTotal(f);
         const custosReqProcesso = p?.id ? getRequisicoesTotalByProcesso(p.id, filteredReqs) : 0;
         const totalCustos = custosFatura + custosReqProcesso;
         const totalMargem = getInvoiceServicosTotal(f);
         const margemBadge = totalMargem > 0 ? `<span class="badge green">${formatMoney(totalMargem)}</span>` : `<span class="badge amber">${formatMoney(totalMargem)}</span>`;
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${formatDate(f.data_fatura || f.pago_at || f.created_at || "")}</td><td><strong>${p?.numero_processo || f.referencia || ""}</strong></td><td>${f.cliente_nome || ""}</td><td>${f.numero_fatura || ""}</td><td>${formatMoney(totalCobrado)}</td><td>${formatMoney(totalCustos)}${custosReqProcesso ? `<div class="small">Inclui req.: ${formatMoney(custosReqProcesso)}</div>` : ''}</td><td>${margemBadge}</td>`;
+        tr.innerHTML = `<td>${formatDate(f.data_fatura || f.pago_at || f.created_at || "")}</td><td><strong>${p?.numero_processo || f.referencia || ""}</strong></td><td>${f.cliente_nome || ""}</td><td>${f.numero_fatura || ""}</td><td>${formatMoney(totalCobrado)}</td><td>${statusPagamento}<div class="small">Pago: ${formatMoney(pagoConfirmado)}<br>Pendente: ${formatMoney(pendentePagamento)}</div></td><td>${formatMoney(totalCustos)}${custosReqProcesso ? `<div class="small">Inclui req.: ${formatMoney(custosReqProcesso)}</div>` : ''}</td><td>${margemBadge}</td>`;
         ftbody.appendChild(tr);
       });
     }
@@ -6935,7 +6992,7 @@ async function deleteMessageThread(clienteEmail) {
     }
 
     function getClientPagoPorProcesso(processo){
-      return getClientProcessInvoices(processo).filter(f => !!f.pago).reduce((s,f)=>s+getInvoiceTotal(f),0);
+      return getClientProcessInvoices(processo).reduce((s,f)=>s+getInvoicePaidTotal(f),0);
     }
 
     function getClientTotalCobradoProcesso(processo){
@@ -6967,7 +7024,7 @@ async function deleteMessageThread(clienteEmail) {
         total += cobrado;
         pago += paid;
         pendente += due;
-        const statusBadge = due <= 0 && cobrado > 0 ? '<span class="badge green">Regularizado</span>' : '<span class="badge amber">Pendente</span>';
+        const statusBadge = due <= 0 && cobrado > 0 ? '<span class="badge green">Regularizado</span>' : (paid > 0 ? '<span class="badge blue">Parcial</span>' : '<span class="badge amber">Pendente</span>');
         return `
           <tr>
             <td><strong>${escapeHtml(p.numero_processo || '-')}</strong><div class="small">${escapeHtml(p.importador_exportador || '')}</div></td>
@@ -7783,9 +7840,64 @@ async function deleteMessageThread(clienteEmail) {
     }
 
 
+    function parseInvoicePayments(f) {
+      if (!f) return [];
+      let raw = f.pagamentos ?? f.pagamentos_json ?? f.payment_history ?? null;
+      if (typeof raw === 'string') {
+        try { raw = JSON.parse(raw); } catch(e) { raw = null; }
+      }
+      if (!Array.isArray(raw)) raw = [];
+
+      if (!raw.length && typeof f.payment_notes === 'string') {
+        const marker = 'EF_PAYMENTS_JSON:';
+        const idx = f.payment_notes.indexOf(marker);
+        if (idx >= 0) {
+          const jsonPart = f.payment_notes.slice(idx + marker.length).trim();
+          try { raw = JSON.parse(jsonPart); } catch(e) { raw = []; }
+        }
+      }
+
+      if (!raw.length && f.pago) {
+        raw = [{
+          valor: getInvoiceTotal(f),
+          data: f.pago_at || f.recibo_emitido_at || f.updated_at || f.created_at || new Date().toISOString(),
+          metodo: f.forma_pagamento || 'Pagamento confirmado',
+          referencia: f.referencia_pagamento || f.payment_notes || '',
+          confirmado: true,
+          confirmado_por: currentUserName || currentUserEmail || 'Sistema'
+        }];
+      }
+      return raw.filter(x => x && safeNumber(x.valor) > 0);
+    }
+
+    function getInvoicePaidTotal(f) {
+      return parseInvoicePayments(f)
+        .filter(p => p.confirmado !== false)
+        .reduce((s,p) => s + safeNumber(p.valor), 0);
+    }
+
+    function getInvoiceDueAmount(f) {
+      return Math.max(getInvoiceTotal(f) - getInvoicePaidTotal(f), 0);
+    }
+
+    function getInvoicePaymentStatus(f) {
+      const total = getInvoiceTotal(f);
+      const paid = getInvoicePaidTotal(f);
+      if (total > 0 && paid >= total - 0.01) return 'Pago';
+      if (paid > 0) return 'Parcial';
+      return 'Pendente';
+    }
+
     function getInvoicePaymentBadge(f) {
-      const pago = !!f.pago;
-      return pago ? `<span class="badge green">Pago</span>` : `<span class="badge amber">Pendente</span>`;
+      const status = getInvoicePaymentStatus(f);
+      if (status === 'Pago') return `<span class="badge green">Pago</span>`;
+      if (status === 'Parcial') return `<span class="badge blue">Parcial</span>`;
+      return `<span class="badge amber">Pendente</span>`;
+    }
+
+    function paymentNotesWithJson(existing, payments) {
+      const base = String(existing || '').split('EF_PAYMENTS_JSON:')[0].trim();
+      return `${base ? base + '\n' : ''}EF_PAYMENTS_JSON:${JSON.stringify(payments || [])}`;
     }
 
     function findLinkedInvoice(cotacao, processoId = null) {
@@ -7803,7 +7915,7 @@ async function deleteMessageThread(clienteEmail) {
         <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
           <button class="btn-mini info" onclick="previewClientInvoice('${f.id}')">Ver fatura</button>
           <button class="btn-mini secondary" onclick="downloadClientInvoice('${f.id}')">Baixar fatura</button>
-          ${!!f.pago ? `<button class="btn-mini green" onclick="downloadClientReceipt('${f.id}')">Baixar recibo</button>` : ''}
+          ${getInvoicePaymentStatus(f) === 'Pago' ? `<button class="btn-mini green" onclick="downloadClientReceipt('${f.id}')">Baixar recibo</button>` : ''}
         </div>
       `;
     }
@@ -7842,14 +7954,14 @@ async function deleteMessageThread(clienteEmail) {
       tbody.innerHTML = clientFaturasCache.map(f => `
         <tr>
           <td>${formatDate(f.data_fatura || f.created_at || '')}</td>
-          <td><strong>${escapeHtml(f.numero_fatura || 'Fatura')}</strong><div class="small">${!!f.pago ? 'Recibo disponível' : 'Aguardando pagamento'}</div></td>
+          <td><strong>${escapeHtml(f.numero_fatura || 'Fatura')}</strong><div class="small">${getInvoicePaymentStatus(f) === 'Pago' ? 'Recibo disponível' : (getInvoicePaidTotal(f) > 0 ? 'Pagamento parcial' : 'Aguardando pagamento')}</div></td>
           <td>${escapeHtml(f.referencia || f.numero_fatura || '-')}</td>
-          <td>${formatMoney(f.total_mt || 0)}</td>
+          <td>${formatMoney(getInvoiceTotal(f))}<div class="small">Pago: ${formatMoney(getInvoicePaidTotal(f))}<br>Pendente: ${formatMoney(getInvoiceDueAmount(f))}</div></td>
           <td>${getInvoicePaymentBadge(f)}</td>
           <td>
             <button class="btn-mini info" onclick="previewClientInvoice('${f.id}')">Ver fatura</button>
             <button class="btn-mini secondary" onclick="downloadClientInvoice('${f.id}')">Baixar fatura</button>
-            ${!!f.pago ? `<button class="btn-mini green" onclick="downloadClientReceipt('${f.id}')">Baixar recibo</button>` : ''}
+            ${getInvoicePaymentStatus(f) === 'Pago' ? `<button class="btn-mini green" onclick="downloadClientReceipt('${f.id}')">Baixar recibo</button>` : ''}
           </td>
         </tr>
       `).join('');
@@ -9296,13 +9408,15 @@ async function deleteMessageThread(clienteEmail) {
         return;
       }
       faturasCache.forEach(f => {
-        const pago = !!f.pago;
+        const pago = getInvoicePaymentStatus(f) === 'Pago';
+        const paidTotal = getInvoicePaidTotal(f);
+        const dueTotal = getInvoiceDueAmount(f);
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${escapeHtml(f.numero_fatura || '')}</strong></td>
           <td>${escapeHtml(f.data_fatura || '')}</td>
           <td>${escapeHtml(f.cliente_nome || '')}</td>
-          <td>${formatMoney(f.total_mt || 0)}</td>
+          <td>${formatMoney(getInvoiceTotal(f))}<div class="small">Pago: ${formatMoney(paidTotal)}<br>Pendente: ${formatMoney(dueTotal)}</div></td>
           <td>${escapeHtml(f.cliente_email || '')}</td>
           <td>${getInvoicePaymentBadge(f)}<div class="small" style="margin-top:6px;">${f.status_envio === 'enviado' ? 'Enviada' : 'Por enviar'}</div></td>
           <td>
@@ -9310,7 +9424,7 @@ async function deleteMessageThread(clienteEmail) {
             <button class="btn-mini secondary" onclick="previewInvoice('${f.id}')">Ver</button>
             <button class="btn-mini info" onclick="downloadInvoicePdf('${f.id}')">Baixar</button>
             <button class="btn-mini green" onclick="sendInvoiceEmail('${f.id}')">Enviar</button>
-            <button class="btn-mini ${pago ? 'secondary' : 'green'}" onclick="markInvoicePaid('${f.id}')">${pago ? 'Atualizar pagamento' : 'Marcar pago'}</button>
+            <button class="btn-mini ${pago ? 'secondary' : 'green'}" onclick="markInvoicePaid('${f.id}')">${pago ? 'Pagamentos' : 'Registar pagamento'}</button>
             ${pago ? `<button class="btn-mini info" onclick="downloadReceiptPdf('${f.id}')">Recibo</button>` : ``}
             <button class="btn-mini danger" onclick="deleteInvoice('${f.id}')">Apagar</button>
           </td>
@@ -9502,8 +9616,8 @@ async function deleteMessageThread(clienteEmail) {
     function downloadReceiptPdf(id) {
       const f = [...faturasCache, ...clientFaturasCache].find(x => x.id === id);
       if (!f) return;
-      if (!f.pago) {
-        alert('O recibo só fica disponível após marcar a fatura como paga.');
+      if (getInvoicePaymentStatus(f) !== 'Pago') {
+        alert('O recibo só fica disponível após pagamento total confirmado.');
         return;
       }
       const w = window.open('', '_blank');
@@ -9553,12 +9667,89 @@ async function deleteMessageThread(clienteEmail) {
       }
     }
 
-    async function markInvoicePaid(id) {
-      const f = faturasCache.find(x => x.id === id);
+    function markInvoicePaid(id) {
+      openInvoicePaymentModal(id);
+    }
+
+    function closeInvoicePaymentModal() {
+      const modal = document.getElementById('invoicePaymentModalBackdrop');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function openInvoicePaymentModal(id) {
+      const f = faturasCache.find(x => String(x.id) === String(id)) || clientFaturasCache.find(x => String(x.id) === String(id));
       if (!f) return;
-      const nota = prompt('Observação do pagamento / referência bancária (opcional):', f.payment_notes || '') ?? '';
+      const modal = document.getElementById('invoicePaymentModalBackdrop');
+      if (!modal) return;
+      document.getElementById('pay_invoice_id').value = f.id;
+      document.getElementById('pay_invoice_total').textContent = formatMoney(getInvoiceTotal(f));
+      document.getElementById('pay_invoice_paid').textContent = formatMoney(getInvoicePaidTotal(f));
+      document.getElementById('pay_invoice_due').textContent = formatMoney(getInvoiceDueAmount(f));
+      document.getElementById('pay_valor').value = getInvoiceDueAmount(f) || '';
+      document.getElementById('pay_data').value = new Date().toISOString().slice(0,10);
+      document.getElementById('pay_metodo').value = 'Transferência bancária';
+      document.getElementById('pay_referencia').value = '';
+      document.getElementById('pay_obs').value = '';
+      renderInvoicePaymentHistory(f);
+      modal.style.display = 'flex';
+    }
+
+    function prefillInvoiceRemainingAmount() {
+      const id = document.getElementById('pay_invoice_id')?.value;
+      const f = faturasCache.find(x => String(x.id) === String(id)) || clientFaturasCache.find(x => String(x.id) === String(id));
+      if (!f) return;
+      const el = document.getElementById('pay_valor');
+      if (el) el.value = getInvoiceDueAmount(f).toFixed(2);
+    }
+
+    function renderInvoicePaymentHistory(f) {
+      const box = document.getElementById('pay_history');
+      if (!box) return;
+      const payments = parseInvoicePayments(f);
+      if (!payments.length) {
+        box.innerHTML = '<div class="small">Ainda não há pagamentos confirmados para esta fatura.</div>';
+        return;
+      }
+      box.innerHTML = payments.map(p => `
+        <div class="ef-payment-history-item">
+          <strong>${formatMoney(p.valor)}</strong> — ${escapeHtml(p.metodo || 'Pagamento')}<br>
+          <span class="small">Data: ${formatDate(p.data || '')} • Ref.: ${escapeHtml(p.referencia || '-')} • Confirmado por: ${escapeHtml(p.confirmado_por || 'Sistema')}</span>
+          ${p.observacao ? `<div class="small">Obs.: ${escapeHtml(p.observacao)}</div>` : ''}
+        </div>
+      `).join('');
+    }
+
+    async function saveInvoicePaymentRecord() {
+      const id = document.getElementById('pay_invoice_id')?.value;
+      const f = faturasCache.find(x => String(x.id) === String(id));
+      if (!f) return;
+      const valor = safeNumber(document.getElementById('pay_valor')?.value || 0);
+      if (valor <= 0) { alert('Informe um valor de pagamento válido.'); return; }
+
+      const currentPaid = getInvoicePaidTotal(f);
+      const total = getInvoiceTotal(f);
+      if (currentPaid + valor > total + 0.01) {
+        if (!confirm('O valor informado ultrapassa o saldo pendente. Confirmar mesmo assim?')) return;
+      }
+
       const stamp = new Date().toISOString();
-      const reciboNumero = f.recibo_numero || f.numero_recibo || `RCB/${new Date().getFullYear()}/${String((faturasCache.findIndex(x => x.id === id) + 1)).padStart(3,'0')}`;
+      const payment = {
+        id: `PAY-${Date.now()}`,
+        valor,
+        data: document.getElementById('pay_data')?.value || stamp.slice(0,10),
+        metodo: document.getElementById('pay_metodo')?.value || 'Pagamento',
+        referencia: document.getElementById('pay_referencia')?.value || '',
+        observacao: document.getElementById('pay_obs')?.value || '',
+        confirmado: true,
+        confirmado_em: stamp,
+        confirmado_por: currentUserName || currentUserEmail || 'Admin/Financeiro'
+      };
+
+      const payments = [...parseInvoicePayments(f), payment];
+      const paidTotal = payments.reduce((s,p)=>s+safeNumber(p.valor),0);
+      const due = Math.max(total - paidTotal, 0);
+      const isFull = total > 0 && paidTotal >= total - 0.01;
+      const reciboNumero = f.recibo_numero || f.numero_recibo || (isFull ? `RCB/${new Date().getFullYear()}/${String((faturasCache.findIndex(x => x.id === id) + 1)).padStart(3,'0')}` : null);
 
       async function tryUpdate(payload) {
         return withTimeout(
@@ -9568,57 +9759,64 @@ async function deleteMessageThread(clienteEmail) {
       }
 
       try {
-        let result = await tryUpdate({
-          pago: true,
-          pago_at: stamp,
-          recibo_numero: reciboNumero,
-          numero_recibo: reciboNumero,
-          recibo_emitido_at: stamp,
-          payment_notes: nota
-        });
+        let payload = {
+          pagamentos: payments,
+          pagamentos_json: payments,
+          valor_pago: paidTotal,
+          saldo_pendente: due,
+          status_pagamento: isFull ? 'Pago' : 'Parcial',
+          pago: isFull,
+          pago_at: isFull ? (f.pago_at || stamp) : null,
+          recibo_numero: isFull ? reciboNumero : (f.recibo_numero || null),
+          numero_recibo: isFull ? reciboNumero : (f.numero_recibo || null),
+          recibo_emitido_at: isFull ? (f.recibo_emitido_at || stamp) : null,
+          payment_notes: paymentNotesWithJson(f.payment_notes, payments)
+        };
 
+        let result = await tryUpdate(payload);
         if (result.error) {
-          const msg = String(result.error.message || '').toLowerCase();
-          const maybeSchemaMismatch =
-            msg.includes('column') ||
-            msg.includes('schema cache') ||
-            msg.includes('pago_at') ||
-            msg.includes('recibo_numero') ||
-            msg.includes('numero_recibo') ||
-            false;
-
-          if (maybeSchemaMismatch) {
-            result = await tryUpdate({
-              pago: true,
-              pago_at: stamp,
-              numero_recibo: reciboNumero
-            });
-          }
+          // Compatibilidade: caso a tabela ainda não tenha colunas novas, guarda o histórico em payment_notes.
+          result = await tryUpdate({
+            pago: isFull,
+            pago_at: isFull ? (f.pago_at || stamp) : null,
+            numero_recibo: isFull ? reciboNumero : (f.numero_recibo || null),
+            payment_notes: paymentNotesWithJson(f.payment_notes, payments)
+          });
         }
-
         if (result.error) throw result.error;
 
         const merged = {
           ...(f || {}),
           ...(result.data || {}),
-          pago: true,
-          pago_at: (result.data && result.data.pago_at) || stamp,
-          recibo_numero: (result.data && (result.data.recibo_numero || result.data.numero_recibo)) || reciboNumero,
-          numero_recibo: (result.data && (result.data.numero_recibo || result.data.recibo_numero)) || reciboNumero,
-          recibo_emitido_at: (result.data && result.data.recibo_emitido_at) || stamp,
-          payment_notes: (result.data && result.data.payment_notes) || nota
+          pagamentos: (result.data && (result.data.pagamentos || result.data.pagamentos_json)) || payments,
+          pagamentos_json: (result.data && (result.data.pagamentos_json || result.data.pagamentos)) || payments,
+          valor_pago: paidTotal,
+          saldo_pendente: due,
+          status_pagamento: isFull ? 'Pago' : 'Parcial',
+          pago: isFull,
+          pago_at: isFull ? ((result.data && result.data.pago_at) || f.pago_at || stamp) : null,
+          recibo_numero: isFull ? ((result.data && (result.data.recibo_numero || result.data.numero_recibo)) || reciboNumero) : (f.recibo_numero || null),
+          numero_recibo: isFull ? ((result.data && (result.data.numero_recibo || result.data.recibo_numero)) || reciboNumero) : (f.numero_recibo || null),
+          payment_notes: (result.data && result.data.payment_notes) || paymentNotesWithJson(f.payment_notes, payments)
         };
 
-        const idx = faturasCache.findIndex(x => x.id === id);
+        const idx = faturasCache.findIndex(x => String(x.id) === String(id));
         if (idx >= 0) faturasCache[idx] = merged;
-        const cidx = clientFaturasCache.findIndex(x => x.id === id);
+        const cidx = clientFaturasCache.findIndex(x => String(x.id) === String(id));
         if (cidx >= 0) clientFaturasCache[cidx] = merged;
 
         renderFaturasTable();
+        renderFinanceiroTable();
         renderClientFinanceDocs();
-        alert('Pagamento confirmado e recibo preparado.');
+        renderClientFinancialDashboard(clientProcessosCache || []);
+        renderInvoicePaymentHistory(merged);
+        document.getElementById('pay_invoice_total').textContent = formatMoney(getInvoiceTotal(merged));
+        document.getElementById('pay_invoice_paid').textContent = formatMoney(getInvoicePaidTotal(merged));
+        document.getElementById('pay_invoice_due').textContent = formatMoney(getInvoiceDueAmount(merged));
+        document.getElementById('pay_valor').value = getInvoiceDueAmount(merged) || '';
+        alert(isFull ? 'Pagamento total confirmado. Recibo disponível.' : 'Pagamento parcial confirmado. Saldo pendente atualizado.');
       } catch (e) {
-        alert((e.message || 'Erro ao marcar pagamento.') + '\n\nExecute também o SQL atualizado das colunas de pagamento/recibo.');
+        alert((e.message || 'Erro ao registar pagamento.') + '\n\nSe possível, execute depois o SQL das colunas profissionais: pagamentos jsonb, valor_pago, saldo_pendente e status_pagamento. O sistema também tenta funcionar via payment_notes.');
       }
     }
 
