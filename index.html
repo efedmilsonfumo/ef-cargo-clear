@@ -2034,6 +2034,38 @@
                   </div>
                 </div>
 
+                <!-- EF PATCH: resumo financeiro com deduções de requisições -->
+                <div class="grid grid-4" id="financeiroResumoDeducoes" style="margin:18px 0;">
+                  <div class="kpi"><div class="kpi-title">Receitas</div><div class="kpi-value" id="financeiroTotalReceitas">0</div></div>
+                  <div class="kpi"><div class="kpi-title">Custos</div><div class="kpi-value" id="financeiroTotalCustos">0</div></div>
+                  <div class="kpi"><div class="kpi-title">Requisições (deduções)</div><div class="kpi-value" id="financeiroTotalReqDeducoes">0</div></div>
+                  <div class="kpi"><div class="kpi-title">Margem líquida</div><div class="kpi-value" id="financeiroMargemLiquidaLinha">0</div></div>
+                </div>
+
+                <div class="card" id="financeiroRequisicoesImpactoBox" style="background:#fff8f8;border-radius:22px;border:1px solid rgba(190,0,26,.14);box-shadow:var(--shadow-soft);">
+                  <div class="panel-head">
+                    <div>
+                      <h3 class="section-title" style="font-size:22px;margin-bottom:6px;">📋 Requisições que impactaram a margem</h3>
+                      <div class="section-sub">Lista das requisições que tiraram dinheiro e explicam a diferença entre margem bruta e margem líquida.</div>
+                    </div>
+                    <span class="badge amber">Total deduzido: <strong id="financeiroImpactoReqTotal">0</strong></span>
+                  </div>
+                  <div class="table-scroll">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Valor</th>
+                          <th>Estado</th>
+                          <th>Motivo</th>
+                          <th>Data</th>
+                          <th>Ação</th>
+                        </tr>
+                      </thead>
+                      <tbody id="financeiroImpactoReqTable"></tbody>
+                    </table>
+                  </div>
+                </div>
+
                 <div class="table-scroll">
                   <table>
                     <thead>
@@ -5918,6 +5950,37 @@
       setText('financeReqApprovedTotal', formatMoney(totals.requisicoes));
       setText('financeMargemBrutaTotal', formatMoney(totals.margemBruta));
       setText('financeMargemLiquidaTotal', formatMoney(totals.margemLiquida));
+      setText('financeiroTotalReceitas', formatMoney(totals.cobrado));
+      setText('financeiroTotalCustos', formatMoney(totals.custos));
+      setText('financeiroTotalReqDeducoes', formatMoney(totals.requisicoes));
+      setText('financeiroMargemLiquidaLinha', formatMoney(totals.margemLiquida));
+      setText('financeiroImpactoReqTotal', formatMoney(totals.requisicoes));
+
+      const impactoReqBody = document.getElementById('financeiroImpactoReqTable');
+      if (impactoReqBody) {
+        if (!approvedReqs.length) {
+          impactoReqBody.innerHTML = '<tr><td colspan="5" class="small">Nenhuma requisição aprovada/paga/recebida a deduzir neste período.</td></tr>';
+        } else {
+          impactoReqBody.innerHTML = approvedReqs.map(r => {
+            const id = String(r.id || '').replace(/'/g, "\\'");
+            const valor = requisicaoValor(r);
+            const linhas = Array.isArray(r.linhas) ? r.linhas : [];
+            const motivo = r.motivo || r.observacao || r.referente || r.requisicao_de || r.para || linhas.map(l => l.instrucao || l.cliente).filter(Boolean).join(' / ') || '-';
+            const dataReq = r.data || r.created_at || r.criado_em || r.atualizado_em || '';
+            return `<tr>
+              <td><strong>${formatMoney(valor)}</strong></td>
+              <td><span class="badge green">${escapeHtml(r.estado || 'Aprovado')}</span></td>
+              <td>${escapeHtml(motivo)}</td>
+              <td>${formatDate(dataReq)}</td>
+              <td>
+                <button class="btn-mini info" onclick="abrirRequisicaoFinanceiro('${id}')">Ver</button>
+                <button class="btn-mini" onclick="downloadRequisicaoFundos('${id}')">Baixar</button>
+              </td>
+            </tr>`;
+          }).join('');
+        }
+      }
+
       const reqBadge = document.getElementById('financeReqCountBadge');
       if(reqBadge) reqBadge.textContent = `${approvedReqs.length} aprovadas / ${filteredReqs.length} total`;
 
@@ -6142,7 +6205,7 @@
       }
       tb.innerHTML=requisicoesCache.map(r=>{
         const id=String(r.id).replace(/'/g,"\\'");
-        return '<tr>'+
+        return '<tr id="req-row-'+id+'">'+
           '<td>'+formatDate(r.data||r.created_at||r.criado_em)+'</td>'+
           '<td>'+escapeHtml(r.funcionario_nome||'-')+'</td>'+
           '<td>'+escapeHtml(r.referente||r.requisicao_de||'-')+'</td>'+
@@ -6179,8 +6242,26 @@
         const {error}=await withTimeout(supabaseClient.from('requisicoes_fundos').delete().eq('id',id),10000);
         if(error){alert(error.message);return;}
         await loadRequisicoesFundos();
+        renderFinanceiroTable();
+        renderInternalDashboard();
         alert('Requisição eliminada com sucesso.');
       }catch(e){alert(e.message||'Erro ao eliminar requisição.');}
+    }
+
+    function abrirRequisicaoFinanceiro(id){
+      showInternalTab('requisicoes');
+      loadRequisicoesFundos(true).then(()=>{
+        setTimeout(()=>{
+          const row=document.getElementById('req-row-'+String(id));
+          if(row){
+            row.scrollIntoView({behavior:'smooth',block:'center'});
+            const oldBg=row.style.background;
+            row.style.background='#fff3cd';
+            row.style.outline='2px solid rgba(190,0,26,.35)';
+            setTimeout(()=>{row.style.background=oldBg; row.style.outline='';},2600);
+          }
+        },200);
+      }).catch(()=>{});
     }
 
     function downloadRequisicaoFundos(id){
