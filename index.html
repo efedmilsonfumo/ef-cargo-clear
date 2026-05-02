@@ -1582,6 +1582,20 @@
     #funcionarioDocsList .doc-chip > div:last-child,#funcionarioDocsList .ef-doc-actions{grid-column:1/-1;justify-content:flex-start!important;}
   }
 </style>
+
+
+<!-- EF Cargo Clear - Dashboard financeiro controlado do cliente -->
+<style id="ef-client-finance-dashboard-safe">
+  .client-finance-summary{margin-top:18px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+  .client-finance-summary .kpi{min-height:112px;}
+  .client-finance-box{margin-top:18px;border:1px solid rgba(190,0,26,.12);border-radius:26px;background:linear-gradient(180deg,#fff 0%,#fbfcff 100%);box-shadow:var(--shadow-soft);padding:18px;}
+  .client-finance-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+  .client-finance-note{background:#fff8f8;border:1px solid rgba(190,0,26,.14);border-radius:18px;padding:12px;color:#6b7280;font-size:13px;line-height:1.45;margin-top:12px;}
+  .client-finance-pill{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;background:#f3f4f6;border:1px solid #e5e7eb;font-size:12px;font-weight:800;color:#374151;}
+  @media(max-width:1100px){.client-finance-summary{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:640px){.client-finance-summary{grid-template-columns:1fr;}}
+</style>
+
 </head>
 <body>
 
@@ -2437,6 +2451,46 @@
             <div class="kpi clickable" onclick="activateClientTab('mensagens')"><div class="kpi-title">Mensagens não lidas</div><div class="kpi-value" id="clientDashUnread">0</div></div>
             <div class="kpi clickable" onclick="activateClientTab('processos')"><div class="kpi-title">Docs visíveis</div><div class="kpi-value" id="clientDashDocs">0</div></div>
             <div class="kpi clickable" onclick="goToLatestClientProcess()"><div class="kpi-title">Último estado</div><div class="kpi-value" id="clientDashEstado" style="font-size:20px;">-</div></div>
+          </div>
+
+
+          <!-- EF PATCH: Dashboard financeiro controlado do cliente -->
+          <div class="client-finance-summary">
+            <div class="kpi clickable" onclick="activateClientTab('faturas')"><div class="kpi-title">Total dos processos</div><div class="kpi-value" id="clientFinTotalEstimado">0</div></div>
+            <div class="kpi clickable" onclick="activateClientTab('faturas')"><div class="kpi-title">Pago confirmado</div><div class="kpi-value" id="clientFinTotalPago">0</div></div>
+            <div class="kpi clickable" onclick="activateClientTab('faturas')"><div class="kpi-title">Pendente</div><div class="kpi-value" id="clientFinTotalPendente">0</div></div>
+            <div class="kpi clickable" onclick="activateClientTab('processos')"><div class="kpi-title">Processos ativos</div><div class="kpi-value" id="clientFinProcessosAtivos">0</div></div>
+          </div>
+
+          <div class="client-finance-box">
+            <div class="client-finance-head">
+              <div>
+                <h3 style="margin:0 0 6px;">💰 Resumo financeiro por processo</h3>
+                <div class="small">Visão do cliente: valores cobrados, pagamentos confirmados e saldo pendente. Não apresenta margem interna da empresa.</div>
+              </div>
+              <button class="btn-mini info" onclick="activateClientTab('faturas')">Ver faturas</button>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Processo</th>
+                    <th>Factura</th>
+                    <th>Estado</th>
+                    <th>Total cobrado</th>
+                    <th>Pago</th>
+                    <th>Pendente</th>
+                    <th>Ação</th>
+                  </tr>
+                </thead>
+                <tbody id="clientFinanceProcessTable">
+                  <tr><td colspan="7">A carregar resumo financeiro...</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="client-finance-note">
+              <strong>Nota:</strong> este painel mostra apenas valores relevantes para o cliente. Custos internos, margem, lucro e despesas administrativas da EF não são exibidos.
+            </div>
           </div>
 
           <div class="quick-actions no-print">
@@ -6874,6 +6928,84 @@ async function deleteMessageThread(clienteEmail) {
       if (dashUnread) dashUnread.textContent = clientUnread;
     }
 
+
+    function getClientProcessInvoices(processo){
+      if(!processo) return [];
+      return (clientFaturasCache || []).filter(f => invoiceMatchesProcess(f, processo));
+    }
+
+    function getClientPagoPorProcesso(processo){
+      return getClientProcessInvoices(processo).filter(f => !!f.pago).reduce((s,f)=>s+getInvoiceTotal(f),0);
+    }
+
+    function getClientTotalCobradoProcesso(processo){
+      const linkedInvoices = getClientProcessInvoices(processo);
+      const totalInvoices = linkedInvoices.reduce((s,f)=>s+getInvoiceTotal(f),0);
+      return totalInvoices || Number(processo?.valor_cobrado || 0);
+    }
+
+    function renderClientFinancialDashboard(processRows){
+      const rows = Array.isArray(processRows) ? processRows : (clientProcessosCache || []);
+      const tbody = document.getElementById('clientFinanceProcessTable');
+      let total = 0, pago = 0, pendente = 0;
+
+      const set = (id, value) => { const el = document.getElementById(id); if(el) el.textContent = value; };
+
+      if(!rows.length){
+        set('clientFinTotalEstimado', formatMoney(0));
+        set('clientFinTotalPago', formatMoney(0));
+        set('clientFinTotalPendente', formatMoney(0));
+        set('clientFinProcessosAtivos', '0');
+        if(tbody) tbody.innerHTML = '<tr><td colspan="7">Ainda não existem processos com valores financeiros para apresentar.</td></tr>';
+        return;
+      }
+
+      const html = rows.map(p => {
+        const cobrado = getClientTotalCobradoProcesso(p);
+        const paid = getClientPagoPorProcesso(p);
+        const due = Math.max(cobrado - paid, 0);
+        total += cobrado;
+        pago += paid;
+        pendente += due;
+        const statusBadge = due <= 0 && cobrado > 0 ? '<span class="badge green">Regularizado</span>' : '<span class="badge amber">Pendente</span>';
+        return `
+          <tr>
+            <td><strong>${escapeHtml(p.numero_processo || '-')}</strong><div class="small">${escapeHtml(p.importador_exportador || '')}</div></td>
+            <td>${escapeHtml(p.numero_factura || '-')}</td>
+            <td>${badgeEstado(p.estado || 'Recebido')}<div style="margin-top:6px;">${statusBadge}</div></td>
+            <td>${formatMoney(cobrado)}</td>
+            <td>${formatMoney(paid)}</td>
+            <td>${formatMoney(due)}</td>
+            <td><button class="btn-mini info" onclick="openClientProcessDetail('${p.id}')">Abrir</button>${getClientInvoiceButtonsHtml(null, p.id)}</td>
+          </tr>`;
+      }).join('');
+
+      set('clientFinTotalEstimado', formatMoney(total));
+      set('clientFinTotalPago', formatMoney(pago));
+      set('clientFinTotalPendente', formatMoney(pendente));
+      set('clientFinProcessosAtivos', String(rows.length));
+      if(tbody) tbody.innerHTML = html;
+    }
+
+    async function ensureClientFinanceData(){
+      try{
+        if(!clientProcessosCache.length) clientProcessosCache = await getClientOwnedProcessos();
+        const { data: userData } = await withTimeout(supabaseClient.auth.getUser(), 8000);
+        const user = userData?.user;
+        if(user?.email){
+          const { data } = await withTimeout(
+            supabaseClient.from('faturas').select('*').eq('cliente_email', user.email).order('created_at', { ascending: false }),
+            10000
+          );
+          clientFaturasCache = data || [];
+        }
+        renderClientFinancialDashboard(clientProcessosCache);
+      }catch(e){
+        const tbody = document.getElementById('clientFinanceProcessTable');
+        if(tbody) tbody.innerHTML = `<tr><td colspan="7">${escapeHtml(e.message || 'Erro ao carregar resumo financeiro.')}</td></tr>`;
+      }
+    }
+
     async function refreshClientDashboard() {
       if (currentUserRole !== "client") return;
 
@@ -6892,10 +7024,14 @@ async function deleteMessageThread(clienteEmail) {
         );
 
         if (cliente?.nome) {
-          const { data: processos } = await withTimeout(
-            supabaseClient.from("processos").select("*").eq("importador_exportador", cliente.nome).order("created_at", { ascending: false }),
+          const processos = await getClientOwnedProcessos();
+          clientProcessosCache = processos || [];
+
+          const { data: faturasCliente } = await withTimeout(
+            supabaseClient.from('faturas').select('*').eq('cliente_email', user.email).order('created_at', { ascending: false }),
             10000
           );
+          clientFaturasCache = faturasCliente || [];
 
           if (processos?.length) {
             latestProcess = processos[0];
@@ -6907,6 +7043,10 @@ async function deleteMessageThread(clienteEmail) {
             );
             docsVisible = docs?.length || 0;
           }
+
+          renderClientFinancialDashboard(processos || []);
+        } else {
+          renderClientFinancialDashboard([]);
         }
 
         document.getElementById("clientDashCotacoes").textContent = getActiveCotacoesCount(clientCotacoesCache);
@@ -7685,6 +7825,7 @@ async function deleteMessageThread(clienteEmail) {
         if (error) throw error;
         clientFaturasCache = data || [];
         if (tbody) renderClientFinanceDocs();
+        renderClientFinancialDashboard(clientProcessosCache || []);
       } catch (e) {
         clientFaturasCache = [];
         if (tbody) tbody.innerHTML = `<tr><td colspan="6">${escapeHtml(e.message || 'Erro ao carregar faturas.')}</td></tr>`;
@@ -7876,6 +8017,7 @@ async function deleteMessageThread(clienteEmail) {
         }
 
         grid.innerHTML = (await Promise.all(clientProcessosCache.map(renderClientProcessCard))).join("");
+        renderClientFinancialDashboard(clientProcessosCache);
         await refreshClientDashboard();
       } catch (e) {
         grid.innerHTML = `<div class="muted-box">${escapeHtml(e.message || "Erro ao carregar processos.")}</div>`;
