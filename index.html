@@ -1863,6 +1863,28 @@
 
                 <div id="financeInsights" class="grid grid-2" style="margin-bottom:18px;"></div>
 
+                <div class="grid grid-3" id="financeReqSummaryRow" style="margin-bottom:18px;">
+                  <div class="kpi"><div class="kpi-title">Requisições aprovadas</div><div class="kpi-value" id="financeReqApprovedTotal">0</div></div>
+                  <div class="kpi"><div class="kpi-title">Margem bruta</div><div class="kpi-value" id="financeMargemBrutaTotal">0</div></div>
+                  <div class="kpi"><div class="kpi-title">Margem líquida</div><div class="kpi-value" id="financeMargemLiquidaTotal">0</div></div>
+                </div>
+
+                <div class="card" style="background:#fff8f8;border-radius:22px;border:1px solid rgba(190,0,26,.14);box-shadow:var(--shadow-soft);">
+                  <div class="panel-head">
+                    <div>
+                      <h3 class="section-title" style="font-size:22px;margin-bottom:6px;">Gastos por Requisições de Fundos</h3>
+                      <div class="section-sub">Somente requisições aprovadas, pagas ou recebidas deduzem da margem líquida.</div>
+                    </div>
+                    <span class="badge amber" id="financeReqCountBadge">0 requisições</span>
+                  </div>
+                  <div class="table-scroll">
+                    <table>
+                      <thead><tr><th>Data</th><th>Funcionário</th><th>Cliente</th><th>Referência</th><th>Estado</th><th>Valor</th></tr></thead>
+                      <tbody id="financeiroReqTable"></tbody>
+                    </table>
+                  </div>
+                </div>
+
                 <div class="table-scroll">
                   <table>
                     <thead>
@@ -5215,14 +5237,58 @@
     function getFinancialTotalsFromFaturas(faturas = []) {
       return (Array.isArray(faturas) ? faturas : []).reduce((acc, f) => { acc.cobrado += getInvoiceTotal(f); acc.custos += getInvoiceEncargosTotal(f); acc.margem += getInvoiceServicosTotal(f); return acc; }, { cobrado: 0, custos: 0, margem: 0 });
     }
+
+    function requisicaoValor(r){
+      if(!r) return 0;
+      const direto = safeNumber(r.valor_total ?? r.total ?? r.valor ?? 0);
+      if(direto) return direto;
+      if(Array.isArray(r.linhas)) return r.linhas.reduce((s,l)=>s+safeNumber(l.valor ?? l.value ?? l.amount ?? 0),0);
+      return 0;
+    }
+
+    function requisicaoDeduzMargem(r){
+      const estado = String(r?.estado || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      return estado.includes('aprovado') || estado.includes('pago') || estado.includes('recebido') || estado.includes('autorizado final');
+    }
+
+    function getRequisicoesDedutiveis(rows = requisicoesCache){
+      return (Array.isArray(rows) ? rows : []).filter(requisicaoDeduzMargem);
+    }
+
+    function getRequisicoesTotal(rows = requisicoesCache){
+      return getRequisicoesDedutiveis(rows).reduce((sum,r)=>sum+requisicaoValor(r),0);
+    }
+
+    function getFinancialTotalsLiquidos(faturas = faturasCache, requisicoes = requisicoesCache){
+      const base = getFinancialTotalsFromFaturas(faturas || []);
+      const reqTotal = getRequisicoesTotal(requisicoes || []);
+      return { ...base, requisicoes: reqTotal, margemBruta: base.margem, margemLiquida: base.margem - reqTotal };
+    }
+
+    function getFinanceFilteredRequisicoes(){
+      const from = document.getElementById('financeFrom')?.value ? new Date(document.getElementById('financeFrom').value) : null;
+      const to = document.getElementById('financeTo')?.value ? new Date(document.getElementById('financeTo').value) : null;
+      const clienteQ = (document.getElementById('financeCliente')?.value || '').trim().toLowerCase();
+      return (requisicoesCache || []).filter(r=>{
+        const d = parsePossibleDate(r.data || r.created_at || r.criado_em || r.atualizado_em);
+        if(from && d && d < from) return false;
+        if(to && d && d > to) return false;
+        if(clienteQ){
+          const blob = [r.cliente, r.funcionario_nome, r.referente, r.requisicao_de, r.para].join(' ').toLowerCase();
+          if(!blob.includes(clienteQ)) return false;
+        }
+        return true;
+      });
+    }
+
     function getLinkedProcessForInvoice(f) { return (processosCache || []).find(p => invoiceMatchesProcess(f, p)) || null; }
 
     function renderInternalDashboard() {
       const totalProcessos = processosCache.length;
       const liberados = processosCache.filter(p => ['Liberado','Entregue'].includes(p.estado || '')).length;
       const docsPendentes = getPendingProcessCount(processosCache);
-      const financeTotalsDashboard = getFinancialTotalsFromFaturas(faturasCache || []);
-      const margemTotal = financeTotalsDashboard.margem;
+      const financeTotalsDashboard = getFinancialTotalsLiquidos(faturasCache || [], requisicoesCache || []);
+      const margemTotal = financeTotalsDashboard.margemLiquida;
 
       const el = (id) => document.getElementById(id);
       if (el('dashTotalProcessos')) el('dashTotalProcessos').textContent = totalProcessos;
@@ -5261,6 +5327,7 @@
       const processosMes = [0,0,0,0,0,0];
       const cobradoMes = [0,0,0,0,0,0];
       const custosMes = [0,0,0,0,0,0];
+      const requisicoesMes = [0,0,0,0,0,0];
 
       processosCache.forEach(p => {
         const d = parsePossibleDate(p.created_at);
@@ -5279,6 +5346,15 @@
         if (idx === undefined) return;
         cobradoMes[idx] += getInvoiceTotal(f);
         custosMes[idx] += getInvoiceEncargosTotal(f);
+      });
+
+      getRequisicoesDedutiveis(requisicoesCache || []).forEach(r => {
+        const d = parsePossibleDate(r.data || r.created_at || r.criado_em || r.atualizado_em);
+        if (!d) return;
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        const idx = map.get(key);
+        if (idx === undefined) return;
+        requisicoesMes[idx] += requisicaoValor(r);
       });
 
 
@@ -5302,7 +5378,8 @@
           type: 'bar',
           data: { labels: labelsMes, datasets: [
             { label: 'Cobrado', data: cobradoMes, backgroundColor: '#16a34a' },
-            { label: 'Custos', data: custosMes, backgroundColor: '#dc2626' }
+            { label: 'Custos', data: custosMes, backgroundColor: '#dc2626' },
+            { label: 'Requisições aprovadas', data: requisicoesMes, backgroundColor: '#f59e0b' }
           ] },
           options: { responsive: true, maintainAspectRatio: false }
         });
@@ -5832,7 +5909,36 @@
       if (!ftbody) return;
       ftbody.innerHTML = "";
       renderFinanceInsights(getFilteredProcessos());
-      getFinanceFilteredFaturas().forEach(f => {
+      const filteredFaturas = getFinanceFilteredFaturas();
+      const filteredReqs = getFinanceFilteredRequisicoes();
+      const approvedReqs = getRequisicoesDedutiveis(filteredReqs);
+      const totals = getFinancialTotalsLiquidos(filteredFaturas, filteredReqs);
+
+      const setText = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent = val; };
+      setText('financeReqApprovedTotal', formatMoney(totals.requisicoes));
+      setText('financeMargemBrutaTotal', formatMoney(totals.margemBruta));
+      setText('financeMargemLiquidaTotal', formatMoney(totals.margemLiquida));
+      const reqBadge = document.getElementById('financeReqCountBadge');
+      if(reqBadge) reqBadge.textContent = `${approvedReqs.length} aprovadas / ${filteredReqs.length} total`;
+
+      const reqBody = document.getElementById('financeiroReqTable');
+      if(reqBody){
+        if(!filteredReqs.length){
+          reqBody.innerHTML = '<tr><td colspan="6" class="small">Sem requisições no período/filtro atual.</td></tr>';
+        }else{
+          reqBody.innerHTML = filteredReqs.map(r=>{
+            const deduct = requisicaoDeduzMargem(r);
+            const estadoClass = deduct ? 'green' : (String(r.estado||'').toLowerCase().includes('rejeit') ? 'amber' : 'blue');
+            return `<tr><td>${formatDate(r.data || r.created_at || r.criado_em || '')}</td><td>${escapeHtml(r.funcionario_nome || '-')}</td><td>${escapeHtml(r.cliente || '-')}</td><td>${escapeHtml(r.referente || r.requisicao_de || r.para || '-')}</td><td><span class="badge ${estadoClass}">${escapeHtml(r.estado || 'Submetido')}</span></td><td><strong>${formatMoney(requisicaoValor(r))}</strong>${deduct ? '<div class="small">Deduz da margem</div>' : '<div class="small">Ainda não deduz</div>'}</td></tr>`;
+          }).join('');
+        }
+      }
+
+      if(!filteredFaturas.length){
+        ftbody.innerHTML = '<tr><td colspan="7" class="small">Sem faturas no período/filtro atual.</td></tr>';
+        return;
+      }
+      filteredFaturas.forEach(f => {
         const p = getLinkedProcessForInvoice(f);
         const totalCobrado = getInvoiceTotal(f);
         const totalCustos = getInvoiceEncargosTotal(f);
@@ -6025,7 +6131,7 @@
     function addRequisicaoLinha(){ const box=document.getElementById('req_linhas'); if(!box) return; const row=document.createElement('div'); row.className='invoice-line'; row.style.gridTemplateColumns='1fr 1fr 160px 40px'; row.innerHTML='<input class="req_instrucao" placeholder="Instrução" /><input class="req_cliente" placeholder="Cliente" /><input class="req_valor" type="number" step="0.01" placeholder="Valor total" /><button class="btn-mini danger" type="button" onclick="this.parentElement.remove()">×</button>'; box.appendChild(row); }
     function getRequisicaoLinhas(){ return Array.from(document.querySelectorAll('#req_linhas .invoice-line')).map(r=>({instrucao:r.querySelector('.req_instrucao')?.value.trim()||'',cliente:r.querySelector('.req_cliente')?.value.trim()||'',valor:Number(r.querySelector('.req_valor')?.value||0)})).filter(x=>x.instrucao||x.cliente||x.valor); }
     function resetRequisicaoForm(){ ['req_de','req_para','req_referente','req_extenso','req_conferido','req_autorizado','req_recebido','req_cheque','req_banco'].forEach(id=>{const x=document.getElementById(id); if(x) x.value='';}); const d=document.getElementById('req_data'); if(d) d.value=new Date().toISOString().slice(0,10); const f=document.getElementById('req_funcionario'); if(f) f.value=currentUserName||currentUserEmail||''; const linhas=document.getElementById('req_linhas'); if(linhas) linhas.innerHTML=''; addRequisicaoLinha(); }
-    async function submeterRequisicaoFundos(){ if(!canAccessInternalTab('requisicoes')){alert('Sem permissão.');return;} const linhas=getRequisicaoLinhas(); if(!linhas.length){alert('Adicione pelo menos uma linha.');return;} const total=linhas.reduce((s,l)=>s+(Number(l.valor)||0),0); const payload={data:document.getElementById('req_data')?.value||new Date().toISOString().slice(0,10),funcionario_nome:document.getElementById('req_funcionario')?.value.trim()||currentUserName||currentUserEmail,requisicao_de:document.getElementById('req_de')?.value.trim()||'',para:document.getElementById('req_para')?.value.trim()||'',referente:document.getElementById('req_referente')?.value.trim()||'',linhas,valor_total:total,valor_extenso:document.getElementById('req_extenso')?.value.trim()||'',conferido_por:document.getElementById('req_conferido')?.value.trim()||'',autorizado_por:document.getElementById('req_autorizado')?.value.trim()||'',recebido_por:document.getElementById('req_recebido')?.value.trim()||'',cheque_no:document.getElementById('req_cheque')?.value.trim()||'',banco:document.getElementById('req_banco')?.value.trim()||'',estado:'Submetido',criado_por_email:currentUserEmail}; try{ const {error}=await withTimeout(supabaseClient.from('requisicoes_fundos').insert(payload),10000); if(error){alert(error.message);return;} resetRequisicaoForm(); await loadRequisicoesFundos(); alert('Requisição submetida com sucesso.'); }catch(e){alert(e.message||'Erro ao submeter requisição.');} }
+    async function submeterRequisicaoFundos(){ if(!canAccessInternalTab('requisicoes')){alert('Sem permissão.');return;} const linhas=getRequisicaoLinhas(); if(!linhas.length){alert('Adicione pelo menos uma linha.');return;} const total=linhas.reduce((s,l)=>s+(Number(l.valor)||0),0); const payload={data:document.getElementById('req_data')?.value||new Date().toISOString().slice(0,10),funcionario_nome:document.getElementById('req_funcionario')?.value.trim()||currentUserName||currentUserEmail,requisicao_de:document.getElementById('req_de')?.value.trim()||'',para:document.getElementById('req_para')?.value.trim()||'',referente:document.getElementById('req_referente')?.value.trim()||'',linhas,valor_total:total,valor_extenso:document.getElementById('req_extenso')?.value.trim()||'',conferido_por:document.getElementById('req_conferido')?.value.trim()||'',autorizado_por:document.getElementById('req_autorizado')?.value.trim()||'',recebido_por:document.getElementById('req_recebido')?.value.trim()||'',cheque_no:document.getElementById('req_cheque')?.value.trim()||'',banco:document.getElementById('req_banco')?.value.trim()||'',estado:'Submetido',criado_por_email:currentUserEmail}; try{ const {error}=await withTimeout(supabaseClient.from('requisicoes_fundos').insert(payload),10000); if(error){alert(error.message);return;} resetRequisicaoForm(); await loadRequisicoesFundos(); renderFinanceiroTable(); renderInternalDashboard(); alert('Requisição submetida com sucesso.'); }catch(e){alert(e.message||'Erro ao submeter requisição.');} }
     async function loadRequisicoesFundos(render=true){ try{ const {data,error}=await withTimeout(supabaseClient.from('requisicoes_fundos').select('*').order('created_at',{ascending:false}),8000); if(!error) requisicoesCache=data||[]; }catch(_){ } if(render) renderRequisicoesFundos(); }
     function renderRequisicoesFundos(){
       const tb=document.getElementById('requisicoesTable');
@@ -6058,6 +6164,8 @@
         const {error}=await withTimeout(supabaseClient.from('requisicoes_fundos').update({estado,autorizado_por:currentUserName||currentUserEmail, atualizado_em:new Date().toISOString()}).eq('id',id),10000);
         if(error){alert(error.message);return;}
         await loadRequisicoesFundos();
+        renderFinanceiroTable();
+        renderInternalDashboard();
       }catch(e){alert(e.message||'Erro ao atualizar requisição.');}
     }
 
@@ -7211,10 +7319,10 @@ async function deleteMessageThread(clienteEmail) {
         await loadFuncionarioDocumentos(false);
         await loadRequisicoesFundos(false);
 
-        const totaisFaturas = getFinancialTotalsFromFaturas(faturasCache || []);
+        const totaisFaturas = getFinancialTotalsLiquidos(faturasCache || [], requisicoesCache || []);
         const totalCobrado = totaisFaturas.cobrado;
-        const totalCustos = totaisFaturas.custos;
-        const totalMargem = totaisFaturas.margem;
+        const totalCustos = totaisFaturas.custos + totaisFaturas.requisicoes;
+        const totalMargem = totaisFaturas.margemLiquida;
         const liberados = processosCache.filter(p => ["Liberado", "Entregue"].includes(p.estado)).length;
 
         document.getElementById("clientesCount").textContent = clientesCache.length;
@@ -9088,10 +9196,13 @@ async function deleteMessageThread(clienteEmail) {
       if (!box) return;
       const processRows = Array.isArray(rows) ? rows : [];
       const linkedFaturas = getFaturasForProcessos(processRows);
-      const totals = getFinancialTotalsFromFaturas(linkedFaturas);
+      const filteredReqs = getFinanceFilteredRequisicoes();
+      const totals = getFinancialTotalsLiquidos(linkedFaturas, filteredReqs);
       const totalCobrado = totals.cobrado;
       const totalCustos = totals.custos;
-      const totalMargem = totals.margem;
+      const totalRequisicoes = totals.requisicoes;
+      const totalMargemBruta = totals.margemBruta;
+      const totalMargem = totals.margemLiquida;
       const clientes = [...new Set(processRows.map(p => String(p.importador_exportador || '').trim()).filter(Boolean))];
       const breakdown = {};
       linkedFaturas.forEach(f => {
@@ -9099,7 +9210,7 @@ async function deleteMessageThread(clienteEmail) {
         lines.forEach(line => { const key = line.nome || 'Outros'; breakdown[key] = (breakdown[key] || 0) + safeNumber(line.valor || 0); });
       });
       const top = Object.entries(breakdown).sort((a,b)=>b[1]-a[1]).slice(0,6);
-      box.innerHTML = `<div class="progress-card"><div class="kpi-title">Resumo filtrado</div><div class="grid grid-3"><div><strong>Cobrado</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:#BE001A;">${formatMoney(totalCobrado)}</div></div><div><strong>Custos</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:#111827;">${formatMoney(totalCustos)}</div></div><div><strong>Margem</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:${totalMargem >= 0 ? '#166534' : '#b91c1c'};">${formatMoney(totalMargem)}</div></div></div><div class="small" style="margin-top:12px;">Fonte: tabela faturas • Clientes no filtro: ${clientes.length} • Processos: ${processRows.length} • Faturas ligadas: ${linkedFaturas.length}</div></div><div class="progress-card"><div class="kpi-title">Em que foi gasto / cobrado</div>${top.length ? top.map(([nome,valor]) => `<div style="display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #eee;"><span>${escapeHtml(nome)}</span><strong>${formatMoney(valor)}</strong></div>`).join("") : `<div class="small">Sem faturas ligadas ao filtro atual.</div>`}</div>`;
+      box.innerHTML = `<div class="progress-card"><div class="kpi-title">Resumo filtrado</div><div class="grid grid-3"><div><strong>Cobrado</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:#BE001A;">${formatMoney(totalCobrado)}</div></div><div><strong>Custos + requisições</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:#111827;">${formatMoney(totalCustos + totalRequisicoes)}</div></div><div><strong>Margem líquida</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:${totalMargem >= 0 ? '#166534' : '#b91c1c'};">${formatMoney(totalMargem)}</div></div></div><div class="small" style="margin-top:12px;">Margem bruta: ${formatMoney(totalMargemBruta)} • Requisições aprovadas: ${formatMoney(totalRequisicoes)} • Clientes no filtro: ${clientes.length} • Processos: ${processRows.length} • Faturas ligadas: ${linkedFaturas.length}</div></div><div class="progress-card"><div class="kpi-title">Em que foi gasto / cobrado</div>${top.length ? top.map(([nome,valor]) => `<div style="display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #eee;"><span>${escapeHtml(nome)}</span><strong>${formatMoney(valor)}</strong></div>`).join("") : `<div class="small">Sem faturas ligadas ao filtro atual.</div>`}<div style="display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid #eee;margin-top:8px;"><span>Requisições aprovadas</span><strong>${formatMoney(totalRequisicoes)}</strong></div></div>`;
     }
 
     window.addEventListener("load", async () => {
