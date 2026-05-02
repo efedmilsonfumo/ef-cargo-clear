@@ -5366,11 +5366,30 @@
       return getRequisicoesCustoProcesso(rows).filter(r => String(getRequisicaoProcessoId(r)) === String(processoId)).reduce((sum,r)=>sum+requisicaoValor(r),0);
     }
 
+    function getProcessoCustosBase(processo){
+      return Number(processo?.custos_processo || processo?.custos || 0);
+    }
+
+    function getProcessoCustosComRequisicoes(processo, rows = requisicoesCache){
+      if(!processo) return 0;
+      return getProcessoCustosBase(processo) + getRequisicoesTotalByProcesso(processo.id, rows);
+    }
+
+    function getProcessoMargemOperacional(processo, rows = requisicoesCache){
+      if(!processo) return 0;
+      return Number(processo.valor_cobrado || 0) - getProcessoCustosComRequisicoes(processo, rows);
+    }
+
+    function getRequisicoesCustoProcessoByProcessos(processRows = processosCache, rows = requisicoesCache){
+      const ids = new Set((Array.isArray(processRows) ? processRows : []).map(p => String(p.id)));
+      return getRequisicoesCustoProcesso(rows || []).filter(r => ids.has(String(getRequisicaoProcessoId(r))));
+    }
+
     function getFinancialTotalsLiquidos(faturas = faturasCache, requisicoes = requisicoesCache){
       const base = getFinancialTotalsFromFaturas(faturas || []);
       const reqEmpresa = getRequisicoesTotal(requisicoes || []);
       const reqProcessos = getRequisicoesProcessoTotal(requisicoes || []);
-      return { ...base, requisicoes: reqEmpresa, requisicoesEmpresa: reqEmpresa, requisicoesProcessos: reqProcessos, margemBruta: base.margem, margemLiquida: base.margem - reqEmpresa };
+      return { ...base, requisicoes: reqEmpresa, requisicoesEmpresa: reqEmpresa, requisicoesProcessos: reqProcessos, custosComRequisicoes: base.custos + reqEmpresa + reqProcessos, margemBruta: base.margem, margemLiquida: base.margem - reqEmpresa };
     }
 
     function getFinanceFilteredRequisicoes(){
@@ -5761,12 +5780,22 @@
       title.textContent = `Processo ${processo.numero_processo || '-'}`;
       sub.textContent = `${processo.importador_exportador || '-'} • Factura ${processo.numero_factura || '-'}`;
 
+      const reqProcessoTotal = getRequisicoesTotalByProcesso(processo.id, requisicoesCache || []);
+      const custosBaseProcesso = getProcessoCustosBase(processo);
+      const custosTotaisProcesso = custosBaseProcesso + reqProcessoTotal;
+      const margemOperacionalProcesso = Number(processo.valor_cobrado || 0) - custosTotaisProcesso;
+
       const financeiroHtml = canSeeInternalValues() ? `
         <label style="margin-top:0;">Valor cobrado</label>
         <input id="cobrado_${processo.id}" type="number" step="0.01" value="${Number(processo.valor_cobrado || 0)}" />
-        <label style="margin-top:8px;">Custos</label>
+        <label style="margin-top:8px;">Custos base do processo</label>
         <input id="custos_${processo.id}" type="number" step="0.01" value="${Number(processo.custos_processo || 0)}" />
-        <div class="small" style="margin-top:8px;">Margem atual: ${formatMoney(processo.margem_lucro || 0)}</div>
+        <div class="muted-box" style="margin-top:10px;padding:12px;border-radius:14px;">
+          <div><strong>Requisições vinculadas:</strong> ${formatMoney(reqProcessoTotal)}</div>
+          <div><strong>Custos totais do processo:</strong> ${formatMoney(custosTotaisProcesso)}</div>
+          <div><strong>Margem operacional:</strong> ${formatMoney(margemOperacionalProcesso)}</div>
+          <div class="small" style="margin-top:6px;">As requisições deste processo entram no custo do processo/cliente e não deduzem a margem global da empresa.</div>
+        </div>
         <div style="margin-top:8px;">
           <button class="btn-mini info" onclick="salvarFinanceiro('${processo.id}')">Guardar financeiro</button>
         </div>
@@ -6028,7 +6057,7 @@
       setText('financeMargemBrutaTotal', formatMoney(totals.margemBruta));
       setText('financeMargemLiquidaTotal', formatMoney(totals.margemLiquida));
       setText('financeiroTotalReceitas', formatMoney(totals.cobrado));
-      setText('financeiroTotalCustos', formatMoney(totals.custos));
+      setText('financeiroTotalCustos', formatMoney(totals.custos + (totals.requisicoesProcessos || 0)));
       setText('financeiroTotalReqDeducoes', formatMoney(totals.requisicoes));
       setText('financeiroMargemLiquidaLinha', formatMoney(totals.margemLiquida));
       setText('financeiroImpactoReqTotal', formatMoney(totals.requisicoes));
@@ -7581,7 +7610,7 @@ async function deleteMessageThread(clienteEmail) {
 
         const totaisFaturas = getFinancialTotalsLiquidos(faturasCache || [], requisicoesCache || []);
         const totalCobrado = totaisFaturas.cobrado;
-        const totalCustos = totaisFaturas.custos + totaisFaturas.requisicoes;
+        const totalCustos = totaisFaturas.custos + totaisFaturas.requisicoesEmpresa + totaisFaturas.requisicoesProcessos;
         const totalMargem = totaisFaturas.margemLiquida;
         const liberados = processosCache.filter(p => ["Liberado", "Entregue"].includes(p.estado)).length;
 
@@ -9457,10 +9486,15 @@ async function deleteMessageThread(clienteEmail) {
       const processRows = Array.isArray(rows) ? rows : [];
       const linkedFaturas = getFaturasForProcessos(processRows);
       const filteredReqs = getFinanceFilteredRequisicoes();
-      const totals = getFinancialTotalsLiquidos(linkedFaturas, filteredReqs);
+      const reqEmpresa = getRequisicoesDedutiveis(filteredReqs);
+      const reqProcessosDoFiltro = getRequisicoesCustoProcessoByProcessos(processRows, filteredReqs);
+      const reqEmpresaTotal = reqEmpresa.reduce((sum,r)=>sum+requisicaoValor(r),0);
+      const reqProcessosTotal = reqProcessosDoFiltro.reduce((sum,r)=>sum+requisicaoValor(r),0);
+      const totals = getFinancialTotalsLiquidos(linkedFaturas, reqEmpresa);
       const totalCobrado = totals.cobrado;
-      const totalCustos = totals.custos;
-      const totalRequisicoes = totals.requisicoes;
+      const totalCustos = totals.custos + reqProcessosTotal;
+      const totalRequisicoes = reqEmpresaTotal;
+      const totalRequisicoesProcesso = reqProcessosTotal;
       const totalMargemBruta = totals.margemBruta;
       const totalMargem = totals.margemLiquida;
       const clientes = [...new Set(processRows.map(p => String(p.importador_exportador || '').trim()).filter(Boolean))];
@@ -9470,7 +9504,7 @@ async function deleteMessageThread(clienteEmail) {
         lines.forEach(line => { const key = line.nome || 'Outros'; breakdown[key] = (breakdown[key] || 0) + safeNumber(line.valor || 0); });
       });
       const top = Object.entries(breakdown).sort((a,b)=>b[1]-a[1]).slice(0,6);
-      box.innerHTML = `<div class="progress-card"><div class="kpi-title">Resumo filtrado</div><div class="grid grid-3"><div><strong>Cobrado</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:#BE001A;">${formatMoney(totalCobrado)}</div></div><div><strong>Custos + requisições</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:#111827;">${formatMoney(totalCustos + totalRequisicoes)}</div></div><div><strong>Margem líquida</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:${totalMargem >= 0 ? '#166534' : '#b91c1c'};">${formatMoney(totalMargem)}</div></div></div><div class="small" style="margin-top:12px;">Margem bruta: ${formatMoney(totalMargemBruta)} • Requisições aprovadas: ${formatMoney(totalRequisicoes)} • Clientes no filtro: ${clientes.length} • Processos: ${processRows.length} • Faturas ligadas: ${linkedFaturas.length}</div></div><div class="progress-card"><div class="kpi-title">Em que foi gasto / cobrado</div>${top.length ? top.map(([nome,valor]) => `<div style="display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #eee;"><span>${escapeHtml(nome)}</span><strong>${formatMoney(valor)}</strong></div>`).join("") : `<div class="small">Sem faturas ligadas ao filtro atual.</div>`}<div style="display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid #eee;margin-top:8px;"><span>Requisições aprovadas</span><strong>${formatMoney(totalRequisicoes)}</strong></div></div>`;
+      box.innerHTML = `<div class="progress-card"><div class="kpi-title">Resumo filtrado</div><div class="grid grid-3"><div><strong>Cobrado</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:#BE001A;">${formatMoney(totalCobrado)}</div></div><div><strong>Custos + requisições do processo</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:#111827;">${formatMoney(totalCustos)}</div></div><div><strong>Margem líquida global</strong><div style="margin-top:6px;font-size:24px;font-weight:800;color:${totalMargem >= 0 ? '#166534' : '#b91c1c'};">${formatMoney(totalMargem)}</div></div></div><div class="small" style="margin-top:12px;">Margem bruta: ${formatMoney(totalMargemBruta)} • Req. custo empresa: ${formatMoney(totalRequisicoes)} • Req. vinculadas a processos: ${formatMoney(totalRequisicoesProcesso)} • Clientes no filtro: ${clientes.length} • Processos: ${processRows.length} • Faturas ligadas: ${linkedFaturas.length}</div></div><div class="progress-card"><div class="kpi-title">Em que foi gasto / cobrado</div>${top.length ? top.map(([nome,valor]) => `<div style="display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #eee;"><span>${escapeHtml(nome)}</span><strong>${formatMoney(valor)}</strong></div>`).join("") : `<div class="small">Sem faturas ligadas ao filtro atual.</div>`}<div style="display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid #eee;margin-top:8px;"><span>Requisições vinculadas aos processos</span><strong>${formatMoney(totalRequisicoesProcesso)}</strong></div><div style="display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid #eee;"><span>Requisições custo da empresa</span><strong>${formatMoney(totalRequisicoes)}</strong></div></div>`;
     }
 
     window.addEventListener("load", async () => {
