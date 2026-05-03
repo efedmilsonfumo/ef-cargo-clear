@@ -297,6 +297,86 @@
       line-height:1.5;
     }
 
+
+    /* EF Cargo Clear - Upgrade final: download, selo forte e dados oficiais */
+    .auth-strong{
+      margin-top:12px;
+      padding:18px;
+      border-radius:22px;
+      background:linear-gradient(135deg,#064e3b 0%,#166534 55%,#22c55e 100%);
+      color:#fff;
+      box-shadow:0 18px 36px rgba(22,101,52,.18);
+      display:flex;
+      align-items:flex-start;
+      gap:14px;
+    }
+    .auth-strong .auth-icon{
+      width:48px;height:48px;border-radius:18px;background:rgba(255,255,255,.16);
+      display:grid;place-items:center;font-size:24px;font-weight:900;flex:0 0 auto;
+      border:1px solid rgba(255,255,255,.22);
+    }
+    .auth-strong strong{display:block;font-size:17px;margin-bottom:4px;letter-spacing:-.02em;}
+    .auth-strong span{display:block;color:rgba(255,255,255,.86);font-size:13px;line-height:1.45;}
+    .validation-actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-top:14px;
+    }
+    .validation-action-btn{
+      border:none;
+      border-radius:18px;
+      padding:14px 16px;
+      min-height:52px;
+      cursor:pointer;
+      font-weight:900;
+      font-size:14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      text-decoration:none;
+      box-shadow:0 12px 24px rgba(15,23,42,.08);
+    }
+    .validation-action-btn.primary{background:linear-gradient(180deg,var(--primary) 0%,var(--primary-dark) 100%);color:#fff;}
+    .validation-action-btn.secondary{background:#fff;color:#111827;border:1px solid var(--line);}
+    .company-panel{
+      border:1px solid rgba(190,0,26,.14);
+      border-radius:24px;
+      padding:18px;
+      background:linear-gradient(180deg,#ffffff 0%,#fff8f8 100%);
+      box-shadow:0 14px 30px rgba(15,23,42,.06);
+    }
+    .company-panel-title{
+      font-size:16px;
+      font-weight:950;
+      color:#111827;
+      margin-bottom:10px;
+    }
+    .company-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+    }
+    .company-item{
+      border:1px solid #eef0f3;
+      background:#fff;
+      border-radius:16px;
+      padding:12px;
+    }
+    .company-item .k{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:900;margin-bottom:5px;}
+    .company-item .v{font-size:13px;color:#111827;font-weight:800;line-height:1.45;}
+    @media(max-width:720px){
+      .validation-actions,.company-grid{grid-template-columns:1fr;}
+    }
+    @media print{
+      body{background:#fff!important;}
+      .card:first-of-type,.footer{display:none!important;}
+      .wrap{max-width:100%;padding:0;}
+      .hero,.card{box-shadow:none!important;border:1px solid #e5e7eb;}
+      .validation-actions{display:none!important;}
+    }
+
   </style>
 </head>
 <body>
@@ -446,8 +526,44 @@
         html += `<div class="payment-note-clean"><strong>Observação:</strong> ${escapeHtml(observacao)}</div>`;
       }
 
+      html += `
+        <div class="auth-strong">
+          <div class="auth-icon">🔒</div>
+          <div>
+            <strong>Recibo autêntico e validado</strong>
+            <span>Documento confirmado digitalmente pelo sistema EF Cargo Clear. A validação indica que o pagamento foi registado e conferido na plataforma.</span>
+          </div>
+        </div>
+
+        <div class="validation-actions">
+          <button class="validation-action-btn primary" onclick="baixarReciboValidado()">📄 Baixar / Guardar PDF</button>
+          <button class="validation-action-btn secondary" onclick="window.print()">🖨️ Imprimir validação</button>
+        </div>
+
+        <div class="company-panel">
+          <div class="company-panel-title">Dados da entidade emissora</div>
+          <div class="company-grid">
+            <div class="company-item"><div class="k">Empresa</div><div class="v">EF &amp; Associados – Despachantes Aduaneiros, Lda</div></div>
+            <div class="company-item"><div class="k">NUIT</div><div class="v">400458796</div></div>
+            <div class="company-item"><div class="k">Endereço</div><div class="v">Av. Karl Marx nº 1881, Maputo</div></div>
+            <div class="company-item"><div class="k">Contactos</div><div class="v">+258 845178833 / +258 865178833</div></div>
+            <div class="company-item"><div class="k">Email</div><div class="v">ef.edmilsonfumo@gmail.com</div></div>
+            <div class="company-item"><div class="k">Sistema</div><div class="v">EF Cargo Clear</div></div>
+          </div>
+        </div>
+      `;
+
       html += `</div>`;
       return html;
+    }
+
+
+    function baixarReciboValidado() {
+      const ref = document.getElementById("refInput")?.value?.trim() || "recibo-validado";
+      const oldTitle = document.title;
+      document.title = "Validacao_" + ref.replace(/[^a-zA-Z0-9_-]/g, "_");
+      window.print();
+      setTimeout(() => { document.title = oldTitle; }, 500);
     }
 
     function setStatus(type, text) {
@@ -543,7 +659,7 @@
       const emitidoEm = data.recibo_emitido_at || data.pago_at || data.data_fatura;
 
       if (isPaid) {
-        setStatus("ok", "Recibo válido e pagamento registado.");
+        setStatus("ok", "✅ Recibo autêntico — pagamento confirmado pelo sistema EF Cargo Clear.");
       } else {
         setStatus("warn", "Documento encontrado, mas sem pagamento confirmado.");
       }
