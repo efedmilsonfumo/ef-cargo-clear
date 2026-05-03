@@ -219,6 +219,84 @@
       .wrap{padding:14px}
       .card,.hero{padding:18px}
     }
+
+
+    /* EF Cargo Clear - Validação premium de recibos */
+    .premium-extra{
+      margin-top:18px;
+      display:grid;
+      gap:14px;
+    }
+    .validation-seal{
+      display:flex;
+      align-items:flex-start;
+      gap:14px;
+      padding:16px;
+      border-radius:22px;
+      background:linear-gradient(135deg,#ecfdf5 0%,#ffffff 62%);
+      border:1px solid #bbf7d0;
+      box-shadow:0 12px 28px rgba(22,101,52,.08);
+    }
+    .validation-seal .seal-icon{
+      width:44px;
+      height:44px;
+      border-radius:16px;
+      display:grid;
+      place-items:center;
+      background:#dcfce7;
+      color:#166534;
+      font-size:22px;
+      font-weight:900;
+      flex:0 0 auto;
+    }
+    .validation-seal strong{display:block;color:#14532d;margin-bottom:4px;font-size:15px;}
+    .validation-seal span{display:block;color:#4b5563;font-size:13px;line-height:1.45;}
+    .payment-panel{
+      border:1px solid rgba(190,0,26,.14);
+      border-radius:24px;
+      background:linear-gradient(180deg,#fff 0%,#fbfcff 100%);
+      padding:16px;
+      box-shadow:0 14px 30px rgba(15,23,42,.06);
+      overflow:hidden;
+    }
+    .payment-panel-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+    .payment-panel-title{font-size:16px;font-weight:900;color:#111827;}
+    .payment-panel-sub{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.35;}
+    .payment-total-pill{
+      display:inline-flex;
+      align-items:center;
+      padding:8px 12px;
+      border-radius:999px;
+      background:#fff3f5;
+      color:var(--primary);
+      border:1px solid rgba(190,0,26,.16);
+      font-size:13px;
+      font-weight:900;
+      white-space:nowrap;
+    }
+    .payment-table-wrap{overflow:auto;border-radius:18px;border:1px solid var(--line);background:#fff;}
+    .payment-table{width:100%;border-collapse:separate;border-spacing:0;min-width:640px;}
+    .payment-table th,.payment-table td{padding:13px 12px;border-bottom:1px solid var(--line);text-align:left;font-size:13px;vertical-align:top;}
+    .payment-table th{background:#f9fafb;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;font-size:11px;font-weight:900;}
+    .payment-table tr:last-child td{border-bottom:none;}
+    .payment-confirmed{display:inline-flex;align-items:center;padding:6px 9px;border-radius:999px;background:#dcfce7;color:#166534;font-size:12px;font-weight:900;}
+    .payment-note-clean{
+      padding:14px 16px;
+      border-radius:18px;
+      background:#f9fafb;
+      border:1px solid var(--line);
+      color:#4b5563;
+      font-size:13px;
+      line-height:1.5;
+    }
+
   </style>
 </head>
 <body>
@@ -282,13 +360,103 @@
       });
     }
 
+    function extractPaymentJson(notes) {
+      const text = String(notes || "");
+      const marker = "EF_PAYMENTS_JSON:";
+      const idx = text.indexOf(marker);
+      if (idx === -1) return [];
+
+      const jsonText = text.slice(idx + marker.length).trim();
+      try {
+        const parsed = JSON.parse(jsonText);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        console.warn("Não foi possível interpretar detalhes técnicos de pagamento.", e);
+        return [];
+      }
+    }
+
+    function limparObservacaoRecibo(notes) {
+      const text = String(notes || "").trim();
+      if (!text) return "";
+
+      const marker = "EF_PAYMENTS_JSON:";
+      const idx = text.indexOf(marker);
+      if (idx === -1) return text;
+
+      const before = text.slice(0, idx).trim();
+      return before || "Pagamento confirmado pelo sistema EF Cargo Clear.";
+    }
+
+    function renderPaymentDetails(notes) {
+      const pagamentos = extractPaymentJson(notes).filter(p => p && (p.confirmado === true || String(p.confirmado).toLowerCase() === "true"));
+      const observacao = limparObservacaoRecibo(notes);
+
+      let html = `
+        <div class="premium-extra">
+          <div class="validation-seal">
+            <div class="seal-icon">✓</div>
+            <div>
+              <strong>Validação digital confirmada</strong>
+              <span>Este recibo foi localizado na base de dados da EF Cargo Clear e corresponde a um pagamento registado/confirmado no sistema.</span>
+            </div>
+          </div>
+      `;
+
+      if (pagamentos.length) {
+        const total = pagamentos.reduce((sum, p) => sum + Number(p.valor || 0), 0);
+        html += `
+          <div class="payment-panel">
+            <div class="payment-panel-head">
+              <div>
+                <div class="payment-panel-title">Detalhes dos pagamentos confirmados</div>
+                <div class="payment-panel-sub">Dados apresentados de forma resumida, sem expor informação técnica interna.</div>
+              </div>
+              <div class="payment-total-pill">Total confirmado: ${escapeHtml(formatMoney(total))}</div>
+            </div>
+            <div class="payment-table-wrap">
+              <table class="payment-table">
+                <thead>
+                  <tr>
+                    <th>Valor</th>
+                    <th>Método</th>
+                    <th>Data</th>
+                    <th>Referência</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${pagamentos.map(p => `
+                    <tr>
+                      <td><strong>${escapeHtml(formatMoney(p.valor || 0))}</strong></td>
+                      <td>${escapeHtml(p.metodo || "-")}</td>
+                      <td>${escapeHtml(formatDate(p.data || p.confirmado_em))}</td>
+                      <td>${escapeHtml(p.referencia || "-")}</td>
+                      <td><span class="payment-confirmed">Confirmado</span></td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }
+
+      if (observacao) {
+        html += `<div class="payment-note-clean"><strong>Observação:</strong> ${escapeHtml(observacao)}</div>`;
+      }
+
+      html += `</div>`;
+      return html;
+    }
+
     function setStatus(type, text) {
       const box = document.getElementById("statusBox");
       box.className = "status " + type;
       box.textContent = text;
     }
 
-    function showResult(fields, extraText = "") {
+    function showResult(fields, extraHtml = "") {
       document.getElementById("resultCard").style.display = "block";
       const grid = document.getElementById("resultGrid");
       grid.innerHTML = fields.map(f => `
@@ -297,7 +465,7 @@
           <div class="v">${escapeHtml(f.value)}</div>
         </div>
       `).join("");
-      document.getElementById("extraBox").textContent = extraText;
+      document.getElementById("extraBox").innerHTML = extraHtml;
     }
 
     async function findReceipt(ref) {
@@ -390,7 +558,7 @@
         { label: "Data de emissão do recibo", value: formatDate(emitidoEm) },
         { label: "Estado", value: isPaid ? "Pago / confirmado" : "Pendente de confirmação" },
         { label: "Referência interna", value: data.referencia || "-" }
-      ], data.payment_notes ? "Observação: " + data.payment_notes : "");
+      ], renderPaymentDetails(data.payment_notes));
     }
 
     document.getElementById("validateBtn").addEventListener("click", validateReceipt);
