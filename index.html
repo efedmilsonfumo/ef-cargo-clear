@@ -9470,17 +9470,44 @@ async function deleteMessageThread(clienteEmail) {
 
 
     function receiptHtmlFromInvoice(f) {
-      const reciboNumero = escapeHtml(f.recibo_numero || f.numero_recibo || ('RCB-' + (f.numero_fatura || '')));
-      const dataPagamento = escapeHtml((f.recibo_emitido_at || f.pago_at || new Date().toISOString()).slice(0, 10));
+      const reciboNumeroRaw = f.recibo_numero || f.numero_recibo || ('RCB-' + (f.numero_fatura || ''));
+      const reciboNumero = escapeHtml(reciboNumeroRaw);
+      const pagamentosConfirmados = parseInvoicePayments(f).filter(p => p.confirmado !== false && safeNumber(p.valor) > 0);
+      const dataPagamentoRaw = (f.recibo_emitido_at || f.pago_at || (pagamentosConfirmados[0] && pagamentosConfirmados[0].data) || new Date().toISOString()).slice(0, 10);
+      const dataPagamento = escapeHtml(dataPagamentoRaw);
       const clienteNome = escapeHtml(f.cliente_nome || '-');
       const clienteEmail = escapeHtml(f.cliente_email || f.email_cliente || '-');
       const clienteNuit = escapeHtml(f.cliente_nuit || f.nuit || '-');
       const referencia = escapeHtml(f.referencia || f.numero_fatura || '-');
-      const valor = formatMoney(f.total_mt || 0);
-      const valorExtenso = escapeHtml(numberToWordsPt(Math.round(Number(f.total_mt || 0))) + ' meticais');
-      const formaPagamento = escapeHtml(f.payment_notes || 'Pagamento confirmado no sistema');
+      const valorTotalRecibo = getInvoicePaidTotal(f) || safeNumber(f.total_mt || 0);
+      const valor = formatMoney(valorTotalRecibo);
+      const valorExtenso = escapeHtml(numberToWordsPt(Math.round(valorTotalRecibo)) + ' meticais');
       const processoRef = escapeHtml(f.processo_numero || f.numero_processo || f.fatura_processo || '-');
-      const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=' + encodeURIComponent('https://ef-cargo-clear.vercel.app/validar-recibo.html?ref=' + (f.recibo_numero || f.numero_recibo || ('RCB-' + (f.numero_fatura || ''))));
+      const pagamentosRows = pagamentosConfirmados.length ? pagamentosConfirmados.map((p, idx) => {
+        const metodo = escapeHtml(p.metodo || 'Pagamento confirmado');
+        const data = escapeHtml(String(p.data || dataPagamentoRaw).slice(0, 10));
+        const ref = escapeHtml(p.referencia || '-');
+        const obs = escapeHtml(p.observacao || '');
+        const confPor = escapeHtml(p.confirmado_por || 'EF Cargo Clear');
+        return `
+          <tr>
+            <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">${idx + 1}</td>
+            <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#111827;font-weight:700;">${formatMoney(p.valor || 0)}</td>
+            <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">${metodo}</td>
+            <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">${data}</td>
+            <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">${ref}</td>
+            <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">${confPor}${obs ? '<br><span style="color:#6b7280;font-size:12px;">' + obs + '</span>' : ''}</td>
+          </tr>
+        `;
+      }).join('') : `
+          <tr>
+            <td colspan="6" style="padding:12px 8px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Pagamento confirmado no sistema.</td>
+          </tr>
+        `;
+      const metodoResumo = pagamentosConfirmados.length
+        ? [...new Set(pagamentosConfirmados.map(p => p.metodo || 'Pagamento confirmado'))].map(escapeHtml).join(' + ')
+        : 'Pagamento confirmado no sistema';
+      const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=' + encodeURIComponent('https://ef-cargo-clear.vercel.app/validar-recibo.html?ref=' + reciboNumeroRaw);
 
       return `
         <div style="font-family:Arial,sans-serif;color:#111;max-width:980px;margin:0 auto;background:#ffffff;">
@@ -9535,9 +9562,9 @@ async function deleteMessageThread(clienteEmail) {
                 <div style="border:1px solid #e5e7eb;border-radius:18px;padding:18px 20px;background:#fff;">
                   <div style="font-size:12px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Detalhes do pagamento</div>
                   <div style="font-size:14px;line-height:1.8;color:#374151;">
-                    <strong>Forma de pagamento:</strong> ${formaPagamento}<br>
+                    <strong>Forma de pagamento:</strong> ${metodoResumo}<br>
                     <strong>Data de pagamento:</strong> ${dataPagamento}<br>
-                    <strong>Referência:</strong> ${referencia}<br>
+                    <strong>Referência geral:</strong> ${referencia}<br>
                     <strong>Processo:</strong> ${processoRef}
                   </div>
                 </div>
@@ -9550,6 +9577,23 @@ async function deleteMessageThread(clienteEmail) {
                   </div>
                   <img src="${qrUrl}" alt="QR Code de validação" style="width:130px;height:130px;border:1px solid #e5e7eb;border-radius:12px;padding:8px;background:#fff;" />
                 </div>
+              </div>
+
+              <div style="margin-top:18px;border:1px solid #e5e7eb;border-radius:18px;padding:18px 20px;background:#fff;">
+                <div style="font-size:12px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Pagamentos confirmados</div>
+                <table style="width:100%;border-collapse:collapse;">
+                  <thead>
+                    <tr style="background:#f9fafb;">
+                      <th style="padding:10px 8px;border-bottom:1px solid #d1d5db;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;">#</th>
+                      <th style="padding:10px 8px;border-bottom:1px solid #d1d5db;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;">Valor</th>
+                      <th style="padding:10px 8px;border-bottom:1px solid #d1d5db;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;">Método</th>
+                      <th style="padding:10px 8px;border-bottom:1px solid #d1d5db;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;">Data</th>
+                      <th style="padding:10px 8px;border-bottom:1px solid #d1d5db;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;">Referência</th>
+                      <th style="padding:10px 8px;border-bottom:1px solid #d1d5db;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;">Confirmado por</th>
+                    </tr>
+                  </thead>
+                  <tbody>${pagamentosRows}</tbody>
+                </table>
               </div>
 
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px;">
@@ -9578,6 +9622,7 @@ async function deleteMessageThread(clienteEmail) {
         </div>
       `;
     }
+
 
     function numberToWordsPt(n) {
       const unidades = ['zero','um','dois','três','quatro','cinco','seis','sete','oito','nove','dez','onze','doze','treze','catorze','quinze','dezasseis','dezassete','dezoito','dezanove'];
