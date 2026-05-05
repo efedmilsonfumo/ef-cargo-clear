@@ -1608,6 +1608,20 @@
   @media(max-width:720px){.ef-pay-status-box{grid-template-columns:1fr;}}
 </style>
 
+
+<!-- EF Cargo Clear - Cálculo Aduaneiro automático na fatura -->
+<style id="ef-customs-calculation-invoice">
+  .ef-customs-calc-box{margin-top:18px;border:1px solid rgba(190,0,26,.14);border-radius:24px;background:linear-gradient(180deg,#fff 0%,#fbfcff 100%);box-shadow:var(--shadow-soft);padding:18px;}
+  .ef-customs-calc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+  .ef-customs-results{margin-top:14px;display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+  .ef-customs-mini{border:1px solid #e5e7eb;border-radius:16px;background:#fff;padding:12px;}
+  .ef-customs-mini .lbl{font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;font-weight:900;margin-bottom:6px;}
+  .ef-customs-mini .val{font-size:16px;font-weight:900;color:#111827;}
+  .ef-customs-note{margin-top:12px;font-size:13px;color:#6b7280;background:#fff8f8;border:1px solid rgba(190,0,26,.12);border-radius:16px;padding:12px;line-height:1.45;}
+  @media(max-width:1100px){.ef-customs-results{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:640px){.ef-customs-results{grid-template-columns:1fr;}}
+</style>
+
 </head>
 <body>
 
@@ -2203,6 +2217,51 @@
                     </div>
                   </div>
                 </div>
+
+                <div class="ef-customs-calc-box">
+                  <div class="ef-customs-calc-head">
+                    <div>
+                      <h3 style="margin:0;">📦 Cálculo Aduaneiro</h3>
+                      <div class="small">Calcula automaticamente DA, ICE e IVA com base no valor CIF e câmbio da fatura.</div>
+                    </div>
+                    <label style="display:flex;gap:8px;align-items:center;margin:0;font-weight:800;color:#111827;">
+                      <input id="fat_incluir_aduaneiro" type="checkbox" checked onchange="recalcInvoice()" style="width:auto;min-height:auto;" />
+                      Incluir no total da fatura
+                    </label>
+                  </div>
+
+                  <div class="grid grid-4">
+                    <div>
+                      <label>Código pautal</label>
+                      <input id="fat_codigo_pautal" placeholder="Ex: 8703.22.20" oninput="recalcInvoice()" />
+                    </div>
+                    <div>
+                      <label>Direitos Aduaneiros (%)</label>
+                      <input id="fat_da_percent" type="number" step="0.01" value="0" oninput="recalcInvoice()" />
+                    </div>
+                    <div>
+                      <label>Imposto de Consumo / ICE (%)</label>
+                      <input id="fat_ic_percent" type="number" step="0.01" value="0" oninput="recalcInvoice()" />
+                    </div>
+                    <div>
+                      <label>IVA (%)</label>
+                      <input id="fat_iva_percent" type="number" step="0.01" value="16" oninput="recalcInvoice()" />
+                    </div>
+                  </div>
+
+                  <div class="ef-customs-results">
+                    <div class="ef-customs-mini"><div class="lbl">CIF MZN</div><div class="val" id="fat_calc_cif_mzn">0,00</div></div>
+                    <div class="ef-customs-mini"><div class="lbl">DA</div><div class="val" id="fat_calc_da">0,00</div></div>
+                    <div class="ef-customs-mini"><div class="lbl">ICE</div><div class="val" id="fat_calc_ic">0,00</div></div>
+                    <div class="ef-customs-mini"><div class="lbl">IVA</div><div class="val" id="fat_calc_iva">0,00</div></div>
+                    <div class="ef-customs-mini"><div class="lbl">Total imposições</div><div class="val" id="fat_calc_total_imposicoes">0,00</div></div>
+                  </div>
+
+                  <div class="ef-customs-note">
+                    Fórmula: CIF MZN = CIF × câmbio; DA = CIF MZN × %DA; ICE = (CIF MZN + DA) × %ICE; IVA = (CIF MZN + DA + ICE) × 16%. As taxas DA/ICE podem ser ajustadas manualmente conforme a pauta.
+                  </div>
+                </div>
+
 
                 <div class="grid grid-2" style="margin-top:18px;">
                   <div class="card" style="background:#fafafa;border-radius:20px;">
@@ -3456,6 +3515,7 @@
     let requisicoesCache = [];
     let funcionarioDocsCache = [];
     let currentInvoiceExtraCounter = 0;
+    let currentInvoiceExistingCustomsLines = [];
     let estadoDonutChart = null;
     let processosMesChart = null;
     let financeiroMesChart = null;
@@ -9118,6 +9178,7 @@ async function deleteMessageThread(clienteEmail) {
       document.getElementById('fat_extenso').value = '';
       document.getElementById('fat_edit_id').value = '';
       currentInvoiceExtraCounter = 0;
+      currentInvoiceExistingCustomsLines = [];
       document.querySelectorAll('.extra-invoice-line').forEach(x => x.remove());
       recalcInvoice();
       setInvoiceSaveButtonLabel();
@@ -9166,9 +9227,43 @@ async function deleteMessageThread(clienteEmail) {
       container.appendChild(wrap);
     }
 
+    function getInvoiceCustomsCalcFromForm(){
+      const cifMzn = Number(document.getElementById('fat_contravalor')?.value || 0);
+      const daPercent = Number(document.getElementById('fat_da_percent')?.value || 0);
+      const icPercent = Number(document.getElementById('fat_ic_percent')?.value || 0);
+      const ivaPercent = Number(document.getElementById('fat_iva_percent')?.value || 16);
+      const codigo = document.getElementById('fat_codigo_pautal')?.value?.trim() || '';
+      const da = cifMzn * (daPercent / 100);
+      const baseIC = cifMzn + da;
+      const ic = baseIC * (icPercent / 100);
+      const baseIVA = cifMzn + da + ic;
+      const iva = baseIVA * (ivaPercent / 100);
+      const total = da + ic + iva;
+      return { codigo, cifMzn, daPercent, icPercent, ivaPercent, da, ic, iva, total };
+    }
+
+    function updateInvoiceCustomsPreview(calc){
+      const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = formatMoney(value || 0); };
+      setText('fat_calc_cif_mzn', calc?.cifMzn || 0);
+      setText('fat_calc_da', calc?.da || 0);
+      setText('fat_calc_ic', calc?.ic || 0);
+      setText('fat_calc_iva', calc?.iva || 0);
+      setText('fat_calc_total_imposicoes', calc?.total || 0);
+    }
+
     function collectInvoiceLines() {
       const encargos = FATURA_ENCARGOS_FIXOS.map((name, idx) => ({ nome: name, valor: Number(document.getElementById(`enc_line_${idx}`)?.value || 0) }));
       const servicos = FATURA_SERVICOS_FIXOS.map((name, idx) => ({ nome: name, valor: Number(document.getElementById(`srv_line_${idx}`)?.value || 0) }));
+      const customs = getInvoiceCustomsCalcFromForm();
+      const includeCustoms = !!document.getElementById('fat_incluir_aduaneiro')?.checked;
+      if (includeCustoms && customs.total > 0) {
+        const suffix = customs.codigo ? ` (${customs.codigo})` : '';
+        encargos.push({ nome: `Direitos Aduaneiros${suffix}`, valor: customs.da });
+        if (customs.ic > 0) encargos.push({ nome: `Imposto de Consumo / ICE${suffix}`, valor: customs.ic });
+        encargos.push({ nome: `IVA Importação${suffix}`, valor: customs.iva });
+      } else if (includeCustoms && Array.isArray(currentInvoiceExistingCustomsLines) && currentInvoiceExistingCustomsLines.length) {
+        currentInvoiceExistingCustomsLines.forEach(x => encargos.push({ nome: x.nome, valor: Number(x.valor || 0) }));
+      }
       document.querySelectorAll('.extra-invoice-line').forEach(line => {
         const name = line.querySelector('input[id^="extra_name_"]')?.value?.trim() || 'Linha extra';
         const value = Number(line.querySelector('input[id^="extra_value_"]')?.value || 0);
@@ -9181,12 +9276,14 @@ async function deleteMessageThread(clienteEmail) {
       const valor = Number(document.getElementById('fat_valor_origem')?.value || 0);
       const cambio = Number(document.getElementById('fat_cambio')?.value || 0);
       const contravalor = valor * cambio;
+      const setVal = (id, value) => { const el = document.getElementById(id); if (el) el.value = value; };
+      setVal('fat_contravalor', contravalor.toFixed(2));
+      const customs = getInvoiceCustomsCalcFromForm();
+      updateInvoiceCustomsPreview(customs);
       const { encargos, servicos } = collectInvoiceLines();
       const subtotalEnc = encargos.reduce((s, x) => s + Number(x.valor || 0), 0);
       const subtotalSrv = servicos.reduce((s, x) => s + Number(x.valor || 0), 0);
       const total = subtotalEnc + subtotalSrv;
-      const setVal = (id, value) => { const el = document.getElementById(id); if (el) el.value = value; };
-      setVal('fat_contravalor', contravalor.toFixed(2));
       const encEl = document.getElementById('fat_subtotal_encargos'); if (encEl) encEl.textContent = formatMoney(subtotalEnc);
       const srvEl = document.getElementById('fat_subtotal_servicos'); if (srvEl) srvEl.textContent = formatMoney(subtotalSrv);
       setVal('fat_total', total.toFixed(2));
@@ -9290,6 +9387,12 @@ async function deleteMessageThread(clienteEmail) {
       document.getElementById('fat_valor_origem').value = Number(f.valor_origem || 0);
       document.getElementById('fat_cambio').value = Number(f.cambio || 0);
       document.getElementById('fat_contravalor').value = Number(f.contravalor_mt || 0);
+      const existingCustoms = getCustomsLinesFromInvoice(f);
+      currentInvoiceExistingCustomsLines = existingCustoms.map(x => ({ nome: x.nome, valor: Number(x.valor || 0) }));
+      const includeCustomsEl = document.getElementById('fat_incluir_aduaneiro');
+      if (includeCustomsEl) includeCustomsEl.checked = existingCustoms.length > 0;
+      const codigoFromLine = (existingCustoms[0]?.nome || '').match(/\(([^)]+)\)/)?.[1] || '';
+      if (document.getElementById('fat_codigo_pautal')) document.getElementById('fat_codigo_pautal').value = codigoFromLine;
       document.getElementById('fat_extenso').value = f.extenso || '';
       document.getElementById('fat_extenso').dataset.auto = '0';
       document.getElementById('fat_nota').value = f.nota || '';
@@ -9314,10 +9417,17 @@ async function deleteMessageThread(clienteEmail) {
       document.getElementById('internal-faturas')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
+
+    function getCustomsLinesFromInvoice(fatura){
+      const encargos = Array.isArray(fatura?.encargos_json) ? fatura.encargos_json : [];
+      return encargos.filter(x => /Direitos Aduaneiros|Imposto de Consumo|ICE|IVA Importação/i.test(String(x?.nome || '')));
+    }
+
     function invoiceHtmlFromRecord(fatura) {
       const cfg = companyConfig || {};
       const encargos = Array.isArray(fatura.encargos_json) ? fatura.encargos_json : [];
       const servicos = Array.isArray(fatura.servicos_json) ? fatura.servicos_json : [];
+      const customsLines = getCustomsLinesFromInvoice(fatura);
       const row = (name, val) => `<tr><td style="padding:6px 8px;border-bottom:1px solid #ddd;">${escapeHtml(name)}</td><td style="padding:6px 8px;border-bottom:1px solid #ddd;text-align:right;">${formatMoney(val)}</td></tr>`;
       return `
         <div style="font-family:Arial,sans-serif;color:#111;max-width:1000px;margin:0 auto;">
@@ -9354,6 +9464,14 @@ async function deleteMessageThread(clienteEmail) {
               Contravalor Mt: ${formatMoney(fatura.contravalor_mt || 0)}
             </div>
           </div>
+
+          ${customsLines.length ? `<div style="margin-top:20px;border:1px solid #ddd;border-radius:12px;padding:14px;">
+            <h3 style="margin:0 0 10px;">Cálculo Aduaneiro</h3>
+            <table style="width:100%;border-collapse:collapse;border:1px solid #ddd;border-radius:12px;overflow:hidden;">
+              ${customsLines.map(x => row(x.nome, x.valor)).join('')}
+              <tr><td style="padding:8px;font-weight:bold;">Total de imposições</td><td style="padding:8px;text-align:right;font-weight:bold;">${formatMoney(customsLines.reduce((s,x)=>s+Number(x.valor||0),0))}</td></tr>
+            </table>
+          </div>` : ''}
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px;align-items:start;">
             <div>
