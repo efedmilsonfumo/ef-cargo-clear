@@ -2225,8 +2225,13 @@
                       </select>
                     </div>
                     <div>
-                      <label>Câmbio</label>
+                      <label>Câmbio da moeda / MZN</label>
                       <input id="fat_cambio" type="number" step="0.01" oninput="recalcInvoice()" />
+                    </div>
+                    <div>
+                      <label>Câmbio USD / MZN (MCNET)</label>
+                      <input id="fat_cambio_usd" type="number" step="0.01" placeholder="Ex: 65" oninput="recalcInvoice()" />
+                      <div class="small" style="margin-top:6px;">Obrigatório para moedas diferentes de USD. Se a moeda for USD, é preenchido automaticamente.</div>
                     </div>
                     <div>
                       <label>Contravalor Mt</label>
@@ -2279,11 +2284,13 @@
                     <div class="ef-customs-mini"><div class="lbl">ICE</div><div class="val" id="fat_calc_ic">0,00</div></div>
                     <div class="ef-customs-mini"><div class="lbl">IVA</div><div class="val" id="fat_calc_iva">0,00</div></div>
                     <div class="ef-customs-mini"><div class="lbl">Total imposições</div><div class="val" id="fat_calc_total_imposicoes">0,00</div></div>
-                    <div class="ef-customs-mini"><div class="lbl">MCNET</div><div class="val" id="fat_calc_mcnet">0,00</div></div>
+                    <div class="ef-customs-mini"><div class="lbl">Valor USD p/ MCNET</div><div class="val" id="fat_calc_valor_usd_mcnet">0,00</div></div>
+                    <div class="ef-customs-mini"><div class="lbl">MCNET USD + IVA</div><div class="val" id="fat_calc_mcnet_usd">0,00</div></div>
+                    <div class="ef-customs-mini"><div class="lbl">MCNET MT</div><div class="val" id="fat_calc_mcnet">0,00</div></div>
                   </div>
 
                   <div class="ef-customs-note">
-                    Fórmula importação: CIF MZN = valor × câmbio; DA = CIF MZN × %DA; ICE = (CIF MZN + DA) × %ICE; IVA importação = (CIF MZN + DA + ICE) × 16%. Na exportação, DA/ICE/IVA importação são 0. MCNET é calculado pela tabela configurada e acrescido de IVA 16%. As taxas podem ser ajustadas manualmente.
+                    Fórmula importação: CIF MZN = valor × câmbio; DA = CIF MZN × %DA; ICE = (CIF MZN + DA) × %ICE; IVA importação = (CIF MZN + DA + ICE) × 16%. Na exportação, DA/ICE/IVA importação são 0. MCNET: primeiro converte o valor da fatura para USD, aplica a tabela MCNET em USD, soma IVA 16% e converte o resultado final para MT pelo câmbio USD/MZN. As taxas podem ser ajustadas manualmente.
                   </div>
                 </div>
 
@@ -9292,15 +9299,28 @@ async function deleteMessageThread(clienteEmail) {
 
     function getInvoiceMoeda(){ return document.getElementById('fat_moeda')?.value || 'USD'; }
 
+    function calcularMcnetDetalhado(valorOriginal){
+      const valor = Number(valorOriginal || 0);
+      const cambioMoeda = Number(document.getElementById('fat_cambio')?.value || 0);
+      const moeda = getInvoiceMoeda();
+      const cambioUsdInput = Number(document.getElementById('fat_cambio_usd')?.value || 0);
+      const cambioUsd = moeda === 'USD' ? (cambioMoeda || cambioUsdInput) : cambioUsdInput;
+      const valorMzn = valor * cambioMoeda;
+      const valorUsd = moeda === 'USD' ? valor : (cambioUsd > 0 ? valorMzn / cambioUsd : 0);
+      let baseUsd = 0;
+      if (valorUsd <= 0) baseUsd = 0;
+      else if (valorUsd <= 500) baseUsd = 5;
+      else if (valorUsd <= 10000) baseUsd = 24;
+      else if (valorUsd <= 50000) baseUsd = 64;
+      else baseUsd = valorUsd * 0.0085;
+      const ivaUsd = baseUsd * 0.16;
+      const totalUsd = baseUsd + ivaUsd;
+      const totalMzn = cambioUsd > 0 ? totalUsd * cambioUsd : 0;
+      return { valorUsd, baseUsd, ivaUsd, totalUsd, totalMzn, cambioUsd };
+    }
+
     function calcularMcnet(valorOriginal){
-      const v = Number(valorOriginal || 0);
-      let base = 0;
-      if (v <= 0) base = 0;
-      else if (v <= 500) base = 5;
-      else if (v <= 10000) base = 24;
-      else if (v <= 50000) base = 64;
-      else base = v * 0.0085;
-      return base * 1.16;
+      return calcularMcnetDetalhado(valorOriginal).totalMzn;
     }
 
     function getInvoiceServiceIndexByName(name){
@@ -9349,8 +9369,9 @@ async function deleteMessageThread(clienteEmail) {
       const baseIVA = cifMzn + da + ic;
       const iva = baseIVA * (ivaPercent / 100);
       const total = da + ic + iva;
-      const mcnet = calcularMcnet(valorOrigem);
-      return { codigo, tipoOperacao, moeda: getInvoiceMoeda(), cifMzn, daPercent, icPercent, ivaPercent, da, ic, iva, total, mcnet };
+      const mcnetDetalhe = calcularMcnetDetalhado(valorOrigem);
+      const mcnet = mcnetDetalhe.totalMzn;
+      return { codigo, tipoOperacao, moeda: getInvoiceMoeda(), cifMzn, daPercent, icPercent, ivaPercent, da, ic, iva, total, mcnet, mcnetDetalhe };
     }
 
     function updateInvoiceCustomsPreview(calc){
@@ -9360,6 +9381,8 @@ async function deleteMessageThread(clienteEmail) {
       setText('fat_calc_ic', calc?.ic || 0);
       setText('fat_calc_iva', calc?.iva || 0);
       setText('fat_calc_total_imposicoes', calc?.total || 0);
+      setText('fat_calc_valor_usd_mcnet', calc?.mcnetDetalhe?.valorUsd || 0);
+      setText('fat_calc_mcnet_usd', calc?.mcnetDetalhe?.totalUsd || 0);
       setText('fat_calc_mcnet', calc?.mcnet || 0);
     }
 
