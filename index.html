@@ -9251,19 +9251,37 @@ async function deleteMessageThread(clienteEmail) {
       setText('fat_calc_total_imposicoes', calc?.total || 0);
     }
 
+    function getInvoiceChargeIndexByName(name){
+      return FATURA_ENCARGOS_FIXOS.findIndex(x => String(x).toLowerCase() === String(name).toLowerCase());
+    }
+
+    function setInvoiceChargeInputByName(name, value){
+      const idx = getInvoiceChargeIndexByName(name);
+      if (idx < 0) return;
+      const el = document.getElementById(`enc_line_${idx}`);
+      if (!el) return;
+      el.value = Number(value || 0).toFixed(2);
+      el.dataset.autoCustoms = '1';
+    }
+
+    function applyCustomsCalcToFixedInvoiceFields(calc){
+      const includeCustoms = !!document.getElementById('fat_incluir_aduaneiro')?.checked;
+      if (!includeCustoms) {
+        ['Direitos Aduaneiros','Imposto de Consumo','Imposto Valor Acrescentado (I.V.A.)'].forEach(name => {
+          const idx = getInvoiceChargeIndexByName(name);
+          const el = idx >= 0 ? document.getElementById(`enc_line_${idx}`) : null;
+          if (el && el.dataset.autoCustoms === '1') el.value = '0.00';
+        });
+        return;
+      }
+      setInvoiceChargeInputByName('Direitos Aduaneiros', calc?.da || 0);
+      setInvoiceChargeInputByName('Imposto de Consumo', calc?.ic || 0);
+      setInvoiceChargeInputByName('Imposto Valor Acrescentado (I.V.A.)', calc?.iva || 0);
+    }
+
     function collectInvoiceLines() {
       const encargos = FATURA_ENCARGOS_FIXOS.map((name, idx) => ({ nome: name, valor: Number(document.getElementById(`enc_line_${idx}`)?.value || 0) }));
       const servicos = FATURA_SERVICOS_FIXOS.map((name, idx) => ({ nome: name, valor: Number(document.getElementById(`srv_line_${idx}`)?.value || 0) }));
-      const customs = getInvoiceCustomsCalcFromForm();
-      const includeCustoms = !!document.getElementById('fat_incluir_aduaneiro')?.checked;
-      if (includeCustoms && customs.total > 0) {
-        const suffix = customs.codigo ? ` (${customs.codigo})` : '';
-        encargos.push({ nome: `Direitos Aduaneiros${suffix}`, valor: customs.da });
-        if (customs.ic > 0) encargos.push({ nome: `Imposto de Consumo / ICE${suffix}`, valor: customs.ic });
-        encargos.push({ nome: `IVA Importação${suffix}`, valor: customs.iva });
-      } else if (includeCustoms && Array.isArray(currentInvoiceExistingCustomsLines) && currentInvoiceExistingCustomsLines.length) {
-        currentInvoiceExistingCustomsLines.forEach(x => encargos.push({ nome: x.nome, valor: Number(x.valor || 0) }));
-      }
       document.querySelectorAll('.extra-invoice-line').forEach(line => {
         const name = line.querySelector('input[id^="extra_name_"]')?.value?.trim() || 'Linha extra';
         const value = Number(line.querySelector('input[id^="extra_value_"]')?.value || 0);
@@ -9280,6 +9298,7 @@ async function deleteMessageThread(clienteEmail) {
       setVal('fat_contravalor', contravalor.toFixed(2));
       const customs = getInvoiceCustomsCalcFromForm();
       updateInvoiceCustomsPreview(customs);
+      applyCustomsCalcToFixedInvoiceFields(customs);
       const { encargos, servicos } = collectInvoiceLines();
       const subtotalEnc = encargos.reduce((s, x) => s + Number(x.valor || 0), 0);
       const subtotalSrv = servicos.reduce((s, x) => s + Number(x.valor || 0), 0);
@@ -9420,7 +9439,8 @@ async function deleteMessageThread(clienteEmail) {
 
     function getCustomsLinesFromInvoice(fatura){
       const encargos = Array.isArray(fatura?.encargos_json) ? fatura.encargos_json : [];
-      return encargos.filter(x => /Direitos Aduaneiros|Imposto de Consumo|ICE|IVA Importação/i.test(String(x?.nome || '')));
+      const nomes = ['Direitos Aduaneiros','Imposto de Consumo','Imposto Valor Acrescentado (I.V.A.)'];
+      return encargos.filter(x => nomes.includes(String(x?.nome || '').trim()) && Number(x?.valor || 0) > 0);
     }
 
     function invoiceHtmlFromRecord(fatura) {
