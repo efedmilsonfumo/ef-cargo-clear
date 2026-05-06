@@ -9591,22 +9591,46 @@ async function deleteMessageThread(clienteEmail) {
         }
         const editId = document.getElementById('fat_edit_id').value || '';
         let data, error;
+        let updatedExistingByNumber = false;
         if (editId) {
           ({ data, error } = await withTimeout(
             supabaseClient.from('faturas').update(payload).eq('id', editId).select('*').single(),
             12000
           ));
         } else {
-          ({ data, error } = await withTimeout(
-            supabaseClient.from('faturas').insert(payload).select('*').single(),
+          const existing = await withTimeout(
+            supabaseClient.from('faturas').select('id, numero_fatura').eq('numero_fatura', payload.numero_fatura).maybeSingle(),
             12000
-          ));
+          );
+          if (existing?.error) {
+            alert(existing.error.message);
+            return;
+          }
+          if (existing?.data?.id) {
+            const ok = confirm(`Já existe uma fatura com o número ${payload.numero_fatura}. Deseja atualizar essa fatura existente em vez de criar uma duplicada?`);
+            if (!ok) return;
+            ({ data, error } = await withTimeout(
+              supabaseClient.from('faturas').update(payload).eq('id', existing.data.id).select('*').single(),
+              12000
+            ));
+            updatedExistingByNumber = true;
+          } else {
+            ({ data, error } = await withTimeout(
+              supabaseClient.from('faturas').insert(payload).select('*').single(),
+              12000
+            ));
+          }
         }
         if (error) {
-          alert(error.message);
+          const msg = String(error.message || '');
+          if (msg.includes('faturas_numero_fatura_key') || msg.includes('duplicate key')) {
+            alert('Já existe uma fatura com este número. Clique em Editar na fatura existente ou use o botão Nova fatura para gerar outro número.');
+          } else {
+            alert(error.message);
+          }
           return;
         }
-        alert(editId ? 'Fatura atualizada com sucesso.' : 'Fatura guardada com sucesso.');
+        alert(editId || updatedExistingByNumber ? 'Fatura atualizada com sucesso.' : 'Fatura guardada com sucesso.');
         const idx = faturasCache.findIndex(x => x.id === data.id);
         if (idx >= 0) faturasCache[idx] = data; else faturasCache.unshift(data);
         renderFaturasTable();
@@ -9693,7 +9717,7 @@ async function deleteMessageThread(clienteEmail) {
               <h1 style="margin:0;color:#BE001A;">Fatura</h1>
               <div style="margin-top:10px;font-size:14px;line-height:1.6;">
                 <strong>EF & ASSOCIADOS DESP ADUANEIROS LDA</strong><br>
-                NUIT: 400458796<br>
+                NUIT: 401359192<br>
                 Avª. Karl Marx nº 1881 - Maputo<br>
                 Tel: +258 845178833 / +258 865178833<br>
                 Email: ef.edmilsonfumo@gmail.com
@@ -9793,7 +9817,7 @@ async function deleteMessageThread(clienteEmail) {
               </div>
               <div style="text-align:right;font-size:13px;line-height:1.6;">
                 <strong>EF & ASSOCIADOS DESP ADUANEIROS LDA</strong><br>
-                NUIT: 400458796<br>
+                NUIT: 401359192<br>
                 Avª. Karl Marx nº 1881 - Maputo<br>
                 Tel: +258 845178833 / +258 865178833<br>
                 Email: ef.edmilsonfumo@gmail.com
