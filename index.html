@@ -2235,7 +2235,7 @@
                     </div>
                     <div>
                       <label>Contravalor Mt</label>
-                      <input id="fat_contravalor" type="number" step="0.01" readonly />
+                      <input id="fat_contravalor" type="number" step="0.01" oninput="this.dataset.manualOverride='1';recalcInvoice()" />
                     </div>
                   </div>
                 </div>
@@ -2317,11 +2317,11 @@
                   <div class="grid grid-3">
                     <div>
                       <label>Total Mt</label>
-                      <input id="fat_total" readonly />
+                      <input id="fat_total" oninput="this.dataset.manualOverride='1';recalcInvoice()" />
                     </div>
                     <div>
                       <label>Extenso</label>
-                      <input id="fat_extenso" />
+                      <input id="fat_extenso" oninput="this.dataset.auto='0'" />
                     </div>
                     <div>
                       <label>Nota</label>
@@ -9193,8 +9193,11 @@ async function deleteMessageThread(clienteEmail) {
       if (!el) return;
       el.innerHTML = lines.map((name, idx) => {
         const defaultValue = type === 'srv' ? Number(FATURA_SERVICOS_PADRAO[name] || 0) : 0;
-        const isAgencia = type === 'srv' && String(name).toLowerCase() === 'agência';
-        const handler = isAgencia ? "this.dataset.manualOverride='1';recalcInvoice()" : "recalcInvoice()";
+        const lowerName = String(name).toLowerCase();
+        const autoEncargos = ['direitos aduaneiros','imposto de consumo','imposto valor acrescentado (i.v.a.)','mcnet'];
+        const autoServicos = ['agência','iva'];
+        const isAutoEditable = (type === 'enc' && autoEncargos.includes(lowerName)) || (type === 'srv' && autoServicos.includes(lowerName));
+        const handler = isAutoEditable ? "this.dataset.manualOverride='1';recalcInvoice()" : "recalcInvoice()";
         return `
         <div class="invoice-line">
           <div class="name">${name}</div>
@@ -9205,7 +9208,11 @@ async function deleteMessageThread(clienteEmail) {
 
     function getNextInvoiceNumber() {
       const year = new Date().getFullYear();
-      const seq = (faturasCache || []).filter(f => String(f.numero_fatura || "").includes(`/EF/${year}`)).length + 1;
+      const nums = (faturasCache || [])
+        .map(f => String(f.numero_fatura || '').match(new RegExp('^(\\d+)\\/EF\\/' + year + '$')))
+        .filter(Boolean)
+        .map(m => Number(m[1] || 0));
+      const seq = (nums.length ? Math.max(...nums) : 0) + 1;
       return `${String(seq).padStart(3,'0')}/EF/${year}`;
     }
 
@@ -9231,6 +9238,8 @@ async function deleteMessageThread(clienteEmail) {
       document.getElementById('fat_data').value = new Date().toISOString().slice(0,10);
       document.getElementById('fat_nota').value = 'Nota:- Os valores indicados nesta fatura poderão sofrer alterações resultantes da taxa cambial até conclusão do processo';
       document.getElementById('fat_extenso').value = '';
+      document.getElementById('fat_extenso').dataset.auto = '1';
+      ['fat_contravalor','fat_total'].forEach(id => { const el = document.getElementById(id); if (el) el.dataset.manualOverride = '0'; });
       document.getElementById('fat_edit_id').value = '';
       currentInvoiceExtraCounter = 0;
       currentInvoiceExistingCustomsLines = [];
@@ -9409,6 +9418,7 @@ async function deleteMessageThread(clienteEmail) {
       if (idx < 0) return;
       const el = document.getElementById(`srv_line_${idx}`);
       if (!el) return;
+      if (el.dataset.manualOverride === '1') return;
       el.value = Number(value || 0).toFixed(2);
       el.dataset.autoServiceIva = '1';
     }
@@ -9472,6 +9482,7 @@ async function deleteMessageThread(clienteEmail) {
       if (idx < 0) return;
       const el = document.getElementById(`enc_line_${idx}`);
       if (!el) return;
+      if (el.dataset.manualOverride === '1') return;
       el.value = Number(value || 0).toFixed(2);
       el.dataset.autoCustoms = '1';
     }
@@ -9492,7 +9503,7 @@ async function deleteMessageThread(clienteEmail) {
       }
       const mcIdx = getInvoiceChargeIndexByName('MCNET');
       const mcEl = mcIdx >= 0 ? document.getElementById(`enc_line_${mcIdx}`) : null;
-      if (mcEl) {
+      if (mcEl && mcEl.dataset.manualOverride !== '1') {
         mcEl.value = includeMcnet ? Number(calc?.mcnet || 0).toFixed(2) : '0.00';
         mcEl.dataset.autoMcnet = '1';
       }
@@ -9518,7 +9529,7 @@ async function deleteMessageThread(clienteEmail) {
       const valor = Number(document.getElementById('fat_valor_origem')?.value || 0);
       const cambio = Number(document.getElementById('fat_cambio')?.value || 0);
       const contravalor = valor * cambio;
-      const setVal = (id, value) => { const el = document.getElementById(id); if (el) el.value = value; };
+      const setVal = (id, value) => { const el = document.getElementById(id); if (el && el.dataset.manualOverride !== '1') el.value = value; };
       setVal('fat_contravalor', contravalor.toFixed(2));
       const customs = getInvoiceCustomsCalcFromForm();
       updateInvoiceCustomsPreview(customs);
@@ -9543,9 +9554,12 @@ async function deleteMessageThread(clienteEmail) {
       const encEl = document.getElementById('fat_subtotal_encargos'); if (encEl) encEl.textContent = formatMoney(subtotalEnc);
       const srvEl = document.getElementById('fat_subtotal_servicos'); if (srvEl) srvEl.textContent = formatMoney(subtotalSrv);
       setVal('fat_total', total.toFixed(2));
+      const totalParaExtenso = document.getElementById('fat_total')?.dataset.manualOverride === '1'
+        ? Number(document.getElementById('fat_total')?.value || total)
+        : total;
       const extensoEl = document.getElementById('fat_extenso');
       if (extensoEl && (!extensoEl.value.trim() || extensoEl.dataset.auto === '1')) {
-        extensoEl.value = numeroPorExtensoPt(total);
+        extensoEl.value = numeroPorExtensoPt(totalParaExtenso);
         extensoEl.dataset.auto = '1';
       }
     }
@@ -9666,7 +9680,7 @@ async function deleteMessageThread(clienteEmail) {
       document.getElementById('fat_origem').value = f.origem || '';
       document.getElementById('fat_valor_origem').value = Number(f.valor_origem || 0);
       document.getElementById('fat_cambio').value = Number(f.cambio || 0);
-      document.getElementById('fat_contravalor').value = Number(f.contravalor_mt || 0);
+      document.getElementById('fat_contravalor').value = Number(f.contravalor_mt || 0); document.getElementById('fat_contravalor').dataset.manualOverride = '1';
       const existingCustoms = getCustomsLinesFromInvoice(f);
       currentInvoiceExistingCustomsLines = existingCustoms.map(x => ({ nome: x.nome, valor: Number(x.valor || 0) }));
       const includeCustomsEl = document.getElementById('fat_incluir_aduaneiro');
@@ -9681,14 +9695,20 @@ async function deleteMessageThread(clienteEmail) {
       FATURA_ENCARGOS_FIXOS.forEach((name, idx) => {
         const item = encargos.find(x => x.nome === name);
         const el = document.getElementById(`enc_line_${idx}`);
-        if (el) el.value = Number(item?.valor || 0);
+        if (el) {
+          el.value = Number(item?.valor || 0);
+          if (['Direitos Aduaneiros','Imposto de Consumo','Imposto Valor Acrescentado (I.V.A.)','MCNET'].includes(name)) el.dataset.manualOverride = '1';
+        }
       });
 
       const servicos = Array.isArray(f.servicos_json) ? f.servicos_json : [];
       FATURA_SERVICOS_FIXOS.forEach((name, idx) => {
         const item = servicos.find(x => x.nome === name);
         const el = document.getElementById(`srv_line_${idx}`);
-        if (el) el.value = Number(item?.valor || 0);
+        if (el) {
+          el.value = Number(item?.valor || 0);
+          if (['Agência','IVA'].includes(name)) el.dataset.manualOverride = '1';
+        }
       });
       const extras = servicos.filter(x => !FATURA_SERVICOS_FIXOS.includes(x.nome));
       extras.forEach(x => addInvoiceExtraLine(x.nome, x.valor));
