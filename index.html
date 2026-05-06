@@ -9378,12 +9378,11 @@ async function deleteMessageThread(clienteEmail) {
         baseUsd = 350;
       } else if (valorUsd <= 100000) {
         baseUsd = 600;
-      } else if (valorUsd <= 500000) {
+      } else if (valorUsd < 500000) {
         baseUsd = 1000;
-      } else if (valorUsd <= 1000000) {
-        baseUsd = valorUsd * 0.0004;
       } else {
-        baseUsd = valorUsd * 0.0004;
+        // Carga geral a partir de 500.000 USD: 0,40% sobre o valor CIF/fatura em USD.
+        baseUsd = valorUsd * 0.004;
       }
       const baseMzn = info.cambioUsd > 0 ? baseUsd * info.cambioUsd : 0;
       return { tipo, valorUsd, honorariosUsd: baseUsd, honorariosMzn: baseMzn, cambioUsd: info.cambioUsd };
