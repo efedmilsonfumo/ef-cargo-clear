@@ -2304,6 +2304,7 @@
                   </div>
                   <div class="card" style="background:#fafafa;border-radius:20px;">
                     <h3 style="margin-top:0;">Prestação de Serviços</h3>
+                    <div class="small" style="margin-bottom:10px;">Agência é calculada automaticamente pela tabela de honorários em USD e convertida para MT pelo câmbio USD/MZN. Pode alterar manualmente se houver acordo especial.</div>
                     <div id="fat_servicos"></div>
                     <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
                       <button class="btn-mini info" onclick="addInvoiceExtraLine()">Adicionar linha extra</button>
@@ -3324,6 +3325,8 @@
       <div class="row" style="margin-top:14px;align-items:center;">
         <button class="btn" onclick="saveInvoicePaymentRecord()">Confirmar pagamento</button>
         <button class="btn btn-outline" onclick="prefillInvoiceRemainingAmount()">Preencher valor em falta</button>
+        <button class="btn btn-outline" onclick="downloadCurrentInvoiceBalanceStatement()">Extrato de saldo</button>
+        <button class="btn btn-outline" onclick="sendCurrentInvoiceBalanceStatement()">Enviar extrato ao cliente</button>
       </div>
 
       <div class="ef-payment-modal-note">
@@ -8054,6 +8057,7 @@ async function deleteMessageThread(clienteEmail) {
           <td>
             <button class="btn-mini info" onclick="previewClientInvoice('${f.id}')">Ver fatura</button>
             <button class="btn-mini secondary" onclick="downloadClientInvoice('${f.id}')">Baixar fatura</button>
+            ${(getInvoicePaymentStatus(f) === 'Parcial') ? `<button class="btn-mini info" onclick="downloadInvoiceBalancePdf('${f.id}')">Extrato de saldo</button>` : ''}
             ${getInvoicePaymentStatus(f) === 'Pago' ? `<button class="btn-mini green" onclick="downloadClientReceipt('${f.id}')">Baixar recibo</button>` : ''}
           </td>
         </tr>
@@ -9109,6 +9113,20 @@ async function deleteMessageThread(clienteEmail) {
     ];
 
 
+    const FATURA_SERVICOS_PADRAO = {
+      "Declaração e Requerimentos": 1500,
+      "Deslocações": 1000,
+      "Comunicação": 500,
+      "Impressos": 350,
+      "Agência": 0,
+      "Fotocópias": 150,
+      "Classificação Pautal": 150,
+      "DIVERSOS": 412,
+      "IVA": 0
+    };
+
+
+
     function sanitizeInvoiceNumber(value) {
       return String(value || '').replace(/[^0-9.,-]/g, '').trim();
     }
@@ -9173,12 +9191,16 @@ async function deleteMessageThread(clienteEmail) {
     function buildInvoiceLines(containerId, lines, type) {
       const el = document.getElementById(containerId);
       if (!el) return;
-      el.innerHTML = lines.map((name, idx) => `
+      el.innerHTML = lines.map((name, idx) => {
+        const defaultValue = type === 'srv' ? Number(FATURA_SERVICOS_PADRAO[name] || 0) : 0;
+        const isAgencia = type === 'srv' && String(name).toLowerCase() === 'agência';
+        const handler = isAgencia ? "this.dataset.manualOverride='1';recalcInvoice()" : "recalcInvoice()";
+        return `
         <div class="invoice-line">
           <div class="name">${name}</div>
-          <input type="number" step="0.01" data-line-type="${type}" data-line-name="${name}" id="${type}_line_${idx}" value="0" oninput="recalcInvoice()" />
-        </div>
-      `).join("");
+          <input type="number" step="0.01" data-line-type="${type}" data-line-name="${name}" id="${type}_line_${idx}" value="${defaultValue}" oninput="${handler}" />
+        </div>`;
+      }).join("");
     }
 
     function getNextInvoiceNumber() {
@@ -9323,6 +9345,62 @@ async function deleteMessageThread(clienteEmail) {
       return calcularMcnetDetalhado(valorOriginal).totalMzn;
     }
 
+    function getInvoiceValorUsdParaHonorarios(valorOriginal){
+      const valor = Number(valorOriginal || 0);
+      const cambioMoeda = Number(document.getElementById('fat_cambio')?.value || 0);
+      const moeda = getInvoiceMoeda();
+      const cambioUsdInput = Number(document.getElementById('fat_cambio_usd')?.value || 0);
+      const cambioUsd = moeda === 'USD' ? (cambioMoeda || cambioUsdInput) : cambioUsdInput;
+      const valorMzn = valor * cambioMoeda;
+      const valorUsd = moeda === 'USD' ? valor : (cambioUsd > 0 ? valorMzn / cambioUsd : 0);
+      return { valorUsd, valorMzn, cambioUsd };
+    }
+
+    function calcularHonorariosDetalhado(valorOriginal){
+      const info = getInvoiceValorUsdParaHonorarios(valorOriginal);
+      const valorUsd = Number(info.valorUsd || 0);
+      const mercadoria = String(document.getElementById('fat_mercadoria')?.value || '').toLowerCase();
+      let tipo = 'Carga geral';
+      let baseUsd = 0;
+      if (mercadoria.includes('isenc') || mercadoria.includes('piet')) {
+        tipo = 'Isenção/PIET';
+        baseUsd = 120;
+      } else if (mercadoria.includes('requer')) {
+        tipo = 'Requerimento';
+        baseUsd = 75;
+      } else if (valorUsd <= 0) {
+        baseUsd = 0;
+      } else if (valorUsd <= 15000) {
+        baseUsd = 150;
+      } else if (valorUsd <= 40000) {
+        baseUsd = 250;
+      } else if (valorUsd <= 60000) {
+        baseUsd = 350;
+      } else if (valorUsd <= 100000) {
+        baseUsd = 600;
+      } else if (valorUsd <= 500000) {
+        baseUsd = 1000;
+      } else if (valorUsd <= 1000000) {
+        baseUsd = valorUsd * 0.0004;
+      } else {
+        baseUsd = valorUsd * 0.0004;
+      }
+      const baseMzn = info.cambioUsd > 0 ? baseUsd * info.cambioUsd : 0;
+      return { tipo, valorUsd, honorariosUsd: baseUsd, honorariosMzn: baseMzn, cambioUsd: info.cambioUsd };
+    }
+
+    function aplicarHonorariosAgenciaAutomatico(){
+      const idx = getInvoiceServiceIndexByName('Agência');
+      const el = idx >= 0 ? document.getElementById(`srv_line_${idx}`) : null;
+      if (!el) return null;
+      if (el.dataset.manualOverride === '1') return null;
+      const valor = Number(document.getElementById('fat_valor_origem')?.value || 0);
+      const calc = calcularHonorariosDetalhado(valor);
+      el.value = Number(calc.honorariosMzn || 0).toFixed(2);
+      el.dataset.autoHonorarios = '1';
+      return calc;
+    }
+
     function getInvoiceServiceIndexByName(name){
       return FATURA_SERVICOS_FIXOS.findIndex(x => String(x).toLowerCase() === String(name).toLowerCase());
     }
@@ -9446,6 +9524,7 @@ async function deleteMessageThread(clienteEmail) {
       const customs = getInvoiceCustomsCalcFromForm();
       updateInvoiceCustomsPreview(customs);
       applyCustomsCalcToFixedInvoiceFields(customs);
+      aplicarHonorariosAgenciaAutomatico();
 
       const ivaSrvIdx = getInvoiceServiceIndexByName('IVA');
       let srvBase = 0;
@@ -9687,6 +9766,124 @@ async function deleteMessageThread(clienteEmail) {
       `;
     }
 
+
+    function invoiceBalanceStatementHtmlFromRecord(fatura) {
+      const cfg = companyConfig || {};
+      const payments = parseInvoicePayments(fatura).filter(p => p.confirmado !== false);
+      const total = getInvoiceTotal(fatura);
+      const paid = getInvoicePaidTotal(fatura);
+      const due = getInvoiceDueAmount(fatura);
+      const status = getInvoicePaymentStatus(fatura);
+      const rows = payments.length ? payments.map((p, idx) => `
+        <tr>
+          <td style="padding:9px 8px;border-bottom:1px solid #e5e7eb;">${idx + 1}</td>
+          <td style="padding:9px 8px;border-bottom:1px solid #e5e7eb;">${escapeHtml(formatDate(p.data || ''))}</td>
+          <td style="padding:9px 8px;border-bottom:1px solid #e5e7eb;">${escapeHtml(p.metodo || 'Pagamento')}</td>
+          <td style="padding:9px 8px;border-bottom:1px solid #e5e7eb;">${escapeHtml(p.referencia || '-')}</td>
+          <td style="padding:9px 8px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:bold;">${formatMoney(p.valor || 0)}</td>
+        </tr>
+      `).join('') : `<tr><td colspan="5" style="padding:12px;border-bottom:1px solid #e5e7eb;color:#6b7280;">Nenhum pagamento confirmado até ao momento.</td></tr>`;
+      return `
+        <div style="font-family:Arial,sans-serif;color:#111;max-width:980px;margin:0 auto;background:#fff;">
+          <div style="border:1px solid #e5e7eb;border-radius:20px;overflow:hidden;box-shadow:0 18px 48px rgba(15,23,42,.10);">
+            <div style="background:linear-gradient(135deg,#0f172a 0%,#1f2937 62%,#BE001A 100%);color:#fff;padding:28px 34px;display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:flex-start;">
+              <div>
+                <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:bold;opacity:.8;">EF Cargo Clear</div>
+                <h1 style="margin:8px 0 0;font-size:34px;line-height:1;">Extrato de Saldo</h1>
+                <div style="margin-top:10px;font-size:14px;opacity:.9;">Documento complementar de controlo de pagamento parcial.</div>
+              </div>
+              <div style="text-align:right;font-size:13px;line-height:1.6;">
+                <strong>EF & ASSOCIADOS DESP ADUANEIROS LDA</strong><br>
+                NUIT: 400458796<br>
+                Avª. Karl Marx nº 1881 - Maputo<br>
+                Tel: +258 845178833 / +258 865178833<br>
+                Email: ef.edmilsonfumo@gmail.com
+              </div>
+            </div>
+
+            <div style="padding:26px 34px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;">
+                <div style="border:1px solid #e5e7eb;border-radius:16px;padding:14px;">
+                  <div style="font-size:11px;color:#6b7280;text-transform:uppercase;font-weight:bold;letter-spacing:.08em;">Cliente</div>
+                  <div style="margin-top:8px;font-size:18px;font-weight:bold;">${escapeHtml(fatura.cliente_nome || '-')}</div>
+                  <div style="margin-top:4px;font-size:13px;color:#374151;">NUIT: ${escapeHtml(fatura.cliente_nuit || '-')}</div>
+                  <div style="font-size:13px;color:#374151;">Email: ${escapeHtml(fatura.cliente_email || '-')}</div>
+                </div>
+                <div style="border:1px solid #e5e7eb;border-radius:16px;padding:14px;">
+                  <div style="font-size:11px;color:#6b7280;text-transform:uppercase;font-weight:bold;letter-spacing:.08em;">Referência</div>
+                  <div style="margin-top:8px;font-size:18px;font-weight:bold;">Fatura ${escapeHtml(fatura.numero_fatura || '-')}</div>
+                  <div style="margin-top:4px;font-size:13px;color:#374151;">Data da fatura: ${escapeHtml(fatura.data_fatura || '-')}</div>
+                  <div style="font-size:13px;color:#374151;">Refª: ${escapeHtml(fatura.referencia || '-')}</div>
+                </div>
+              </div>
+
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+                <div style="border:1px solid #e5e7eb;border-radius:16px;padding:14px;background:#fafafa;"><div style="font-size:11px;color:#6b7280;text-transform:uppercase;font-weight:bold;">Valor da fatura</div><div style="margin-top:8px;font-size:20px;font-weight:900;">${formatMoney(total)}</div></div>
+                <div style="border:1px solid #bbf7d0;border-radius:16px;padding:14px;background:#f0fdf4;"><div style="font-size:11px;color:#166534;text-transform:uppercase;font-weight:bold;">Pago confirmado</div><div style="margin-top:8px;font-size:20px;font-weight:900;color:#166534;">${formatMoney(paid)}</div></div>
+                <div style="border:1px solid #fecaca;border-radius:16px;padding:14px;background:#fff1f2;"><div style="font-size:11px;color:#991b1b;text-transform:uppercase;font-weight:bold;">Saldo em aberto</div><div style="margin-top:8px;font-size:20px;font-weight:900;color:#991b1b;">${formatMoney(due)}</div></div>
+                <div style="border:1px solid #bfdbfe;border-radius:16px;padding:14px;background:#eff6ff;"><div style="font-size:11px;color:#1d4ed8;text-transform:uppercase;font-weight:bold;">Estado</div><div style="margin-top:8px;font-size:20px;font-weight:900;color:#1d4ed8;">${escapeHtml(status)}</div></div>
+              </div>
+
+              <h3 style="margin:0 0 10px;">Histórico de pagamentos</h3>
+              <table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
+                <thead>
+                  <tr style="background:#f9fafb;">
+                    <th style="padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;">#</th>
+                    <th style="padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;">Data</th>
+                    <th style="padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;">Método</th>
+                    <th style="padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;">Referência</th>
+                    <th style="padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:right;font-size:11px;color:#6b7280;text-transform:uppercase;">Valor</th>
+                  </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+
+              <div style="margin-top:18px;border:1px solid #e5e7eb;border-radius:16px;padding:14px;background:#fafafa;font-size:13px;line-height:1.7;color:#374151;">
+                <strong>Nota:</strong> Este extrato não substitui a fatura nem o recibo. Serve para informar o cliente sobre pagamentos já confirmados e saldo ainda pendente. O recibo final fica disponível após liquidação total da fatura.
+              </div>
+
+              <div style="margin-top:24px;display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;font-size:12px;color:#6b7280;border-top:1px solid #e5e7eb;padding-top:14px;">
+                <div>Documento gerado automaticamente pelo EF Cargo Clear em ${formatDate(new Date().toISOString())}</div>
+                <div>Processado por: ${escapeHtml(currentUserName || currentUserEmail || 'Sistema')}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function downloadInvoiceBalancePdf(id) {
+      const f = [...faturasCache, ...clientFaturasCache].find(x => String(x.id) === String(id));
+      if (!f) return;
+      const w = window.open('', '_blank');
+      if (!w) { alert('O navegador bloqueou a abertura do extrato.'); return; }
+      w.document.open();
+      w.document.write(`<html><head><title>Extrato-${escapeHtml(f.numero_fatura || '')}</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{margin:20px;background:#f4f6f8;}@media print{body{margin:0;background:#fff;}}</style></head><body>${invoiceBalanceStatementHtmlFromRecord(f)}<script>window.onload=()=>setTimeout(()=>window.print(),350);<\/script></body></html>`);
+      w.document.close();
+    }
+
+    async function sendInvoiceBalanceEmail(id) {
+      const f = faturasCache.find(x => String(x.id) === String(id)) || clientFaturasCache.find(x => String(x.id) === String(id));
+      if (!f) return;
+      if (!f.cliente_email) { alert('Esta fatura não tem email do cliente.'); return; }
+      const subject = `Extrato de saldo da fatura ${f.numero_fatura || ''}`;
+      const html = invoiceBalanceStatementHtmlFromRecord(f);
+      await sendEmail(f.cliente_email, subject, html);
+      alert('Extrato de saldo enviado ao cliente.');
+    }
+
+    function downloadCurrentInvoiceBalanceStatement() {
+      const id = document.getElementById('pay_invoice_id')?.value;
+      if (!id) return;
+      downloadInvoiceBalancePdf(id);
+    }
+
+    function sendCurrentInvoiceBalanceStatement() {
+      const id = document.getElementById('pay_invoice_id')?.value;
+      if (!id) return;
+      sendInvoiceBalanceEmail(id);
+    }
+
     function previewDraftInvoice() {
       recalcInvoice();
       const payload = buildInvoicePayload();
@@ -9723,6 +9920,7 @@ async function deleteMessageThread(clienteEmail) {
             <button class="btn-mini green" onclick="sendInvoiceEmail('${f.id}')">Enviar</button>
             <button class="btn-mini ${pago ? 'secondary' : 'green'}" onclick="markInvoicePaid('${f.id}')">${pago ? 'Pagamentos' : 'Registar pagamento'}</button>
             ${pago ? `<button class="btn-mini info" onclick="downloadReceiptPdf('${f.id}')">Recibo</button>` : ``}
+            ${(!pago && paidTotal > 0 && dueTotal > 0) ? `<button class="btn-mini info" onclick="downloadInvoiceBalancePdf('${f.id}')">Extrato</button><button class="btn-mini green" onclick="sendInvoiceBalanceEmail('${f.id}')">Enviar extrato</button>` : ``}
             <button class="btn-mini danger" onclick="deleteInvoice('${f.id}')">Apagar</button>
           </td>
         `;
@@ -10156,7 +10354,15 @@ async function deleteMessageThread(clienteEmail) {
         document.getElementById('pay_invoice_paid').textContent = formatMoney(getInvoicePaidTotal(merged));
         document.getElementById('pay_invoice_due').textContent = formatMoney(getInvoiceDueAmount(merged));
         document.getElementById('pay_valor').value = getInvoiceDueAmount(merged) || '';
-        alert(isFull ? 'Pagamento total confirmado. Recibo disponível.' : 'Pagamento parcial confirmado. Saldo pendente atualizado.');
+        if (isFull) {
+          alert('Pagamento total confirmado. Recibo disponível.');
+        } else {
+          if (confirm('Pagamento parcial confirmado. Deseja enviar agora o extrato de saldo ao cliente?')) {
+            await sendInvoiceBalanceEmail(id);
+          } else {
+            alert('Pagamento parcial confirmado. Saldo pendente atualizado.');
+          }
+        }
       } catch (e) {
         alert((e.message || 'Erro ao registar pagamento.') + '\n\nSe possível, execute depois o SQL das colunas profissionais: pagamentos jsonb, valor_pago, saldo_pendente e status_pagamento. O sistema também tenta funcionar via payment_notes.');
       }
