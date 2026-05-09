@@ -1699,6 +1699,22 @@
   @media(max-width:640px){.landing-wrap,.landing-footer-row,.landing-nav{padding-left:14px;padding-right:14px;}.landing-nav{min-height:76px;}.landing-actions .landing-btn-dark{display:none;}.landing-hero{padding:28px 0 36px;}.landing-hero h1{font-size:40px;}.landing-hero p{font-size:17px;}.landing-cta{flex-direction:column;}.landing-btn{width:100%;}.landing-feature-grid,.landing-steps-grid,.landing-logo-row{grid-template-columns:1fr;}.landing-section-head h2,.landing-control-copy h3,.landing-proof-highlight h3,.landing-cta-copy h3{font-size:30px;}.landing-control-box,.landing-proof-highlight,.landing-testimonial,.landing-feature-card,.landing-tracking-panel{padding:20px;}.landing-cta-box{padding:22px;}.auth-portal-backdrop{padding:10px;}}
 </style>
 
+
+<style id="ef-auth-safe-style">
+  .auth-portal-backdrop{display:none;position:fixed;inset:0;background:rgba(3,7,18,.58);backdrop-filter:blur(8px);z-index:9999;padding:20px;overflow:auto;}
+  .auth-portal-backdrop.show{display:flex!important;align-items:center;justify-content:center;}
+  .auth-portal-inner{width:100%;max-width:1120px;margin:auto;}
+  .auth-portal-stage{position:relative;display:grid;grid-template-columns:minmax(280px,360px) minmax(340px,1fr);gap:24px;align-items:stretch;}
+  .auth-portal-side{background:linear-gradient(135deg,#091324 0%,#10192c 100%);color:#fff;border-radius:30px;padding:28px;box-shadow:0 22px 55px rgba(15,23,42,.28);}
+  .auth-portal-side h2{margin:0 0 14px;font-size:34px;line-height:1.02;letter-spacing:-.04em;}
+  .auth-portal-side p{margin:0 0 18px;color:rgba(255,255,255,.84);line-height:1.6;}
+  .auth-portal-side ul{margin:0;padding:0;display:grid;gap:12px;}
+  .auth-portal-side li{list-style:none;display:flex;gap:10px;align-items:flex-start;font-weight:700;}
+  .auth-portal-side li::before{content:'✓';display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;background:rgba(255,255,255,.14);flex:0 0 22px;}
+  .auth-close-btn{position:absolute;right:14px;top:14px;width:42px;height:42px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(9,19,36,.86);color:#fff;font-size:18px;cursor:pointer;z-index:3;}
+  @media (max-width:900px){.auth-portal-stage{grid-template-columns:1fr}.auth-portal-side{display:none}.auth-close-btn{right:10px;top:10px}}
+</style>
+
 </head>
 <body>
 
@@ -1718,8 +1734,8 @@
             <a href="#contacto-landing">Contacto</a>
           </div>
           <div class="landing-actions">
-            <button class="landing-btn landing-btn-dark" type="button" onclick="openAuthPortal('login')">Entrar</button>
-            <button class="landing-btn landing-btn-primary" type="button" onclick="openAuthPortal('register')">Criar conta grátis</button>
+            <button class="landing-btn landing-btn-dark" type="button" onclick="efOpenAuth('login')">Entrar</button>
+            <button class="landing-btn landing-btn-primary" type="button" onclick="efOpenAuth('register')">Criar conta grátis</button>
           </div>
         </div>
       </div>
@@ -1735,7 +1751,7 @@
             <li>Gestão completa dos seus processos</li>
           </ul>
           <div class="landing-cta">
-            <button class="landing-btn landing-btn-primary" type="button" onclick="openAuthPortal('register')">Criar conta grátis</button>
+            <button class="landing-btn landing-btn-primary" type="button" onclick="efOpenAuth('register')">Criar conta grátis</button>
             <a class="landing-btn landing-btn-dark" href="#como-funciona-landing">Ver como funciona</a>
             <a class="landing-btn landing-btn-dark" href="https://wa.me/qr/EQ7TL5DZORZAJ1" target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>
           </div>
@@ -1787,7 +1803,7 @@
                 <div class="landing-field"><label>Destino</label><div class="landing-input">Lisboa, Portugal</div></div>
                 <div class="landing-field"><label>Tipo de carga</label><div class="landing-input">Carga geral</div></div>
                 <div class="landing-field"><label>Peso</label><div class="landing-input">1200 kg</div></div>
-                <button class="landing-calc-btn" type="button" onclick="openAuthPortal('register')">Calcular custo</button>
+                <button class="landing-calc-btn" type="button" onclick="efOpenAuth('register')">Calcular custo</button>
               </div>
             </div>
           </div>
@@ -1891,7 +1907,7 @@
           <div class="landing-cta-box">
             <div class="landing-cta-copy"><h3>Comece agora gratuitamente</h3><p>Junte-se a empresas que querem mais controlo, mais rapidez e mais profissionalismo.</p></div>
             <div class="landing-cta-actions">
-              <button class="landing-btn landing-btn-light" type="button" onclick="openAuthPortal('register')">Criar conta grátis</button>
+              <button class="landing-btn landing-btn-light" type="button" onclick="efOpenAuth('register')">Criar conta grátis</button>
               <a class="landing-btn landing-btn-dark" href="https://wa.me/qr/EQ7TL5DZORZAJ1" target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>
             </div>
           </div>
@@ -1905,8 +1921,8 @@
             <a href="#topLanding">Início</a>
             <a href="#como-funciona-landing">Como funciona</a>
             <a href="#recursos-landing">Recursos</a>
-            <button type="button" onclick="openAuthPortal('register')" style="background:none;border:0;color:inherit;padding:0;cursor:pointer;font:inherit;">Criar conta</button>
-            <button type="button" onclick="openAuthPortal('login')" style="background:none;border:0;color:inherit;padding:0;cursor:pointer;font:inherit;">Entrar</button>
+            <button type="button" onclick="efOpenAuth('register')" style="background:none;border:0;color:inherit;padding:0;cursor:pointer;font:inherit;">Criar conta</button>
+            <button type="button" onclick="efOpenAuth('login')" style="background:none;border:0;color:inherit;padding:0;cursor:pointer;font:inherit;">Entrar</button>
           </div>
         </div>
       </footer>
@@ -1924,7 +1940,7 @@
               <li>Mais controlo e menos chamadas</li>
             </ul>
           </div>
-          <button class="auth-close-btn" type="button" onclick="closeAuthPortal()">✕</button>
+          <button class="auth-close-btn" type="button" onclick="efCloseAuth()">✕</button>
           <div class="login-welcome">
       <div class="login-badge">EF Cargo Clear</div>
       <h1>Bem-vindo</h1>
@@ -1959,8 +1975,8 @@
         </div>
 
         <p style="margin-top:14px;display:flex;gap:14px;flex-wrap:wrap;">
-          <button class="link-btn" onclick="showRegister()">Criar conta</button>
-          <button class="link-btn" onclick="showForgot()">Esqueci a password</button>
+          <button class="link-btn" onclick="efOpenAuth('register')">Criar conta</button>
+          <button class="link-btn" onclick="efOpenAuth('forgot')">Esqueci a password</button>
         </p>
 
         <p id="loginMsg" class="small" style="margin-top:14px;"></p>
@@ -2000,7 +2016,7 @@
         </div>
 
         <p style="margin-top:16px;">
-          <button class="link-btn" onclick="showLogin()">Voltar ao login</button>
+          <button class="link-btn" onclick="efOpenAuth('login')">Voltar ao login</button>
         </p>
 
         <p id="registerMsg" class="small" style="margin-top:14px;"></p>
@@ -2020,7 +2036,7 @@
         </div>
 
         <p style="margin-top:16px;">
-          <button class="link-btn" onclick="showLogin()">Voltar ao login</button>
+          <button class="link-btn" onclick="efOpenAuth('login')">Voltar ao login</button>
         </p>
 
         <p id="forgotMsg" class="small" style="margin-top:14px;"></p>
