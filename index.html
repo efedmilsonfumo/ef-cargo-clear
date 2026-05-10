@@ -4851,7 +4851,11 @@
     async function loadApp(user) {
       currentUserEmail = (user.email || "").toLowerCase();
 
-      document.getElementById("loginView").classList.add("hidden");
+      const loginViewEl = document.getElementById("loginView");
+      if (loginViewEl) {
+        loginViewEl.classList.remove("auth-visible");
+        loginViewEl.classList.add("hidden");
+      }
       document.getElementById("appView").classList.remove("hidden");
 
       await loadCompanyConfig();
