@@ -10262,7 +10262,7 @@ async function deleteMessageThread(clienteEmail) {
             <button class="btn-mini info" onclick="downloadInvoicePdf('${f.id}')">Baixar</button>
             <button class="btn-mini green" onclick="sendInvoiceEmail('${f.id}')">Enviar</button>
             <button class="btn-mini ${pago ? 'secondary' : 'green'}" onclick="markInvoicePaid('${f.id}')">${pago ? 'Pagamentos' : 'Registar pagamento'}</button>
-            ${pago ? `<button class="btn-mini info" onclick="downloadReceiptPdf('${f.id}')">Recibo</button>` : ``}
+            ${pago ? `<button class="btn-mini info" onclick="downloadReceiptPdf('${f.id}')">Baixar recibo</button>` : ``}
             ${(!pago && paidTotal > 0 && dueTotal > 0) ? `<button class="btn-mini info" onclick="downloadInvoiceBalancePdf('${f.id}')">Extrato</button><button class="btn-mini green" onclick="sendInvoiceBalanceEmail('${f.id}')">Enviar extrato</button>` : ``}
             <button class="btn-mini danger" onclick="deleteInvoice('${f.id}')">Apagar</button>
           </td>
