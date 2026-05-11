@@ -10127,9 +10127,9 @@ async function deleteMessageThread(clienteEmail) {
         </tr>
       `).join('') : `<tr><td colspan="5" style="padding:12px;border-bottom:1px solid #e5e7eb;color:#6b7280;">Nenhum pagamento confirmado até ao momento.</td></tr>`;
       return `
-        <div style="font-family:Arial,sans-serif;color:#111;max-width:980px;margin:0 auto;background:#fff;">
+        <div style="font-family:Arial,sans-serif;color:#111;max-width:980px;margin:0 auto;background:#fff;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;">
           <div style="border:1px solid #e5e7eb;border-radius:20px;overflow:hidden;box-shadow:0 18px 48px rgba(15,23,42,.10);">
-            <div style="background:linear-gradient(135deg,#0f172a 0%,#1f2937 62%,#BE001A 100%);color:#fff;padding:28px 34px;display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:flex-start;">
+            <div style="background:linear-gradient(135deg,#0f172a 0%,#1f2937 62%,#BE001A 100%);color:#fff;padding:28px 34px;display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:flex-start;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;">
               <div>
                 <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:bold;opacity:.8;">EF Cargo Clear</div>
                 <h1 style="margin:8px 0 0;font-size:34px;line-height:1;">Extrato de Saldo</h1>
@@ -10201,7 +10201,7 @@ async function deleteMessageThread(clienteEmail) {
       const w = window.open('', '_blank');
       if (!w) { alert('O navegador bloqueou a abertura do extrato.'); return; }
       w.document.open();
-      w.document.write(`<html><head><title>Extrato-${escapeHtml(f.numero_fatura || '')}</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{margin:20px;background:#f4f6f8;}@media print{body{margin:0;background:#fff;}}</style></head><body>${invoiceBalanceStatementHtmlFromRecord(f)}<script>window.onload=()=>setTimeout(()=>window.print(),350);<\/script></body></html>`);
+      w.document.write(`<html><head><title>Extrato-${escapeHtml(f.numero_fatura || '')}</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>@page{size:A4;margin:10mm;}html,body{margin:0;padding:0;background:#f4f6f8;}body{margin:0;padding:20px;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;}*{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;}@media print{html,body{background:#fff !important;}body{margin:0 !important;padding:0 !important;}}</style></head><body>${invoiceBalanceStatementHtmlFromRecord(f)}<script>window.onload=()=>setTimeout(()=>window.print(),350);<\/script></body></html>`);
       w.document.close();
     }
 
@@ -10348,9 +10348,9 @@ async function deleteMessageThread(clienteEmail) {
       const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=' + encodeURIComponent('https://ef-cargo-clear.vercel.app/validar-recibo.html?ref=' + reciboNumeroRaw);
 
       return `
-        <div style="font-family:Arial,sans-serif;color:#111;max-width:980px;margin:0 auto;background:#ffffff;">
+        <div style="font-family:Arial,sans-serif;color:#111;max-width:980px;margin:0 auto;background:#ffffff;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;">
           <div style="border:1px solid #e5e7eb;border-radius:24px;overflow:hidden;box-shadow:0 16px 40px rgba(15,23,42,.08);">
-            <div style="background:linear-gradient(135deg,#7f0012 0%,#be001a 55%,#e24a5d 100%);padding:30px 34px;color:#fff;">
+            <div style="background:linear-gradient(135deg,#7f0012 0%,#be001a 55%,#e24a5d 100%);padding:30px 34px;color:#fff;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;">
               <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;">
                 <div>
                   <div style="font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.92;">EF & Associados, Lda</div>
@@ -10360,7 +10360,7 @@ async function deleteMessageThread(clienteEmail) {
                     Documento emitido após confirmação de pagamento
                   </div>
                 </div>
-                <div style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:16px 18px;border-radius:18px;min-width:250px;text-align:right;">
+                <div style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:16px 18px;border-radius:18px;min-width:250px;text-align:right;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;">
                   <div style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;opacity:.9;">Número do recibo</div>
                   <div style="font-size:24px;font-weight:800;margin-top:6px;">${reciboNumero}</div>
                   <div style="margin-top:10px;font-size:13px;line-height:1.6;">
@@ -10515,9 +10515,13 @@ async function deleteMessageThread(clienteEmail) {
   <title>${escapeHtml(f.recibo_numero || f.numero_recibo || ('Recibo-' + (f.numero_fatura || '')))}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body{margin:0;padding:24px;background:#f4f6f8;}
+    @page{size:A4;margin:10mm;}
+    html,body{margin:0;padding:0;background:#f4f6f8;}
+    body{padding:24px;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;}
+    *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;}
     @media print{
-      body{background:#fff;padding:0;}
+      html,body{background:#fff !important;}
+      body{padding:0 !important;}
     }
   </style>
 </head>
